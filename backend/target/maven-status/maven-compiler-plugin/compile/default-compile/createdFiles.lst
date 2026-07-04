@@ -1,0 +1,3 @@
+br\gov\ife\sgrsc\api\HealthController.class
+br\gov\ife\sgrsc\SgRscBackendApplication.class
+br\gov\ife\sgrsc\config\SecurityConfig.class
