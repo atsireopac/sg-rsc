@@ -1,4 +1,4 @@
-package br.gov.ife.sgrsc.api;
+package br.gov.ife.sgrsc.features.health;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
