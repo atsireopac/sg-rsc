@@ -126,7 +126,6 @@ O MER Conceitual representa as entidades principais do SG-RSC e seus relacioname
 | Origem | Cardinalidade | Destino |
 |--------|---------------|---------|
 | Servidor | 1:N | Solicitação |
-| Solicitação | 1:1 | Memorial |
 | Solicitação | 1:N | Documento |
 | Solicitação | 1:N | Avaliação |
 | Solicitação | 1:N | Parecer |
@@ -153,9 +152,9 @@ Cada solicitação pertence obrigatoriamente a um único servidor.
 
 ## 6.2 Solicitação e Memorial
 
-Cada solicitação possuirá um memorial.
+O Memorial Descritivo não possuirá tabela própria.
 
-Cada memorial pertence a uma única solicitação.
+Ele será armazenado como um Documento do tipo MEMORIAL.
 
 ---
 
@@ -218,7 +217,7 @@ As entidades serão apresentadas na seguinte ordem:
 
 1. Servidor
 2. Solicitação
-3. Memorial
+3. Nível RSC
 4. Documento
 5. Avaliação
 6. Pontuação
@@ -358,7 +357,7 @@ Todas as demais entidades do sistema estarão direta ou indiretamente vinculadas
 | numero_protocolo | VARCHAR(30) | Sim | Sim | Número gerado pelo SG-RSC |
 | numero_processo | VARCHAR(50) | Não | Sim | Processo no SEI ou sistema equivalente |
 | servidor_id | BIGINT | Sim | Não | FK para Servidor |
-| nivel_rsc_id | VARCHAR(20) | Sim | Não | FK para nivel_rsc |
+| nivel_rsc_id | BIGINT | Sim | Não | FK para nivel_rsc |
 | status_solicitacao_id | BIGINT | Sim | Não | FK para status_solicitacao |
 | resultado_solicitacao_id | BIGINT | Não | Não | FK para resultado_solicitacao |
 | data_solicitacao | TIMESTAMP | Sim | Não | Data da criação |
@@ -394,7 +393,7 @@ Essa abordagem elimina a necessidade de uma tabela específica para memorial, re
 - numero_protocolo (UNIQUE)
 - numero_processo (UNIQUE)
 - servidor_id
-- status
+- status_solicitacao_id
 - data_protocolo
 
 ---
