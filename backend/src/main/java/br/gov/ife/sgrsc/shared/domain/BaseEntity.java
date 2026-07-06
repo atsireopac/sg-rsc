@@ -5,11 +5,15 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 
 import java.time.LocalDateTime;
 
 @MappedSuperclass
 public abstract class BaseEntity {
+
+    private static final String USUARIO_SISTEMA = "system";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -33,6 +37,23 @@ public abstract class BaseEntity {
 
     @Column(name = "deleted_by", length = 100)
     private String deletedBy;
+
+    @PrePersist
+    protected void onCreate() {
+        LocalDateTime agora = LocalDateTime.now();
+
+        this.createdAt = agora;
+        this.updatedAt = agora;
+
+        this.createdBy = USUARIO_SISTEMA;
+        this.updatedBy = USUARIO_SISTEMA;
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+        this.updatedBy = USUARIO_SISTEMA;
+    }
 
     public Long getId() {
         return id;
