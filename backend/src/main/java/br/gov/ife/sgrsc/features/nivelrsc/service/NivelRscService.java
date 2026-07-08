@@ -19,25 +19,41 @@ public class NivelRscService {
     }
 
     public List<NivelRsc> listarTodos() {
-        return nivelRscRepository.findAll();
+        return nivelRscRepository.findByDeletedAtIsNull();
     }
 
     public NivelRsc buscarPorId(Long id) {
-        return nivelRscRepository.findById(id)
+        return nivelRscRepository.findByIdAndDeletedAtIsNull(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Nível RSC não encontrado."
-                ));
+            ));
     }
     public NivelRsc criar(NivelRscRequest request) {
-    NivelRsc nivelRsc = new NivelRsc();
+        NivelRsc nivelRsc = new NivelRsc();
 
-    nivelRsc.setCodigo(request.getCodigo());
-    nivelRsc.setNome(request.getNome());
-    nivelRsc.setDescricao(request.getDescricao());
-    nivelRsc.setPercentualIncentivo(request.getPercentualIncentivo());
-    nivelRsc.setAtivo(request.getAtivo() != null ? request.getAtivo() : true);
+        nivelRsc.setCodigo(request.getCodigo());
+        nivelRsc.setNome(request.getNome());
+        nivelRsc.setDescricao(request.getDescricao());
+        nivelRsc.setPercentualIncentivo(request.getPercentualIncentivo());
+        nivelRsc.setAtivo(request.getAtivo() != null ? request.getAtivo() : true);
 
-    return nivelRscRepository.save(nivelRsc);
-}
+        return nivelRscRepository.save(nivelRsc);
+    }
+    public NivelRsc atualizar(Long id, NivelRscRequest request) {
+        NivelRsc nivelRsc = buscarPorId(id);
+
+        nivelRsc.setCodigo(request.getCodigo());
+        nivelRsc.setNome(request.getNome());
+        nivelRsc.setDescricao(request.getDescricao());
+        nivelRsc.setPercentualIncentivo(request.getPercentualIncentivo());
+        nivelRsc.setAtivo(request.getAtivo() != null ? request.getAtivo() : nivelRsc.getAtivo());
+
+        return nivelRscRepository.save(nivelRsc);
+    }
+    public void excluir(Long id) {
+        NivelRsc nivelRsc = buscarPorId(id);
+        nivelRsc.marcarComoExcluido();
+        nivelRscRepository.save(nivelRsc);
+    }
 }

@@ -110,4 +110,8 @@ public abstract class BaseEntity {
     public void setDeletedBy(String deletedBy) {
         this.deletedBy = deletedBy;
     }
+    public void marcarComoExcluido() {
+        this.deletedAt = LocalDateTime.now();
+        this.deletedBy = USUARIO_SISTEMA;
+    }
 }

@@ -1,5 +1,7 @@
 package br.gov.ife.sgrsc.features.nivelrsc.controller;
 
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import br.gov.ife.sgrsc.features.nivelrsc.dto.NivelRscRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -37,5 +39,14 @@ public class NivelRscController {
     @ResponseStatus(HttpStatus.CREATED)
     public NivelRsc criar(@RequestBody NivelRscRequest request) {
         return nivelRscService.criar(request);
+    }
+    @PutMapping("/{id}")
+    public NivelRsc atualizar(@PathVariable Long id, @RequestBody NivelRscRequest request) {
+    return nivelRscService.atualizar(id, request);
+    }
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void excluir(@PathVariable Long id) {
+    nivelRscService.excluir(id);
 }
 }
