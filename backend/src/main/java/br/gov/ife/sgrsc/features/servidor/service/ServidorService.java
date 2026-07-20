@@ -2,11 +2,13 @@ package br.gov.ife.sgrsc.features.servidor.service;
 
 import br.gov.ife.sgrsc.features.servidor.domain.Servidor;
 import br.gov.ife.sgrsc.features.servidor.dto.ServidorRequest;
+import br.gov.ife.sgrsc.features.servidor.dto.ServidorResponse;
 import br.gov.ife.sgrsc.features.servidor.repository.ServidorRepository;
 import br.gov.ife.sgrsc.features.situacaofuncional.domain.SituacaoFuncional;
 import br.gov.ife.sgrsc.features.situacaofuncional.repository.SituacaoFuncionalRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -25,19 +27,21 @@ public class ServidorService {
         this.situacaoFuncionalRepository = situacaoFuncionalRepository;
     }
 
-    public List<Servidor> listarTodos() {
-        return servidorRepository.findByDeletedAtIsNull();
+    @Transactional(readOnly = true)
+    public List<ServidorResponse> listarTodos() {
+        return servidorRepository.findByDeletedAtIsNull()
+                .stream()
+                .map(this::toResponse)
+                .toList();
     }
 
-    public Servidor buscarPorId(Long id) {
-        return servidorRepository.findByIdAndDeletedAtIsNull(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Servidor não encontrado."
-                ));
+    @Transactional(readOnly = true)
+    public ServidorResponse buscarPorId(Long id) {
+        return toResponse(buscarEntidadePorId(id));
     }
 
-    public Servidor criar(ServidorRequest request) {
+    @Transactional
+    public ServidorResponse criar(ServidorRequest request) {
         SituacaoFuncional situacaoFuncional =
                 buscarSituacaoFuncional(request.getSituacaoFuncionalId());
 
@@ -45,24 +49,55 @@ public class ServidorService {
 
         preencherDados(servidor, request, situacaoFuncional);
 
-        return servidorRepository.save(servidor);
+        Servidor servidorSalvo = servidorRepository.save(servidor);
+
+        return toResponse(servidorSalvo);
     }
 
-    public Servidor atualizar(Long id, ServidorRequest request) {
-        Servidor servidor = buscarPorId(id);
+    @Transactional
+    public ServidorResponse atualizar(Long id, ServidorRequest request) {
+        Servidor servidor = buscarEntidadePorId(id);
 
         SituacaoFuncional situacaoFuncional =
                 buscarSituacaoFuncional(request.getSituacaoFuncionalId());
 
         preencherDados(servidor, request, situacaoFuncional);
 
-        return servidorRepository.save(servidor);
+        Servidor servidorAtualizado = servidorRepository.save(servidor);
+
+        return toResponse(servidorAtualizado);
     }
 
+    @Transactional
     public void excluir(Long id) {
-        Servidor servidor = buscarPorId(id);
+        Servidor servidor = buscarEntidadePorId(id);
+
         servidor.marcarComoExcluido();
+
         servidorRepository.save(servidor);
+    }
+
+    private Servidor buscarEntidadePorId(Long id) {
+        return servidorRepository.findByIdAndDeletedAtIsNull(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Servidor não encontrado."
+                ));
+    }
+
+    private SituacaoFuncional buscarSituacaoFuncional(Long id) {
+        if (id == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "A situação funcional é obrigatória."
+            );
+        }
+
+        return situacaoFuncionalRepository.findByIdAndDeletedAtIsNull(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Situação funcional não encontrada."
+                ));
     }
 
     private void preencherDados(
@@ -83,18 +118,25 @@ public class ServidorService {
         servidor.setSituacaoFuncional(situacaoFuncional);
     }
 
-    private SituacaoFuncional buscarSituacaoFuncional(Long id) {
-        if (id == null) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "A situação funcional é obrigatória."
-            );
-        }
+    private ServidorResponse toResponse(Servidor servidor) {
+        SituacaoFuncional situacaoFuncional =
+                servidor.getSituacaoFuncional();
 
-        return situacaoFuncionalRepository.findByIdAndDeletedAtIsNull(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Situação funcional não encontrada."
-                ));
+        return new ServidorResponse(
+                servidor.getId(),
+                servidor.getSiape(),
+                servidor.getNome(),
+                servidor.getCpf(),
+                servidor.getEmail(),
+                servidor.getCargo(),
+                servidor.getClasse(),
+                servidor.getNivel(),
+                servidor.getPadrao(),
+                servidor.getUnidade(),
+                servidor.getCampus(),
+                situacaoFuncional.getId(),
+                situacaoFuncional.getCodigo(),
+                situacaoFuncional.getNome()
+        );
     }
 }
