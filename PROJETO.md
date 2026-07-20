@@ -2,9 +2,11 @@
 
 # Controle de Versões
 
-| Versão | Data | Autor | Alterações |
-|---------|------|--------|------------|
-| 1.0 | 03/07/2026 | Erik Barbosa | Criação do documento |
+| Versão  | Data           | Autor            | Alterações                                                                                                                                          |
+| ------- | -------------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1.0     | 03/07/2026     | Erik Barbosa     | Criação do documento                                                                                                                                |
+| **1.1** | **20/07/2026** | **Erik Barbosa** | **Atualização da arquitetura, definição do Keycloak como provedor de identidade, atualização do roadmap e adequação da arquitetura Feature-First.** |
+
 
 
 # Glossário
@@ -98,11 +100,11 @@ O SG-RSC será desenvolvido utilizando arquitetura em camadas, separando clarame
 
 A solução será composta por:
 
-- Front-end Angular;
-- API REST em Spring Boot;
-- Banco PostgreSQL;
+- Front-end Angular 17;
+- Keycloak (indetity Provider)
+- API REST em Spring Boot 3.5;
+- Banco PostgreSQL 16;
 - Serviço de armazenamento de documentos;
-- Serviço de autenticação;
 - Serviço de geração de relatórios.
 
 Essa separação permitirá evolução independente dos componentes.
@@ -120,7 +122,11 @@ Este projeto adotará:
 - Docker;
 - API REST;
 - JSON;
-- JWT para autenticação;
+- Keycloak como Identity Provider;
+- OAuth2;
+- OpenID Connect (OIDC);
+- JWT emitido pelo Keycloak;
+- Spring Security OAuth2 Resource Server;
 - OpenAPI (Swagger);
 - JUnit 5;
 - Mockito.
@@ -1544,7 +1550,7 @@ Para manter a padronização do banco de dados serão adotadas as seguintes conv
 
 O banco será composto inicialmente pelas seguintes tabelas:
 
-- usuario
+- keycloakUserId (As credenciais de autenticação (login e senha) não serão armazenadas pelo SG-RSC. Essas informações serão gerenciadas pelo Keycloak. A aplicação manterá apenas a referência ao usuário autenticado por meio do identificador único (keycloakUserId).)
 - servidor
 - solicitacao
 - memorial
@@ -2007,41 +2013,37 @@ A solução será composta pelos seguintes componentes:
 
 # 7.3 Arquitetura Geral
 
-```
+                    Navegador
 
-```
-+----------------------------------------------------+
-|                    Navegador                       |
-|                (Angular 17)                        |
-+-------------------------▲--------------------------+
-                          │
-                     HTTPS / JSON
-                          │
-+-------------------------▼--------------------------+
-|             API REST (Spring Boot 3)              |
-|----------------------------------------------------|
-| Controllers                                        |
-| Services                                           |
-| Regras de Negócio                                  |
-| Motor de Avaliação do RSC                          |
-| Auditoria                                          |
-+-------------------------▲--------------------------+
-                          │
-                          │ JPA / Hibernate
-                          ▼
-+----------------------------------------------------+
-|                  PostgreSQL                        |
-+----------------------------------------------------+
+                        │
 
-                          │
-                          ▼
+                Angular 17 SPA
 
-+----------------------------------------------------+
-|      Armazenamento de Documentos                   |
-+----------------------------------------------------+
-```
+                        │
 
----
+        Login (OAuth2 / OpenID Connect)
+
+                        │
+
+                   Keycloak
+
+                        │
+
+              Access Token (JWT)
+
+                        │
+
+          Spring Boot 3.5 API
+
+        (OAuth2 Resource Server)
+
+                        │
+
+                 Spring Data JPA
+
+                        │
+
+                  PostgreSQL 16
 
 # 7.4 Tecnologias
 
@@ -2107,19 +2109,20 @@ src/main/java
 
 br.gov.ife.sgrsc
 
-├── config
-├── controller
-├── dto
-├── entity
-├── enums
-├── exception
-├── mapper
-├── repository
-├── security
-├── service
-├── specification
-├── util
-└── validation
+backend/
+
+config/
+
+features/
+    health/
+    servidor/
+    situacaofuncional/
+    solicitacao/
+    resultadosolicitacao/
+
+security/
+
+shared/
 ```
 
 ---
@@ -2167,6 +2170,7 @@ configuracoes
 O desenvolvimento seguirá os seguintes padrões:
 
 - Arquitetura em Camadas;
+- Feature-First Architecture;
 - REST;
 - SOLID;
 - Clean Code;
@@ -2180,7 +2184,13 @@ O desenvolvimento seguirá os seguintes padrões:
 
 # 7.8 Segurança
 
-O sistema utilizará autenticação baseada em JWT.
+O SG-RSC utilizará o Keycloak como provedor de identidade e autenticação.
+
+A autenticação será baseada nos padrões OAuth2 e OpenID Connect (OIDC). Após a autenticação do usuário, o Keycloak emitirá um Access Token no formato JWT.
+
+A API Spring Boot atuará como OAuth2 Resource Server, sendo responsável apenas pela validação do token e autorização das requisições.
+
+O controle de acesso será realizado por meio de papéis (RBAC), permitindo restringir funcionalidades conforme o perfil do usuário.
 
 Todos os endpoints protegidos exigirão autenticação.
 
@@ -2198,6 +2208,7 @@ O sistema possuirá inicialmente os seguintes perfis:
 - Administrador.
 
 Novos perfis poderão ser adicionados futuramente.
+Os perfis serão gerenciados centralizadamente pelo Keycloak e sincronizados com a aplicação conforme necessário.
 
 ---
 
@@ -2225,6 +2236,8 @@ A arquitetura foi concebida para permitir futuras integrações com:
 - SEI;
 - Gov.br;
 - Sistemas de autenticação institucional.
+
+A utilização do Keycloak permitirá futura integração com Active Directory (LDAP), autenticação institucional e Single Sign-On (SSO), reduzindo o esforço de manutenção de credenciais e facilitando a integração com outros sistemas corporativos.
 
 ---
 
@@ -2254,3 +2267,280 @@ As decisões arquiteturais aqui definidas deverão orientar todas as etapas de i
 ---
 
 Fim do Capítulo 7.
+
+# Capítulo 8 – Decisões Arquiteturais (Architecture Decision Records - ADR)
+
+---
+
+# 8.1 Objetivo
+
+Este capítulo registra as principais decisões arquiteturais adotadas durante o desenvolvimento do SG-RSC.
+
+Cada decisão documenta o contexto em que foi tomada, as alternativas consideradas, a solução escolhida e seus impactos na arquitetura da aplicação.
+
+O objetivo é preservar o histórico das decisões técnicas, facilitar a manutenção do projeto e apoiar futuras evoluções da solução.
+
+As ADRs deverão ser atualizadas sempre que uma decisão arquitetural relevante for tomada.
+
+---
+
+# 8.2 ADR-001 – Adoção da Arquitetura Feature-First
+
+## Status
+
+Aceita.
+
+## Contexto
+
+O SG-RSC possui diversas funcionalidades independentes, como Servidor, Solicitação, Critérios, Pareceres, Documentos e Relatórios. Organizar o projeto apenas por camadas (controller, service, repository, etc.) tende a aumentar o acoplamento entre módulos e dificultar a manutenção conforme a aplicação evolui.
+
+## Decisão
+
+Adotar a arquitetura **Feature-First**, organizando o código por funcionalidades. Cada funcionalidade reúne seus próprios controllers, services, repositories, DTOs e demais componentes.
+
+## Consequências
+
+### Benefícios
+
+- Melhor organização do código.
+- Baixo acoplamento entre funcionalidades.
+- Facilidade de manutenção.
+- Escalabilidade da aplicação.
+- Maior produtividade no desenvolvimento.
+
+### Desvantagens
+
+- Exige disciplina na organização dos pacotes.
+- Pode gerar duplicação de componentes utilitários quando mal utilizada.
+
+---
+
+# 8.3 ADR-002 – Utilização do PostgreSQL
+
+## Status
+
+Aceita.
+
+## Contexto
+
+O sistema necessita de um banco de dados relacional robusto, confiável e compatível com o ecossistema Spring Boot.
+
+## Decisão
+
+Adotar o PostgreSQL como Sistema Gerenciador de Banco de Dados (SGBD).
+
+## Consequências
+
+### Benefícios
+
+- Software livre.
+- Excelente desempenho.
+- Suporte completo a transações.
+- Alta compatibilidade com Hibernate e Spring Data JPA.
+- Grande comunidade.
+
+### Desvantagens
+
+- Exige instalação e administração do banco.
+- Curva de aprendizado para recursos avançados.
+
+---
+
+# 8.4 ADR-003 – Utilização do Flyway
+
+## Status
+
+Aceita.
+
+## Contexto
+
+O banco de dados evoluirá continuamente durante o desenvolvimento.
+
+É necessário manter o histórico das alterações estruturais.
+
+## Decisão
+
+Utilizar o Flyway para versionamento e migração automática do banco de dados.
+
+## Consequências
+
+### Benefícios
+
+- Versionamento do banco.
+- Reprodutibilidade dos ambientes.
+- Facilidade de implantação.
+- Histórico completo das alterações.
+
+### Desvantagens
+
+- Necessidade de disciplina na criação das migrações.
+- Alterações incorretas podem impactar ambientes compartilhados.
+
+---
+
+# 8.5 ADR-004 – Adoção do Keycloak como Provedor de Identidade
+
+## Status
+
+Aceita.
+
+## Contexto
+
+O SG-RSC necessita autenticar usuários com segurança, evitando implementar um mecanismo próprio para gerenciamento de senhas, sessões e tokens.
+
+## Decisão
+
+Adotar o **Keycloak** como provedor de identidade da aplicação.
+
+A autenticação será baseada nos protocolos OAuth2 e OpenID Connect (OIDC).
+
+O Spring Boot atuará como **OAuth2 Resource Server**, responsável apenas pela validação dos tokens JWT emitidos pelo Keycloak.
+
+## Consequências
+
+### Benefícios
+
+- Centralização da autenticação.
+- Single Sign-On (SSO).
+- Integração futura com LDAP e Active Directory.
+- Gerenciamento de usuários e perfis.
+- Recuperação de senha.
+- Menor responsabilidade da aplicação sobre credenciais.
+
+### Desvantagens
+
+- Introdução de um novo serviço na infraestrutura.
+- Necessidade de configuração e administração do Keycloak.
+
+---
+
+# 8.6 ADR-005 – Exclusão Lógica (Soft Delete)
+
+## Status
+
+Aceita.
+
+## Contexto
+
+O SG-RSC manipula processos administrativos que devem permanecer auditáveis mesmo após sua descontinuação.
+
+## Decisão
+
+Adotar exclusão lógica (Soft Delete), preservando os registros no banco de dados.
+
+## Consequências
+
+### Benefícios
+
+- Preservação do histórico.
+- Atendimento às necessidades de auditoria.
+- Recuperação de registros.
+
+### Desvantagens
+
+- Consultas precisam considerar registros inativos.
+- Crescimento do banco ao longo do tempo.
+
+---
+
+# 8.7 ADR-006 – Auditoria das Entidades
+
+## Status
+
+Aceita.
+
+## Contexto
+
+Toda movimentação do processo administrativo deve ser rastreável.
+
+## Decisão
+
+Implementar auditoria automática nas entidades do sistema, registrando criação, alteração e exclusão lógica dos registros.
+
+## Consequências
+
+### Benefícios
+
+- Rastreabilidade.
+- Transparência.
+- Atendimento às auditorias.
+- Facilidade de investigação.
+
+### Desvantagens
+
+- Pequeno aumento no volume de armazenamento.
+- Maior complexidade na implementação.
+
+---
+
+# 8.8 ADR-007 – Utilização do Java 25 LTS
+
+## Status
+
+Aceita.
+
+## Contexto
+
+O projeto será desenvolvido utilizando uma versão moderna da plataforma Java, visando maior desempenho e acesso aos recursos mais recentes da linguagem.
+
+## Decisão
+
+Adotar o Java 25 LTS como linguagem oficial do backend.
+
+## Consequências
+
+### Benefícios
+
+- Longo período de suporte.
+- Melhor desempenho.
+- Recursos modernos da linguagem.
+- Compatibilidade com Spring Boot.
+
+### Desvantagens
+
+- Pode limitar a execução em ambientes legados.
+- Exige atualização das ferramentas de desenvolvimento.
+
+---
+
+# 8.9 ADR-008 – Utilização do Docker e Docker Compose
+
+## Status
+
+Aceita.
+
+## Contexto
+
+É necessário padronizar o ambiente de desenvolvimento e facilitar a implantação da aplicação.
+
+## Decisão
+
+Utilizar Docker para containerização dos serviços e Docker Compose para orquestração dos ambientes locais.
+
+## Consequências
+
+### Benefícios
+
+- Ambientes padronizados.
+- Facilidade de instalação.
+- Reprodutibilidade.
+- Redução de problemas de configuração.
+
+### Desvantagens
+
+- Necessidade de conhecimento em Docker.
+- Consumo adicional de recursos da máquina.
+
+---
+
+# 8.10 Considerações Finais
+
+As decisões arquiteturais registradas neste capítulo representam o estado atual da arquitetura do SG-RSC.
+
+Novas ADRs poderão ser incorporadas ao longo da evolução do projeto para documentar alterações relevantes na arquitetura, infraestrutura, padrões de desenvolvimento e tecnologias adotadas.
+
+A manutenção deste histórico contribuirá para a rastreabilidade das decisões técnicas, facilitará a integração de novos desenvolvedores ao projeto e servirá como referência para futuras evoluções da aplicação.
+
+---
+
+Fim do Capítulo 8.

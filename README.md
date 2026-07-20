@@ -1,58 +1,94 @@
 # SG-RSC
 
+![Java](https://img.shields.io/badge/Java-25-blue)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.5-success)
+![Angular](https://img.shields.io/badge/Angular-17-red)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue)
+![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED)
+![Status](https://img.shields.io/badge/Status-Em_Desenvolvimento-orange)
+![License](https://img.shields.io/badge/License-MIT-green)
+
 Sistema de Gestão do Reconhecimento de Saberes e Competências (RSC-PCCTAE)
 
 ---
 
 ## Sobre o Projeto
 
-O SG-RSC é uma aplicação web desenvolvida para automatizar o processo de solicitação, análise, avaliação e concessão do Reconhecimento de Saberes e Competências (RSC) aos servidores Técnico-Administrativos em Educação (PCCTAE).
+O **SG-RSC** é uma aplicação web desenvolvida para informatizar todo o processo de solicitação, análise, avaliação e homologação do **Reconhecimento de Saberes e Competências (RSC)** destinado aos servidores Técnico-Administrativos em Educação (PCCTAE).
 
-O projeto foi concebido seguindo princípios de Arquitetura Limpa, Domain-Driven Design (DDD) e desenvolvimento incremental, priorizando organização, rastreabilidade e facilidade de manutenção.
+O projeto está sendo desenvolvido de forma incremental, utilizando uma arquitetura **Feature-First**, com foco em organização por funcionalidades, baixo acoplamento, código limpo e facilidade de manutenção. À medida que evoluir, incorporará princípios de **Domain-Driven Design (DDD)** sempre que agregarem valor à modelagem do domínio.
 
 ---
 
-## Objetivos
+# Objetivos
 
-- Automatizar o fluxo de solicitação do RSC.
+- Automatizar o fluxo completo do processo de RSC.
 - Auxiliar a Diretoria de Gestão de Pessoas (DGP).
 - Apoiar as Comissões Avaliadoras.
-- Centralizar documentos e memorial.
+- Centralizar documentos comprobatórios e memoriais.
 - Automatizar o cálculo da pontuação.
 - Garantir rastreabilidade e auditoria.
 - Parametrizar a legislação vigente.
+- Reduzir atividades manuais e retrabalho.
 
 ---
 
-## Tecnologias
+# Tecnologias
 
-### Backend
+## Backend
 
-- Java 25
-- Spring Boot 3
+- Java 25 LTS
+- Spring Boot 3.5
 - Spring Security
+- Spring Data JPA
 - Maven
-- Flyway (planejado)
-- PostgreSQL
+- Flyway
 
-### Frontend
+## Frontend
 
 - Angular 17
 - TypeScript
 - HTML5
 - CSS3
 
-### Infraestrutura
+## Banco de Dados
+
+- PostgreSQL 16
+
+## Infraestrutura
 
 - Docker
+- Docker Compose
 - Git
 - GitHub
 
+## Autenticação (Próxima Sprint)
+
+- Keycloak
+- OAuth2
+- OpenID Connect (OIDC)
+- JWT
+
 ---
 
-## Arquitetura
+# Arquitetura
 
-O projeto utiliza arquitetura **Feature-First**, organizada por funcionalidades.
+O sistema será composto pela seguinte arquitetura:
+
+```text
+                Angular 17
+                     │
+                     ▼
+                Keycloak
+                     │
+                     ▼
+             Spring Boot API
+                     │
+                     ▼
+              PostgreSQL 16
+```
+
+O backend utiliza uma organização **Feature-First**, separando controllers, services, repositories, DTOs e entidades por funcionalidade.
 
 Exemplo:
 
@@ -61,10 +97,10 @@ backend/
 
 features/
     health/
-    solicitacao/
     servidor/
-    avaliacao/
-    legislacao/
+    solicitacao/
+    situacaofuncional/
+    resultadosolicitacao/
 
 config/
 shared/
@@ -73,7 +109,7 @@ security/
 
 ---
 
-## Estrutura do Projeto
+# Estrutura do Projeto
 
 ```text
 backend/
@@ -86,58 +122,160 @@ scripts/
 
 ---
 
-## Documentação
+# Funcionalidades Implementadas
 
-A documentação do projeto está organizada em:
+## Infraestrutura
 
-- PROJETO.md
-- Modelo de Domínio
-- ADRs (Architecture Decision Records)
-- Diagramas
-- Requisitos
-- Arquitetura
+- Estrutura inicial do projeto
+- Backend Spring Boot
+- Frontend Angular
+- PostgreSQL em Docker
+- Docker Compose
+- Migrações com Flyway
+- Health Check
+- Configuração de CORS
+- Spring Security
+- Auditoria das entidades
+
+## Backend
+
+- CRUD inicial de Servidor
+- Cadastro de Situação Funcional
+- Relacionamentos JPA
+- Persistência com Spring Data JPA
 
 ---
 
-## Status do Projeto
+# Roadmap
 
-Sprint 1 ✅
+## Sprint 1 ✅
 
 - Estrutura inicial
 - Backend Spring Boot
 - Frontend Angular
-- Comunicação Frontend ↔ Backend
-- Health Check
+- PostgreSQL
+- Docker
+- Flyway
 - Spring Security
-- CORS
+- CRUD inicial de Servidor
+- Situação Funcional
+- Auditoria das entidades
 
-Sprint 2 🚧
+## Sprint 2 🚧
 
-- Arquitetura Feature-First
-- Modelo de Domínio
-- Modelagem do Banco de Dados (em andamento)
+- Integração com Keycloak
+- OAuth2 / OpenID Connect
+- JWT
+- Cadastro de Usuários
+- Perfis de Acesso
 
----
+## Sprint 3
 
-## Próximos Passos
-
-- Modelagem do banco de dados
-- Migrações Flyway
-- Entidades Java
-- APIs REST
 - CRUD de Solicitações
 - Upload de documentos
+- Memorial Descritivo
+
+## Sprint 4
+
+- Fluxo de Avaliação
+- Pareceres
+- Resultado Final
+
+## Sprint 5
+
 - Dashboard
-- Autenticação completa
+- Relatórios
+- Indicadores
 
 ---
-## Histórico de Versões
+
+# Como Executar
+
+## Pré-requisitos
+
+- Java 25 LTS
+- Docker Desktop
+- Node.js
+- Angular CLI
+- Maven
+
+---
+
+## Banco de Dados
+
+```bash
+docker compose up -d
+```
+
+---
+
+## Backend
+
+```bash
+cd backend
+./mvnw spring-boot:run
+```
+
+Health Check:
+
+```
+GET http://localhost:8080/api/health
+```
+
+---
+
+## Frontend
+
+```bash
+cd frontend
+
+npm install
+
+npm start
+```
+
+Aplicação:
+
+```
+http://localhost:4200
+```
+
+---
+
+# Documentação
+
+A documentação técnica encontra-se na pasta **docs/**.
+
+Principais documentos:
+
+- Projeto.md
+- Arquitetura.md
+- ModeloDeDados.md
+- API.md
+- Roadmap.md
+- DecisoesArquiteturais.md
+- Deploy.md
+
+---
+
+# Status do Projeto
+
+🚧 Em desenvolvimento
+
+Atualmente o projeto encontra-se na implementação da infraestrutura de autenticação utilizando **Keycloak**, preparando a base para controle de usuários, perfis de acesso e autorização baseada em papéis (RBAC).
+
+---
+
+# Histórico de Versões
 
 | Versão | Descrição |
 |---------|-----------|
 | v0.1.0 | Estrutura inicial do projeto |
-| v0.2.0 | Arquitetura Feature-First e Modelo de Domínio |
+| v0.2.0 | Arquitetura Feature-First e modelo inicial |
+| v0.3.0 | PostgreSQL, Docker, Flyway, auditoria e CRUD inicial de Servidor |
 
-## Licença
+---
 
-MIT
+# Licença
+
+Este projeto está licenciado sob a licença **MIT**.
