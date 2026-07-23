@@ -1,1 +1,19 @@
-<p>sidebar works!</p>
+<nav class="sidebar" aria-label="Menu principal">
+  <div class="titulo-menu">
+    <span>Menu principal</span>
+  </div>
+
+  <mat-nav-list>
+    @for (item of menuItems; track item.route) {
+      <a
+        mat-list-item
+        [routerLink]="item.route"
+        routerLinkActive="ativo"
+        [routerLinkActiveOptions]="{ exact: item.exact }">
+
+        <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+        <span matListItemTitle>{{ item.label }}</span>
+      </a>
+    }
+  </mat-nav-list>
+</nav>
