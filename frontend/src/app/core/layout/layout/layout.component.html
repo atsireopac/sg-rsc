@@ -1,19 +1,24 @@
 <div class="layout">
+  <app-header (menuToggle)="alternarMenu()"></app-header>
 
-    <app-header></app-header>
+  <mat-sidenav-container class="container">
+    <mat-sidenav
+      #menuLateral
+      class="menu-lateral"
+      mode="side"
+      opened>
 
-    <div class="conteudo-principal">
+      <app-sidebar></app-sidebar>
+    </mat-sidenav>
 
-        <app-sidebar></app-sidebar>
+    <mat-sidenav-content class="conteudo-geral">
+      <main class="conteudo">
+        <router-outlet></router-outlet>
+      </main>
 
-        <main class="conteudo">
-            <router-outlet></router-outlet>
-        </main>
-
-    </div>
-
-    <footer class="rodape">
-        SG-RSC
-    </footer>
-
+      <footer class="rodape">
+        © 2026 SG-RSC
+      </footer>
+    </mat-sidenav-content>
+  </mat-sidenav-container>
 </div>

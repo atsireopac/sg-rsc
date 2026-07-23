@@ -1,13 +1,29 @@
-<header class="header">
+<mat-toolbar color="primary" class="header">
+  <button
+    mat-icon-button
+    type="button"
+    aria-label="Abrir ou fechar menu lateral"
+    (click)="alternarMenu()">
+
+    <mat-icon>menu</mat-icon>
+  </button>
+
   <div class="sistema">
     <strong>SG-RSC</strong>
     <span>Sistema de Gestão do RSC</span>
   </div>
 
+  <span class="espacador"></span>
+
   <div class="usuario">
     <span>Erik Barbosa</span>
-    <button type="button" aria-label="Abrir menu do usuário">
-      ▼
+
+    <button
+      mat-icon-button
+      type="button"
+      aria-label="Abrir menu do usuário">
+
+      <mat-icon>account_circle</mat-icon>
     </button>
   </div>
-</header>
+</mat-toolbar>

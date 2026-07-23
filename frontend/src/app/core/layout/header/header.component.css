@@ -1,18 +1,13 @@
 .header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  min-height: 64px;
-  padding: 0 32px;
-  border-bottom: 1px solid #dddddd;
-  background: #ffffff;
+  position: relative;
+  z-index: 2;
 }
 
-.sistema,
-.usuario {
+.sistema {
   display: flex;
   align-items: center;
   gap: 12px;
+  margin-left: 8px;
 }
 
 .sistema strong {
@@ -23,23 +18,24 @@
   font-size: 14px;
 }
 
-.usuario span {
-  font-weight: 600;
+.espacador {
+  flex: 1;
 }
 
-.usuario button {
-  padding: 6px;
-  border: 0;
-  background: transparent;
-  cursor: pointer;
+.usuario {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.usuario span {
+  font-size: 14px;
+  font-weight: 500;
 }
 
 @media (max-width: 600px) {
-  .header {
-    padding: 0 20px;
-  }
-
-  .sistema span {
+  .sistema span,
+  .usuario span {
     display: none;
   }
 }
