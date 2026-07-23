@@ -1,0 +1,40 @@
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
+.layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: #f5f6f8;
+}
+
+.topo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 64px;
+  padding: 0 32px;
+  border-bottom: 1px solid #dddddd;
+  background: #ffffff;
+}
+
+.topo strong {
+  font-size: 20px;
+}
+
+.topo span {
+  font-size: 14px;
+}
+
+.conteudo {
+  flex: 1;
+}
+
+.rodape {
+  padding: 16px 32px;
+  border-top: 1px solid #dddddd;
+  background: #ffffff;
+  font-size: 13px;
+}

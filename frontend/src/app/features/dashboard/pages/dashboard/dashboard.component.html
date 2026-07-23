@@ -1,0 +1,82 @@
+<section class="dashboard">
+
+  <div *ngIf="carregando" class="mensagem">
+    Carregando dados do usuário...
+  </div>
+
+  <div *ngIf="mensagemErro" class="mensagem erro">
+    {{ mensagemErro }}
+  </div>
+
+  <ng-container *ngIf="usuario && !carregando">
+
+    <header class="cabecalho-dashboard">
+      <div>
+        <p class="subtitulo">Sistema de Gestão do RSC</p>
+        <h1>Olá, {{ usuario.nome }}</h1>
+        <p>Bem-vindo ao painel principal do SG-RSC.</p>
+      </div>
+
+      <div class="perfil">
+        <span>Usuário</span>
+        <strong>{{ usuario.username }}</strong>
+      </div>
+    </header>
+
+    <section class="cards">
+
+      <article class="card">
+        <span>Solicitações em andamento</span>
+        <strong>0</strong>
+        <p>Processos ainda não concluídos</p>
+      </article>
+
+      <article class="card">
+        <span>Pendentes de análise</span>
+        <strong>0</strong>
+        <p>Solicitações aguardando avaliação</p>
+      </article>
+
+      <article class="card">
+        <span>Solicitações aprovadas</span>
+        <strong>0</strong>
+        <p>Processos finalizados com aprovação</p>
+      </article>
+
+      <article class="card">
+        <span>Solicitações devolvidas</span>
+        <strong>0</strong>
+        <p>Processos que precisam de ajustes</p>
+      </article>
+
+    </section>
+
+    <section class="informacoes">
+      <h2>Informações do usuário</h2>
+
+      <div class="dados-usuario">
+        <p>
+          <span>Nome</span>
+          <strong>{{ usuario.nome }}</strong>
+        </p>
+
+        <p>
+          <span>E-mail</span>
+          <strong>{{ usuario.email }}</strong>
+        </p>
+
+        <p>
+          <span>Perfis</span>
+          <strong>{{ usuario.roles.join(', ') }}</strong>
+        </p>
+      </div>
+    </section>
+
+    <section *ngIf="possuiRole('ADMIN')" class="administracao">
+      <h2>Área administrativa</h2>
+      <p>Você possui permissão de administrador do sistema.</p>
+    </section>
+
+  </ng-container>
+
+</section>
