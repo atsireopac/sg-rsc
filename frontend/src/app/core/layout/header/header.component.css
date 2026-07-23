@@ -1,0 +1,45 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 64px;
+  padding: 0 32px;
+  border-bottom: 1px solid #dddddd;
+  background: #ffffff;
+}
+
+.sistema,
+.usuario {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sistema strong {
+  font-size: 20px;
+}
+
+.sistema span {
+  font-size: 14px;
+}
+
+.usuario span {
+  font-weight: 600;
+}
+
+.usuario button {
+  padding: 6px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+@media (max-width: 600px) {
+  .header {
+    padding: 0 20px;
+  }
+
+  .sistema span {
+    display: none;
+  }
+}

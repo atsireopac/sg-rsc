@@ -1,14 +1,19 @@
 <div class="layout">
-  <header class="topo">
-    <strong>SG-RSC</strong>
-    <span>Sistema de Gestão do RSC</span>
-  </header>
 
-  <main class="conteudo">
-    <router-outlet></router-outlet>
-  </main>
+    <app-header></app-header>
 
-  <footer class="rodape">
-    SG-RSC
-  </footer>
+    <div class="conteudo-principal">
+
+        <app-sidebar></app-sidebar>
+
+        <main class="conteudo">
+            <router-outlet></router-outlet>
+        </main>
+
+    </div>
+
+    <footer class="rodape">
+        SG-RSC
+    </footer>
+
 </div>
