@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
-import { HealthService } from './health.service';
+import { UsuarioService, Usuario } from './usuario.service';
 
 @Component({
   selector: 'app-root',
@@ -15,18 +15,19 @@ export class AppComponent implements OnInit {
   message = 'Carregando status do backend...';
   isError = false;
 
-  constructor(private readonly healthService: HealthService) {}
+  constructor(private readonly usuarioService: UsuarioService) {}
 
   ngOnInit(): void {
-    this.healthService.getHealth().subscribe({
-      next: (response) => {
-        this.message = response;
-        this.isError = false;
-      },
-      error: () => {
-        this.message = 'Não foi possível conectar ao backend.';
-        this.isError = true;
-      }
-    });
-  }
+  this.usuarioService.me().subscribe({
+    next: (usuario: Usuario) => {
+      this.message = `Bem-vindo ${usuario.nome} (${usuario.roles.join(', ')})`;
+      this.isError = false;
+    },
+    error: (erro) => {
+      console.error(erro);
+      this.message = 'Falha ao obter usuário autenticado.';
+      this.isError = true;
+    }
+  });
+}
 }
