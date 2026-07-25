@@ -11,4 +11,6 @@ public interface StatusSolicitacaoRepository extends JpaRepository<StatusSolicit
     List<StatusSolicitacao> findByDeletedAtIsNull();
 
     Optional<StatusSolicitacao> findByIdAndDeletedAtIsNull(Long id);
+
+    Optional<StatusSolicitacao> findByCodigoAndDeletedAtIsNull(String codigo);
 }

@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 @Table(name = "solicitacao")
 public class Solicitacao extends BaseEntity {
 
-    @Column(name = "numero_protocolo", nullable = false, unique = true, length = 30)
+    @Column(name = "numero_protocolo", unique = true, length = 30)
     private String numeroProtocolo;
 
     @Column(name = "numero_processo", unique = true, length = 50)
@@ -43,7 +43,7 @@ public class Solicitacao extends BaseEntity {
     @Column(name = "data_solicitacao", nullable = false)
     private LocalDateTime dataSolicitacao;
 
-    @Column(name = "data_protocolo", nullable = false)
+    @Column(name = "data_protocolo")
     private LocalDateTime dataProtocolo;
 
     @Column(name = "data_encerramento")

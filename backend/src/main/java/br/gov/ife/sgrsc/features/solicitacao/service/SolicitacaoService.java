@@ -56,13 +56,16 @@ public class SolicitacaoService {
     public Solicitacao criar(SolicitacaoRequest request) {
         Servidor servidor = buscarServidor(request.getServidorId());
         NivelRsc nivelRsc = buscarNivelRsc(request.getNivelRscId());
-        StatusSolicitacao status = buscarStatusSolicitacao(
-                request.getStatusSolicitacaoId()
-        );
+
+        StatusSolicitacao status = statusSolicitacaoRepository
+                .findByCodigoAndDeletedAtIsNull("RASCUNHO")
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Status RASCUNHO não encontrado."
+                ));
 
         Solicitacao solicitacao = new Solicitacao();
 
-        solicitacao.setNumeroProtocolo(request.getNumeroProtocolo());
         solicitacao.setNumeroProcesso(request.getNumeroProcesso());
         solicitacao.setServidor(servidor);
         solicitacao.setNivelRsc(nivelRsc);
@@ -76,10 +79,7 @@ public class SolicitacaoService {
             solicitacao.setResultadoSolicitacao(resultado);
         }
 
-        LocalDateTime agora = LocalDateTime.now();
-
-        solicitacao.setDataSolicitacao(agora);
-        solicitacao.setDataProtocolo(agora);
+        solicitacao.setDataSolicitacao(LocalDateTime.now());
 
         return solicitacaoRepository.save(solicitacao);
     }
