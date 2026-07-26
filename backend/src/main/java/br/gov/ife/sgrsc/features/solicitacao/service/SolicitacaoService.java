@@ -54,6 +54,7 @@ public class SolicitacaoService {
     }
 
     public Solicitacao criar(SolicitacaoRequest request) {
+
         Servidor servidor = buscarServidor(request.getServidorId());
         NivelRsc nivelRsc = buscarNivelRsc(request.getNivelRscId());
 
@@ -70,44 +71,23 @@ public class SolicitacaoService {
         solicitacao.setServidor(servidor);
         solicitacao.setNivelRsc(nivelRsc);
         solicitacao.setStatusSolicitacao(status);
-
-        if (request.getResultadoSolicitacaoId() != null) {
-            ResultadoSolicitacao resultado = buscarResultadoSolicitacao(
-                    request.getResultadoSolicitacaoId()
-            );
-
-            solicitacao.setResultadoSolicitacao(resultado);
-        }
-
         solicitacao.setDataSolicitacao(LocalDateTime.now());
 
         return solicitacaoRepository.save(solicitacao);
     }
 
     public Solicitacao atualizar(Long id, SolicitacaoRequest request) {
+
         Solicitacao solicitacao = buscarPorId(id);
+
+        validarSolicitacaoEmRascunho(solicitacao);
 
         Servidor servidor = buscarServidor(request.getServidorId());
         NivelRsc nivelRsc = buscarNivelRsc(request.getNivelRscId());
-        StatusSolicitacao status = buscarStatusSolicitacao(
-                request.getStatusSolicitacaoId()
-        );
 
-        solicitacao.setNumeroProtocolo(request.getNumeroProtocolo());
         solicitacao.setNumeroProcesso(request.getNumeroProcesso());
         solicitacao.setServidor(servidor);
         solicitacao.setNivelRsc(nivelRsc);
-        solicitacao.setStatusSolicitacao(status);
-
-        if (request.getResultadoSolicitacaoId() != null) {
-            ResultadoSolicitacao resultado = buscarResultadoSolicitacao(
-                    request.getResultadoSolicitacaoId()
-            );
-
-            solicitacao.setResultadoSolicitacao(resultado);
-        } else {
-            solicitacao.setResultadoSolicitacao(null);
-        }
 
         return solicitacaoRepository.save(solicitacao);
     }
@@ -118,7 +98,22 @@ public class SolicitacaoService {
         solicitacaoRepository.save(solicitacao);
     }
 
+    private void validarSolicitacaoEmRascunho(Solicitacao solicitacao) {
+
+        String codigo = solicitacao
+                .getStatusSolicitacao()
+                .getCodigo();
+
+        if (!"RASCUNHO".equals(codigo)) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Somente solicitações em rascunho podem ser editadas."
+            );
+        }
+    }
+
     private Servidor buscarServidor(Long id) {
+
         if (id == null) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
@@ -134,6 +129,7 @@ public class SolicitacaoService {
     }
 
     private NivelRsc buscarNivelRsc(Long id) {
+
         if (id == null) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
@@ -149,6 +145,7 @@ public class SolicitacaoService {
     }
 
     private StatusSolicitacao buscarStatusSolicitacao(Long id) {
+
         if (id == null) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
@@ -164,6 +161,7 @@ public class SolicitacaoService {
     }
 
     private ResultadoSolicitacao buscarResultadoSolicitacao(Long id) {
+
         return resultadoSolicitacaoRepository.findByIdAndDeletedAtIsNull(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
