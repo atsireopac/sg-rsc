@@ -1,6 +1,7 @@
 package br.gov.ife.sgrsc.features.documento.service;
 
 import br.gov.ife.sgrsc.features.documento.domain.Documento;
+import br.gov.ife.sgrsc.features.documento.dto.DocumentoDownload;
 import br.gov.ife.sgrsc.features.documento.dto.DocumentoResponse;
 import br.gov.ife.sgrsc.features.documento.dto.DocumentoUploadRequest;
 import br.gov.ife.sgrsc.features.documento.mapper.DocumentoMapper;
@@ -9,6 +10,7 @@ import br.gov.ife.sgrsc.features.solicitacao.repository.SolicitacaoRepository;
 import br.gov.ife.sgrsc.features.tipodocumento.repository.TipoDocumentoRepository;
 import br.gov.ife.sgrsc.shared.storage.FileStorageService;
 import br.gov.ife.sgrsc.shared.util.HashUtils;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -105,6 +107,20 @@ public class DocumentoService {
         Documento documentoSalvo = documentoRepository.save(documento);
 
         return DocumentoMapper.toResponse(documentoSalvo);
+    }
+
+    public DocumentoDownload download(Long id) {
+        Documento documento = buscarPorId(id);
+
+        Resource arquivo = fileStorageService.recuperar(
+                documento.getNomeArmazenado()
+        );
+
+        return new DocumentoDownload(
+                arquivo,
+                documento.getNomeOriginal(),
+                documento.getMimeType()
+        );
     }
 
     public void excluir(Long id) {

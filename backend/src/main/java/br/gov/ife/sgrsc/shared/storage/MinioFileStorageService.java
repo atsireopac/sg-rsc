@@ -1,10 +1,13 @@
 package br.gov.ife.sgrsc.shared.storage;
 
 import io.minio.BucketExistsArgs;
+import io.minio.GetObjectArgs;
 import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -50,6 +53,25 @@ public class MinioFileStorageService implements FileStorageService {
         } catch (Exception exception) {
             throw new IllegalStateException(
                     "Não foi possível armazenar o arquivo no MinIO.",
+                    exception
+            );
+        }
+    }
+
+    @Override
+    public Resource recuperar(String nomeArmazenado) {
+        try {
+            return new InputStreamResource(
+                    minioClient.getObject(
+                            GetObjectArgs.builder()
+                                    .bucket(bucket)
+                                    .object(nomeArmazenado)
+                                    .build()
+                    )
+            );
+        } catch (Exception exception) {
+            throw new IllegalStateException(
+                    "Não foi possível recuperar o arquivo do MinIO.",
                     exception
             );
         }
