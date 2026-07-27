@@ -19,11 +19,26 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.GET, "/api/health").permitAll()
+
                         .requestMatchers(
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**"
                         ).permitAll()
+
+                        .requestMatchers(
+                                "/api/solicitacoes",
+                                "/api/solicitacoes/**",
+                                "/api/servidores",
+                                "/api/servidores/**",
+                                "/api/niveis-rsc",
+                                "/api/niveis-rsc/**",
+                                "/api/tipos-documento",
+                                "/api/tipos-documento/**",
+                                "/api/documentos",
+                                "/api/documentos/**"
+                        ).permitAll()
+
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 ->

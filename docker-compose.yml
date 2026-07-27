@@ -56,10 +56,26 @@ services:
     restart: unless-stopped
     networks:
       - sg-rsc-network
-
+  minio:
+    image: minio/minio:latest
+    container_name: sg-rsc-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: sgrsc
+      MINIO_ROOT_PASSWORD: sgrsc123
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    restart: unless-stopped
+    networks:
+      - sg-rsc-network
+      
 volumes:
   postgres_data:
   keycloak_postgres_data:
+  minio_data:
 
 networks:
   sg-rsc-network:

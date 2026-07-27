@@ -2,9 +2,18 @@ package br.gov.ife.sgrsc.features.solicitacao.controller;
 
 import br.gov.ife.sgrsc.features.solicitacao.domain.Solicitacao;
 import br.gov.ife.sgrsc.features.solicitacao.dto.SolicitacaoRequest;
+import br.gov.ife.sgrsc.features.solicitacao.dto.SolicitacaoResponse;
 import br.gov.ife.sgrsc.features.solicitacao.service.SolicitacaoService;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
@@ -19,7 +28,7 @@ public class SolicitacaoController {
     }
 
     @GetMapping
-    public List<Solicitacao> listarTodos() {
+    public List<SolicitacaoResponse> listarTodos() {
         return solicitacaoService.listarTodos();
     }
 

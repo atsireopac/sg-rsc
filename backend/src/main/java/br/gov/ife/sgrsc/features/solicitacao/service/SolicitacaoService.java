@@ -8,6 +8,8 @@ import br.gov.ife.sgrsc.features.servidor.domain.Servidor;
 import br.gov.ife.sgrsc.features.servidor.repository.ServidorRepository;
 import br.gov.ife.sgrsc.features.solicitacao.domain.Solicitacao;
 import br.gov.ife.sgrsc.features.solicitacao.dto.SolicitacaoRequest;
+import br.gov.ife.sgrsc.features.solicitacao.dto.SolicitacaoResponse;
+import br.gov.ife.sgrsc.features.solicitacao.mapper.SolicitacaoMapper;
 import br.gov.ife.sgrsc.features.solicitacao.repository.SolicitacaoRepository;
 import br.gov.ife.sgrsc.features.statussolicitacao.domain.StatusSolicitacao;
 import br.gov.ife.sgrsc.features.statussolicitacao.repository.StatusSolicitacaoRepository;
@@ -17,6 +19,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class SolicitacaoService {
@@ -41,8 +44,12 @@ public class SolicitacaoService {
         this.resultadoSolicitacaoRepository = resultadoSolicitacaoRepository;
     }
 
-    public List<Solicitacao> listarTodos() {
-        return solicitacaoRepository.findByDeletedAtIsNull();
+    public List<SolicitacaoResponse> listarTodos() {
+
+        return solicitacaoRepository.findByDeletedAtIsNull()
+                .stream()
+                .map(SolicitacaoMapper::toResponse)
+                .collect(Collectors.toList());
     }
 
     public Solicitacao buscarPorId(Long id) {
@@ -93,8 +100,10 @@ public class SolicitacaoService {
     }
 
     public void excluir(Long id) {
+
         Solicitacao solicitacao = buscarPorId(id);
         solicitacao.marcarComoExcluido();
+
         solicitacaoRepository.save(solicitacao);
     }
 
