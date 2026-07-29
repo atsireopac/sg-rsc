@@ -4,11 +4,14 @@
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.5-success)
 ![Angular](https://img.shields.io/badge/Angular-17-red)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue)
+![MinIO](https://img.shields.io/badge/MinIO-Object_Storage-C72E49)
 ![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED)
 ![Status](https://img.shields.io/badge/Status-Em_Desenvolvimento-orange)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
 Sistema de Gestão do Reconhecimento de Saberes e Competências (RSC-PCCTAE)
+
+> Sistema web desenvolvido em Java e Angular para gerenciamento do processo de Reconhecimento de Saberes e Competências (RSC), com autenticação via Keycloak, armazenamento de documentos no MinIO e arquitetura Feature-First.
 
 ---
 
@@ -19,6 +22,22 @@ O **SG-RSC** é uma aplicação web desenvolvida para informatizar todo o proces
 O projeto está sendo desenvolvido de forma incremental, utilizando uma arquitetura **Feature-First**, com foco em organização por funcionalidades, baixo acoplamento, código limpo e facilidade de manutenção. À medida que evoluir, incorporará princípios de **Domain-Driven Design (DDD)** sempre que agregarem valor à modelagem do domínio.
 
 ---
+
+## Índice
+
+- Sobre o Projeto
+- Objetivos
+- Tecnologias
+- Arquitetura
+- Estrutura do Projeto
+- Funcionalidades Implementadas
+- Roadmap
+- Como Executar
+- API REST
+- Documentação
+- Status do Projeto
+- Histórico de Versões
+- Licença
 
 # Objetivos
 
@@ -43,6 +62,7 @@ O projeto está sendo desenvolvido de forma incremental, utilizando uma arquitet
 - Spring Data JPA
 - Maven
 - Flyway
+- OpenAPI (Swagger)
 
 ## Frontend
 
@@ -59,10 +79,12 @@ O projeto está sendo desenvolvido de forma incremental, utilizando uma arquitet
 
 - Docker
 - Docker Compose
+- PostgreSQL 16
+- MinIO (Object Storage)
 - Git
 - GitHub
 
-## Autenticação (Próxima Sprint)
+## Autenticação
 
 - Keycloak
 - OAuth2
@@ -76,16 +98,20 @@ O projeto está sendo desenvolvido de forma incremental, utilizando uma arquitet
 O sistema será composto pela seguinte arquitetura:
 
 ```text
-                Angular 17
-                     │
-                     ▼
-                Keycloak
-                     │
-                     ▼
-             Spring Boot API
-                     │
-                     ▼
-              PostgreSQL 16
+                         Angular 17
+                              │
+                              ▼
+                         Keycloak
+                    (OAuth2 / OIDC)
+                              │
+                         JWT Token
+                              │
+                              ▼
+                    Spring Boot 3.5 API
+                     /                 \
+                    ▼                   ▼
+           PostgreSQL 16            MinIO
+      (Metadados do Sistema)   (Documentos)
 ```
 
 O backend utiliza uma organização **Feature-First**, separando controllers, services, repositories, DTOs e entidades por funcionalidade.
@@ -95,16 +121,21 @@ Exemplo:
 ```text
 backend/
 
+config/
 features/
+security/
+shared/
+
+features/
+    documento/
     health/
     servidor/
-    solicitacao/
     situacaofuncional/
+    solicitacao/
     resultadosolicitacao/
 
-config/
 shared/
-security/
+    storage/
 ```
 
 ---
@@ -126,23 +157,32 @@ scripts/
 
 ## Infraestrutura
 
-- Estrutura inicial do projeto
-- Backend Spring Boot
-- Frontend Angular
-- PostgreSQL em Docker
-- Docker Compose
-- Migrações com Flyway
-- Health Check
-- Configuração de CORS
+## Módulo de Servidores
+
+- CRUD de Servidor
+- CRUD de Situação Funcional
+
+## Módulo de Solicitações
+
+- CRUD de Solicitações
+
+## Módulo de Documentos
+
+- Cadastro de Tipos de Documento
+- Upload de documentos
+- Download de documentos
+- Exclusão lógica
+- Persistência de metadados
+- Armazenamento físico no MinIO
+
+## Infraestrutura
+
+- PostgreSQL
+- Flyway
 - Spring Security
-- Auditoria das entidades
-
-## Backend
-
-- CRUD inicial de Servidor
-- Cadastro de Situação Funcional
-- Relacionamentos JPA
-- Persistência com Spring Data JPA
+- OpenAPI
+- Docker Compose
+- Health Check
 
 ---
 
@@ -161,7 +201,7 @@ scripts/
 - Situação Funcional
 - Auditoria das entidades
 
-## Sprint 2 🚧
+## Sprint 2 ✅
 
 - Integração com Keycloak
 - OAuth2 / OpenID Connect
@@ -169,23 +209,34 @@ scripts/
 - Cadastro de Usuários
 - Perfis de Acesso
 
-## Sprint 3
+## Sprint 3 ✅
 
 - CRUD de Solicitações
 - Upload de documentos
-- Memorial Descritivo
+- Download de documentos
+- MinIO
+- Swagger
 
 ## Sprint 4
 
-- Fluxo de Avaliação
-- Pareceres
-- Resultado Final
+- Critérios
+- Memorial
+- Associação Documento × Critério
+- Fluxo de Protocolo
 
 ## Sprint 5
+
+- Fluxo da Comissão
+- Pareceres
+- Pontuação
+- Recursos
+
+## Sprint 6
 
 - Dashboard
 - Relatórios
 - Indicadores
+- Auditoria
 
 ---
 
@@ -206,8 +257,14 @@ scripts/
 ```bash
 docker compose up -d
 ```
+Após a execução do comando, serão iniciados os seguintes serviços:
 
+- PostgreSQL 16
+- Keycloak
+- MinIO
 ---
+
+
 
 ## Backend
 
@@ -242,6 +299,32 @@ http://localhost:4200
 
 ---
 
+# API REST
+
+A documentação interativa é gerada automaticamente pelo OpenAPI (Swagger), permitindo visualizar e testar todos os endpoints disponíveis.
+
+```
+http://localhost:8080/swagger-ui.html
+```
+
+### MinIO Console
+
+```
+http://localhost:9001
+```
+
+Usuário:
+
+```
+sgrsc
+```
+
+Senha:
+
+```
+********
+```
+
 # Documentação
 
 A documentação técnica encontra-se na pasta **docs/**.
@@ -258,13 +341,24 @@ Principais documentos:
 
 ---
 
-# Status do Projeto
+## Status Atual
 
-🚧 Em desenvolvimento
+Atualmente o SG-RSC possui sua infraestrutura principal concluída, incluindo autenticação baseada em Keycloak, persistência com PostgreSQL, versionamento de banco com Flyway, documentação da API com OpenAPI (Swagger) e armazenamento de documentos utilizando MinIO.
 
-Atualmente o projeto encontra-se na implementação da infraestrutura de autenticação utilizando **Keycloak**, preparando a base para controle de usuários, perfis de acesso e autorização baseada em papéis (RBAC).
+O desenvolvimento segue de forma incremental, com foco na implementação dos módulos de negócio previstos para o processo de Reconhecimento de Saberes e Competências (RSC-PCCTAE).
 
 ---
+
+# Próximas Implementações
+
+- Associação de documentos aos critérios de avaliação
+- Memorial descritivo
+- Motor de cálculo da pontuação
+- Fluxo de análise da comissão
+- Emissão de pareceres
+- Recursos administrativos
+- Dashboard gerencial
+- Relatórios
 
 # Histórico de Versões
 
@@ -273,6 +367,7 @@ Atualmente o projeto encontra-se na implementação da infraestrutura de autenti
 | v0.1.0 | Estrutura inicial do projeto |
 | v0.2.0 | Arquitetura Feature-First e modelo inicial |
 | v0.3.0 | PostgreSQL, Docker, Flyway, auditoria e CRUD inicial de Servidor |
+| v0.4.0 | Integração com MinIO, módulo de documentos, upload, download e documentação da arquitetura |
 
 ---
 
