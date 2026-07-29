@@ -2,11 +2,11 @@
 
 # Controle de Versões
 
-| Versão  | Data           | Autor            | Alterações                                                                                                                                          |
-| ------- | -------------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1.0     | 03/07/2026     | Erik Barbosa     | Criação do documento                                                                                                                                |
-| **1.1** | **20/07/2026** | **Erik Barbosa** | **Atualização da arquitetura, definição do Keycloak como provedor de identidade, atualização do roadmap e adequação da arquitetura Feature-First.** |
-
+| Versão  | Data           | Autor            | Alterações                                                                                                                                                                                                                      |
+| ------- | -------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1.0     | 03/07/2026     | Erik Barbosa     | Criação do documento.                                                                                                                                                                                                           |
+| **1.1** | **20/07/2026** | **Erik Barbosa** | **Atualização da arquitetura, definição do Keycloak como provedor de identidade, atualização do roadmap e adequação da arquitetura Feature-First.**                                                                           |
+| **1.2** | **29/07/2026** | **Erik Barbosa** | **Implementação do módulo de documentos, integração com MinIO para armazenamento de arquivos, inclusão dos fluxos de upload e download, atualização da arquitetura da solução e documentação da estratégia de armazenamento.** |
 
 
 # Glossário
@@ -101,13 +101,13 @@ O SG-RSC será desenvolvido utilizando arquitetura em camadas, separando clarame
 A solução será composta por:
 
 - Front-end Angular 17;
-- Keycloak (indetity Provider)
+- Keycloak como Identity Provider;
 - API REST em Spring Boot 3.5;
-- Banco PostgreSQL 16;
-- Serviço de armazenamento de documentos;
+- Banco de dados PostgreSQL 16;
+- MinIO como serviço de armazenamento de documentos;
 - Serviço de geração de relatórios.
 
-Essa separação permitirá evolução independente dos componentes.
+Essa separação permite que cada componente evolua de forma independente, favorecendo a escalabilidade, a manutenibilidade e a reutilização da solução.
 
 # Decisões Arquiteturais
 
@@ -117,6 +117,8 @@ Este projeto adotará:
 - Spring Boot 3;
 - Angular 17;
 - PostgreSQL;
+- MinIO;
+- SDK Java do MinIO;
 - Maven;
 - Git;
 - Docker;
@@ -781,21 +783,45 @@ RN100
 
 ### Objetivo
 
-Enviar documentação comprobatória.
+Permitir que o servidor envie documentos comprobatórios para uma solicitação de RSC.
 
-### Fluxo
+### Ator
 
-Selecionar categoria.
+Servidor.
 
-Selecionar arquivo.
+### Pré-condições
 
-Enviar.
+- O usuário deve estar autenticado.
+- A solicitação deve existir.
+- O tipo de documento deve estar cadastrado.
 
-Sistema valida formato.
+### Fluxo Principal
 
-Sistema registra auditoria.
+1. O servidor seleciona a solicitação.
+2. O servidor informa o tipo de documento.
+3. O servidor seleciona o arquivo.
+4. O sistema valida os dados informados.
+5. O arquivo é armazenado no MinIO.
+6. Os metadados do documento são persistidos no PostgreSQL.
+7. O documento é associado à solicitação.
+8. O sistema disponibiliza o documento para consulta e download.
 
----
+### Fluxos Alternativos
+
+- Arquivo inválido.
+- Solicitação inexistente.
+- Tipo de documento inexistente.
+- Falha na comunicação com o serviço de armazenamento.
+
+### Pós-condições
+
+- O documento permanece armazenado no MinIO.
+- Os metadados permanecem registrados no PostgreSQL.
+- O documento pode ser listado, baixado ou removido logicamente.
+
+### Regras de Negócio
+
+RN102 – Documentação.
 
 ## UC004 – Gerar Memorial
 
@@ -2099,35 +2125,104 @@ A solução será composta pelos seguintes componentes:
 - Docker
 
 ---
+# 7.5 Armazenamento de Documentos
 
-# 7.5 Organização do Backend
+O SG-RSC adota uma estratégia de armazenamento híbrido para os documentos enviados pelos usuários.
 
-```
+Os arquivos físicos são armazenados no **MinIO**, um serviço de Object Storage compatível com a API Amazon S3, enquanto os metadados permanecem armazenados no banco de dados PostgreSQL.
 
-```
+Essa abordagem evita o armazenamento de arquivos binários diretamente no banco de dados relacional, reduzindo seu crescimento e melhorando o desempenho das consultas.
+
+Os metadados registrados no PostgreSQL incluem informações necessárias para localização, auditoria e gerenciamento dos documentos, tais como:
+
+- nome original do arquivo;
+- nome do arquivo armazenado;
+- tipo MIME;
+- tamanho do arquivo;
+- data de envio;
+- solicitação vinculada;
+- tipo de documento.
+
+O armazenamento físico e os metadados são utilizados de forma complementar, permitindo que o sistema localize e disponibilize os arquivos de forma transparente aos usuários.
+
+Servidor
+
+↓
+
+Upload do Documento
+
+↓
+
+DocumentoController
+
+↓
+
+DocumentoService
+
+↓
+
+MinioFileStorageService
+
+├── Armazena o arquivo no MinIO
+
+└── Persiste os metadados no PostgreSQL
+
+↓
+
+Documento disponível para consulta e download
+
+# 7.6 API REST – Módulo de Documentos
+
+O módulo de documentos disponibiliza endpoints REST para upload, consulta, download e exclusão lógica dos documentos vinculados às solicitações.
+
+Os endpoints seguem os princípios REST e utilizam autenticação baseada em OAuth2/OpenID Connect, com validação de tokens JWT realizada pelo Spring Security.
+
+| Método | Endpoint | Descrição |
+|---------|----------|-----------|
+| **POST** | `/api/documentos` | Realiza o upload de um documento e registra seus metadados no PostgreSQL. |
+| **GET** | `/api/documentos/solicitacao/{id}` | Lista os documentos vinculados a uma solicitação. |
+| **GET** | `/api/documentos/{id}/download` | Realiza o download do arquivo armazenado no MinIO. |
+| **DELETE** | `/api/documentos/{id}` | Realiza a exclusão lógica do documento. |
+
+### Observações
+
+- O upload de documentos utiliza requisições `multipart/form-data`.
+- Os arquivos são armazenados fisicamente no MinIO.
+- Os metadados dos documentos são persistidos no PostgreSQL.
+- A autenticação e autorização são realizadas por meio de tokens JWT emitidos pelo Keycloak.
+- A documentação interativa da API está disponível por meio do OpenAPI (Swagger).
+
+# 7.7 Organização do Backend
+
+```text
 src/main/java
-
-br.gov.ife.sgrsc
-
-backend/
-
-config/
-
-features/
-    health/
-    servidor/
-    situacaofuncional/
-    solicitacao/
-    resultadosolicitacao/
-
-security/
-
-shared/
+└── br.gov.ife.sgrsc
+    ├── config
+    │   └── MinioConfig
+    │
+    ├── features
+    │   ├── documento
+    │   │   ├── controller
+    │   │   ├── dto
+    │   │   ├── entity
+    │   │   ├── repository
+    │   │   └── service
+    │   ├── health
+    │   ├── servidor
+    │   ├── situacaofuncional
+    │   ├── solicitacao
+    │   └── resultadosolicitacao
+    │
+    ├── security
+    │
+    └── shared
+        └── storage
+            ├── FileStorageService
+            └── MinioFileStorageService
 ```
+O backend do SG-RSC adota a arquitetura Feature-First, organizando o código por funcionalidades de negócio. Cada módulo concentra seus próprios componentes (controllers, services, repositories, DTOs e entidades), reduzindo o acoplamento entre funcionalidades e facilitando a manutenção. Componentes compartilhados, como configurações e serviços de infraestrutura, permanecem centralizados nos pacotes config e shared.
 
----
-
-# 7.6 Organização do Front-end
+# 7.8 Organização do Front-end
 
 ```
 
@@ -2165,7 +2260,7 @@ configuracoes
 
 ---
 
-# 7.7 Padrões Arquiteturais
+# 7.9 Padrões Arquiteturais
 
 O desenvolvimento seguirá os seguintes padrões:
 
@@ -2182,7 +2277,7 @@ O desenvolvimento seguirá os seguintes padrões:
 
 ---
 
-# 7.8 Segurança
+# 7.10 Segurança
 
 O SG-RSC utilizará o Keycloak como provedor de identidade e autenticação.
 
@@ -2198,7 +2293,7 @@ As permissões serão controladas por perfis de acesso.
 
 ---
 
-# 7.9 Perfis
+# 7.11 Perfis
 
 O sistema possuirá inicialmente os seguintes perfis:
 
@@ -2212,7 +2307,7 @@ Os perfis serão gerenciados centralizadamente pelo Keycloak e sincronizados com
 
 ---
 
-# 7.10 Auditoria
+# 7.12 Auditoria
 
 Todas as operações críticas deverão ser registradas.
 
@@ -2227,7 +2322,7 @@ Exemplos:
 
 ---
 
-# 7.11 Escalabilidade
+# 7.13 Escalabilidade
 
 A arquitetura foi concebida para permitir futuras integrações com:
 
@@ -2241,7 +2336,7 @@ A utilização do Keycloak permitirá futura integração com Active Directory (
 
 ---
 
-# 7.12 Princípios Arquiteturais
+# 7.14 Princípios Arquiteturais
 
 Durante todo o desenvolvimento serão observados os seguintes princípios:
 
@@ -2258,7 +2353,7 @@ Durante todo o desenvolvimento serão observados os seguintes princípios:
 
 ---
 
-# 7.13 Considerações Finais
+# 7.15 Considerações Finais
 
 A arquitetura apresentada neste capítulo estabelece a base técnica para o desenvolvimento do SG-RSC.
 
@@ -2532,6 +2627,45 @@ Utilizar Docker para containerização dos serviços e Docker Compose para orque
 - Consumo adicional de recursos da máquina.
 
 ---
+
+# 8.11 ADR-009 – Utilização do MinIO para Armazenamento de Documentos
+
+## Status
+
+Aceita.
+
+## Contexto
+
+O SG-RSC necessita armazenar documentos enviados pelos usuários durante o processo de solicitação do Reconhecimento de Saberes e Competências (RSC-PCCTAE).
+
+O armazenamento desses arquivos diretamente no banco de dados relacional aumentaria seu volume, impactaria o desempenho das consultas e dificultaria a escalabilidade da aplicação.
+
+Além disso, a solução deve permitir futura migração para ambientes em nuvem e manter compatibilidade com tecnologias amplamente adotadas pelo mercado.
+
+## Decisão
+
+Adotar o **MinIO** como serviço de armazenamento de objetos (Object Storage), compatível com a API Amazon S3.
+
+Os arquivos enviados pelos usuários serão armazenados fisicamente no MinIO, enquanto seus metadados permanecerão persistidos no PostgreSQL.
+
+A comunicação entre a aplicação e o serviço de armazenamento será realizada por meio do SDK oficial Java do MinIO.
+
+## Consequências
+
+### Benefícios
+
+- Separação entre dados relacionais e arquivos binários.
+- Redução do crescimento do banco de dados.
+- Melhor desempenho para armazenamento e recuperação de documentos.
+- Arquitetura compatível com a API Amazon S3.
+- Facilidade de substituição futura por outros provedores compatíveis.
+- Maior escalabilidade para armazenamento de documentos.
+
+### Desvantagens
+
+- Introdução de um novo serviço na infraestrutura da aplicação.
+- Necessidade de gerenciamento do serviço de armazenamento e dos buckets.
+- Dependência da disponibilidade do MinIO para operações de upload e download de documentos.
 
 # 8.10 Considerações Finais
 
