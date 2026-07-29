@@ -2,11 +2,12 @@
 
 # Controle de Versões
 
-| Versão  | Data           | Autor            | Alterações                                                                                                                                                                                                                      |
-| ------- | -------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1.0     | 03/07/2026     | Erik Barbosa     | Criação do documento.                                                                                                                                                                                                           |
-| **1.1** | **20/07/2026** | **Erik Barbosa** | **Atualização da arquitetura, definição do Keycloak como provedor de identidade, atualização do roadmap e adequação da arquitetura Feature-First.**                                                                           |
+| Versão | Data | Autor | Alterações |
+| ------- | ---- | ----- | ---------- |
+| 1.0 | 03/07/2026 | Erik Barbosa | Criação do documento. |
+| **1.1** | **20/07/2026** | **Erik Barbosa** | **Atualização da arquitetura, definição do Keycloak como provedor de identidade, atualização do roadmap e adequação da arquitetura Feature-First.** |
 | **1.2** | **29/07/2026** | **Erik Barbosa** | **Implementação do módulo de documentos, integração com MinIO para armazenamento de arquivos, inclusão dos fluxos de upload e download, atualização da arquitetura da solução e documentação da estratégia de armazenamento.** |
+| **1.3** | **29/07/2026** | **Erik Barbosa** | **Implementação do módulo Base Legal, CRUD completo de Legislação, Requisito e Critério, DTOs Request/Response, Mappers, Soft Delete, consolidação da arquitetura Feature-First e validação dos endpoints REST do backend.** |
 
 
 # Glossário
@@ -1197,9 +1198,13 @@ O sistema será composto, inicialmente, pelas seguintes entidades:
 
 • Memorial
 
-• Documento
+• Legislação
+
+• Requisito
 
 • Critério
+
+• Documento
 
 • Pontuação
 
@@ -1488,11 +1493,19 @@ Memorial
 
 ↓
 
-Documento
+Legislação
+
+↓
+
+Requisito
 
 ↓
 
 Critério
+
+↓
+
+Documento
 
 ↓
 
@@ -1580,8 +1593,10 @@ O banco será composto inicialmente pelas seguintes tabelas:
 - servidor
 - solicitacao
 - memorial
-- documento
+- legislacao
+- requisito
 - criterio
+- documento
 - documento_criterio
 - pontuacao
 - parecer
@@ -2005,6 +2020,30 @@ Exemplo de fundamentação:
 A modelagem da Base Legal permitirá que futuras alterações na legislação sejam realizadas por meio de parametrizações no sistema, reduzindo a necessidade de alterações no código-fonte e aumentando a vida útil da aplicação.
 
 Além disso, todas as avaliações realizadas pela Comissão deverão permanecer vinculadas à respectiva fundamentação legal, garantindo rastreabilidade, transparência e segurança jurídica para os processos administrativos.
+
+## Status da Implementação
+
+A primeira versão do módulo **Base Legal** já foi implementada no backend do SG-RSC.
+
+Nesta etapa foram desenvolvidas as seguintes entidades de domínio:
+
+- Legislação;
+- Requisito;
+- Critério.
+
+Essas entidades são responsáveis pela parametrização da legislação aplicável ao processo de Reconhecimento de Saberes e Competências, permitindo que futuras alterações normativas sejam refletidas por meio de cadastro de dados, reduzindo a necessidade de alterações no código-fonte.
+
+O módulo foi implementado seguindo a arquitetura Feature-First, contemplando:
+
+- entidades JPA;
+- repositórios;
+- serviços;
+- controllers REST;
+- DTOs de requisição e resposta;
+- mapeadores (Mapper Pattern);
+- exclusão lógica (Soft Delete);
+- testes funcionais dos endpoints REST.
+
 Fim do Capítulo 6.
 
 # Capítulo 7 – Arquitetura do Sistema
@@ -2667,6 +2706,37 @@ A comunicação entre a aplicação e o serviço de armazenamento será realizad
 - Necessidade de gerenciamento do serviço de armazenamento e dos buckets.
 - Dependência da disponibilidade do MinIO para operações de upload e download de documentos.
 
+# 8.12 ADR-010 – Implementação da Base Legal Parametrizável
+
+## Status
+
+Aceita.
+
+## Contexto
+
+O Decreto nº 13.048/2026 define critérios e requisitos que podem sofrer alterações ao longo do tempo. Manter essas regras diretamente no código-fonte aumentaria o custo de manutenção e reduziria a flexibilidade da aplicação.
+
+## Decisão
+
+Implementar um módulo denominado **Base Legal**, composto pelas entidades **Legislação**, **Requisito** e **Critério**, permitindo que a fundamentação normativa e os critérios de avaliação sejam parametrizados por meio do banco de dados.
+
+A implementação segue a arquitetura Feature-First, utilizando DTOs específicos para entrada e saída, Mapper Pattern, Spring Data JPA e exclusão lógica (Soft Delete).
+
+## Consequências
+
+### Benefícios
+
+- Parametrização da legislação.
+- Maior flexibilidade para alterações normativas.
+- Redução da necessidade de mudanças no código.
+- Maior rastreabilidade das regras de negócio.
+- Reutilização da estrutura em futuras versões do sistema.
+
+### Desvantagens
+
+- Necessidade de manutenção da base legal cadastrada.
+- Maior dependência da consistência dos dados parametrizados.
+
 # 8.10 Considerações Finais
 
 As decisões arquiteturais registradas neste capítulo representam o estado atual da arquitetura do SG-RSC.
@@ -2678,3 +2748,45 @@ A manutenção deste histórico contribuirá para a rastreabilidade das decisõe
 ---
 
 Fim do Capítulo 8.
+
+# Capítulo 9 – Status da Implementação
+
+## Visão Geral
+
+Este capítulo registra a evolução incremental do desenvolvimento do SG-RSC, permitindo acompanhar as funcionalidades implementadas ao longo das sprints do projeto.
+
+## Sprint 1
+
+- Estrutura inicial do backend.
+- Configuração do Spring Boot.
+- Configuração do PostgreSQL.
+- Estrutura Feature-First.
+
+## Sprint 2
+
+- Configuração do Spring Security.
+- Integração com Keycloak.
+- Endpoint Health.
+
+## Sprint 3
+
+- Implementação do módulo de documentos.
+- Integração com MinIO.
+- Upload de arquivos.
+- Download de arquivos.
+- Exclusão lógica de documentos.
+
+## Sprint 4
+
+- Implementação do módulo Base Legal.
+- CRUD de Legislação.
+- CRUD de Requisito.
+- CRUD de Critério.
+- DTOs Request/Response.
+- Mapper Pattern.
+- Soft Delete.
+- Testes completos dos endpoints REST.
+
+## Próxima Sprint
+
+Implementação do módulo de Solicitação de RSC, responsável por gerenciar o ciclo de vida das solicitações, integrando os módulos de Base Legal, Documentos e, futuramente, Memorial, Parecer e Pontuação.
