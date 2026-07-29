@@ -1,6 +1,7 @@
 package br.gov.ife.sgrsc.features.solicitacao.service;
 
 import br.gov.ife.sgrsc.features.documento.repository.DocumentoRepository;
+import br.gov.ife.sgrsc.features.historico.service.HistoricoService;
 import br.gov.ife.sgrsc.features.nivelrsc.domain.NivelRsc;
 import br.gov.ife.sgrsc.features.nivelrsc.repository.NivelRscRepository;
 import br.gov.ife.sgrsc.features.resultadosolicitacao.domain.ResultadoSolicitacao;
@@ -33,6 +34,7 @@ public class SolicitacaoService {
     private final StatusSolicitacaoRepository statusSolicitacaoRepository;
     private final ResultadoSolicitacaoRepository resultadoSolicitacaoRepository;
     private final DocumentoRepository documentoRepository;
+    private final HistoricoService historicoService;
 
     public SolicitacaoService(
             SolicitacaoRepository solicitacaoRepository,
@@ -40,7 +42,8 @@ public class SolicitacaoService {
             NivelRscRepository nivelRscRepository,
             StatusSolicitacaoRepository statusSolicitacaoRepository,
             ResultadoSolicitacaoRepository resultadoSolicitacaoRepository,
-            DocumentoRepository documentoRepository
+            DocumentoRepository documentoRepository,
+            HistoricoService historicoService
     ) {
         this.solicitacaoRepository = solicitacaoRepository;
         this.servidorRepository = servidorRepository;
@@ -48,6 +51,7 @@ public class SolicitacaoService {
         this.statusSolicitacaoRepository = statusSolicitacaoRepository;
         this.resultadoSolicitacaoRepository = resultadoSolicitacaoRepository;
         this.documentoRepository = documentoRepository;
+        this.historicoService = historicoService;
     }
 
     public List<SolicitacaoResponse> listarTodos() {
@@ -139,12 +143,15 @@ public class SolicitacaoService {
         solicitacao.setNumeroProtocolo(
                 gerarNumeroProtocolo(solicitacao)
         );
-
         solicitacao.setDataProtocolo(agora);
         solicitacao.setStatusSolicitacao(statusProtocolada);
 
         Solicitacao solicitacaoProtocolada =
                 solicitacaoRepository.save(solicitacao);
+
+        historicoService.registrarSolicitacaoProtocolada(
+                solicitacaoProtocolada
+        );
 
         return SolicitacaoMapper.toResponse(solicitacaoProtocolada);
     }
@@ -297,4 +304,3 @@ public class SolicitacaoService {
                 ));
     }
 }
-

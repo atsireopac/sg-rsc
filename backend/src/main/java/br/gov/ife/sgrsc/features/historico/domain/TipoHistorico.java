@@ -9,7 +9,7 @@ import jakarta.persistence.Table;
 @Table(name = "tipo_historico")
 public class TipoHistorico extends BaseEntity {
 
-    @Column(name = "nome", nullable = false, length = 100)
+    @Column(name = "nome", nullable = false, unique = true, length = 100)
     private String nome;
 
     @Column(name = "descricao")
@@ -35,5 +35,21 @@ public class TipoHistorico extends BaseEntity {
 
     public void setDescricao(String descricao) {
         this.descricao = descricao;
+    }
+
+    public String getCodigo() {
+        return codigo;
+    }
+
+    public void setCodigo(String codigo) {
+        this.codigo = codigo;
+    }
+
+    public Boolean getAtivo() {
+        return ativo;
+    }
+
+    public void setAtivo(Boolean ativo) {
+        this.ativo = ativo;
     }
 }

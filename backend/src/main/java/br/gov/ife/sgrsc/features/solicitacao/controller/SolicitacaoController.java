@@ -1,8 +1,8 @@
 package br.gov.ife.sgrsc.features.solicitacao.controller;
 
-import br.gov.ife.sgrsc.features.solicitacao.domain.Solicitacao;
 import br.gov.ife.sgrsc.features.solicitacao.dto.SolicitacaoRequest;
 import br.gov.ife.sgrsc.features.solicitacao.dto.SolicitacaoResponse;
+import br.gov.ife.sgrsc.features.solicitacao.mapper.SolicitacaoMapper;
 import br.gov.ife.sgrsc.features.solicitacao.service.SolicitacaoService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -35,26 +35,32 @@ public class SolicitacaoController {
     }
 
     @GetMapping("/{id}")
-    public Solicitacao buscarPorId(
+    public SolicitacaoResponse buscarPorId(
             @PathVariable Long id
     ) {
-        return solicitacaoService.buscarPorId(id);
+        return SolicitacaoMapper.toResponse(
+                solicitacaoService.buscarPorId(id)
+        );
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Solicitacao criar(
+    public SolicitacaoResponse criar(
             @RequestBody SolicitacaoRequest request
     ) {
-        return solicitacaoService.criar(request);
+        return SolicitacaoMapper.toResponse(
+                solicitacaoService.criar(request)
+        );
     }
 
     @PutMapping("/{id}")
-    public Solicitacao atualizar(
+    public SolicitacaoResponse atualizar(
             @PathVariable Long id,
             @RequestBody SolicitacaoRequest request
     ) {
-        return solicitacaoService.atualizar(id, request);
+        return SolicitacaoMapper.toResponse(
+                solicitacaoService.atualizar(id, request)
+        );
     }
 
     @PostMapping("/{id}/protocolar")
