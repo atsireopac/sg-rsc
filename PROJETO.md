@@ -8,6 +8,7 @@
 | **1.1** | **20/07/2026** | **Erik Barbosa** | **Atualização da arquitetura, definição do Keycloak como provedor de identidade, atualização do roadmap e adequação da arquitetura Feature-First.** |
 | **1.2** | **29/07/2026** | **Erik Barbosa** | **Implementação do módulo de documentos, integração com MinIO para armazenamento de arquivos, inclusão dos fluxos de upload e download, atualização da arquitetura da solução e documentação da estratégia de armazenamento.** |
 | **1.3** | **29/07/2026** | **Erik Barbosa** | **Implementação do módulo Base Legal, CRUD completo de Legislação, Requisito e Critério, DTOs Request/Response, Mappers, Soft Delete, consolidação da arquitetura Feature-First e validação dos endpoints REST do backend.** |
+| **1.4** | **29/07/2026** | **Erik Barbosa** | **Implementação do módulo de Solicitações, geração automática de protocolo, integração com documentos, histórico de movimentações (auditoria funcional), validação da protocolização e evolução do fluxo administrativo do RSC.** |
 
 
 # Glossário
@@ -848,30 +849,50 @@ Exportar PDF.
 
 ## UC005 – Protocolar Solicitação
 
-Objetivo
+### Objetivo
 
-Enviar oficialmente o processo.
+Permitir que o servidor finalize oficialmente uma solicitação de RSC, gerando seu número de protocolo e iniciando o fluxo administrativo de análise.
 
-Validações
+### Ator
 
-Memorial obrigatório.
+Servidor.
 
-Documentos obrigatórios.
+### Pré-condições
 
-Pontuação calculada.
+- A solicitação deve existir.
+- A solicitação deve estar em status **Rascunho**.
+- Deve existir pelo menos um documento anexado.
+- O Memorial Descritivo deve ter sido enviado.
 
-Critérios mínimos.
+### Fluxo Principal
 
-Ao finalizar
+1. O servidor solicita a protocolização.
+2. O sistema valida as regras de negócio.
+3. O sistema gera automaticamente um número único de protocolo.
+4. O status da solicitação é alterado para **Protocolada**.
+5. A data de protocolização é registrada.
+6. O sistema registra automaticamente o evento no histórico da solicitação.
+7. A solicitação torna-se pronta para análise pela Comissão.
 
-Gerar número.
+### Fluxos Alternativos
 
-Gerar protocolo.
+- Solicitação inexistente.
+- Solicitação já protocolada.
+- Solicitação sem documentos anexados.
+- Memorial obrigatório não enviado.
 
-Registrar auditoria.
+### Pós-condições
 
-Enviar confirmação.
+- Número de protocolo gerado.
+- Data de protocolização registrada.
+- Histórico atualizado.
+- Solicitação disponível para análise.
 
+### Regras de Negócio
+
+- RN101 – Memorial obrigatório.
+- RN102 – Documentação obrigatória.
+- RN005 – Auditoria das ações.
 ---
 
 ## UC006 – Consultar Processo
@@ -1115,9 +1136,9 @@ Ao longo do desenvolvimento do SG-RSC, esta matriz será continuamente atualizad
 |----|----------------|----|---------|--------------------|------|-------|--------|--------|
 | UC001 | Autenticar Usuário | RN001 | Autenticação | Usuário | POST /auth/login | Login | TS001 | Planejado |
 | UC002 | Criar Solicitação | RN001, RN002, RN100 | Solicitações | Solicitação | POST /solicitacoes | Nova Solicitação | TS002 | Planejado |
-| UC003 | Anexar Documentos | RN102 | Documentos | Documento | POST /documentos | Upload de Documentos | TS003 | Planejado |
+| UC003 | Anexar Documentos | RN102 | Documentos | Documento | POST /documentos | Upload de Documentos | TS003 | Implementado |
 | UC004 | Gerar Memorial | RN101 | Memorial | Memorial | POST /memorial | Memorial | TS004 | Planejado |
-| UC005 | Protocolar Solicitação | RN101, RN102, RN103, RN104 | Solicitações | Solicitação | POST /solicitacoes/protocolar | Protocolar Solicitação | TS005 | Planejado |
+| UC005 | Protocolar Solicitação | RN101, RN102, RN103, RN104 | Solicitações | Solicitação | POST /solicitacoes/protocolar | Protocolar Solicitação | TS005 | Implementado |
 | UC006 | Consultar Processo | RN005 | Solicitações | Solicitação | GET /solicitacoes/{id} | Consulta da Solicitação | TS006 | Planejado |
 | UC007 | Solicitar Complementação | RN107 | Comissão | Complementação | POST /complementacoes | Solicitar Complementação | TS007 | Planejado |
 | UC008 | Responder Complementação | RN107 | Comissão | Complementação | POST /complementacoes/responder | Responder Complementação | TS008 | Planejado |
@@ -2231,6 +2252,53 @@ Os endpoints seguem os princípios REST e utilizam autenticação baseada em OAu
 - A autenticação e autorização são realizadas por meio de tokens JWT emitidos pelo Keycloak.
 - A documentação interativa da API está disponível por meio do OpenAPI (Swagger).
 
+# 7.6.1 API REST – Módulo de Solicitações
+
+O módulo de solicitações é responsável pelo gerenciamento do ciclo de vida das solicitações de RSC.
+
+Atualmente disponibiliza operações para:
+
+- criação de solicitações;
+- consulta por identificador;
+- listagem de solicitações;
+- atualização;
+- protocolização.
+
+Durante a protocolização o sistema:
+
+- valida a existência de documentos obrigatórios;
+- gera automaticamente um número de protocolo;
+- altera o status da solicitação;
+- registra a data de protocolização;
+- cria automaticamente um registro no histórico da solicitação.
+
+Os endpoints retornam DTOs específicos, evitando a exposição direta das entidades JPA e reduzindo o acoplamento entre a API e o modelo de persistência.
+
+# 7.6.2 Histórico das Solicitações
+
+Cada movimentação relevante da solicitação é registrada no módulo de histórico.
+
+Inicialmente foi implementado o evento:
+
+- SOLICITACAO_PROTOCOLADA
+
+Esse registro armazena:
+
+- tipo do evento;
+- descrição;
+- usuário responsável;
+- data do evento;
+- solicitação relacionada.
+
+Essa estrutura permitirá registrar futuramente novas movimentações, como:
+
+- envio para análise;
+- solicitação de complementação;
+- deferimento;
+- indeferimento;
+- recurso;
+- decisão final.
+
 # 7.7 Organização do Backend
 
 ```text
@@ -2787,6 +2855,22 @@ Este capítulo registra a evolução incremental do desenvolvimento do SG-RSC, p
 - Soft Delete.
 - Testes completos dos endpoints REST.
 
+## Sprint 5
+
+- Implementação do módulo de Solicitações.
+- CRUD de Solicitações.
+- Geração automática de protocolo.
+- Validação de documentos obrigatórios.
+- Integração com o módulo de Documentos.
+- Registro automático do histórico de protocolização.
+- Migração Flyway para tipos de histórico.
+- DTOs Request/Response.
+- Mapper Pattern.
+- Testes completos do fluxo de protocolização.
+
 ## Próxima Sprint
 
-Implementação do módulo de Solicitação de RSC, responsável por gerenciar o ciclo de vida das solicitações, integrando os módulos de Base Legal, Documentos e, futuramente, Memorial, Parecer e Pontuação.
+- Implementação do módulo Memorial.
+- Associação de documentos aos critérios.
+- Cálculo automático da pontuação.
+- Início do fluxo de análise pela Comissão.
