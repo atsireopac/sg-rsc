@@ -9,4 +9,5 @@ public interface DocumentoRepository extends JpaRepository<Documento, Long> {
 
     List<Documento> findBySolicitacaoIdAndDeletedAtIsNull(Long solicitacaoId);
 
+    boolean existsBySolicitacaoIdAndDeletedAtIsNull(Long solicitacaoId);
 }

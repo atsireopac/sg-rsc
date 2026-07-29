@@ -1,5 +1,6 @@
 package br.gov.ife.sgrsc.features.solicitacao.service;
 
+import br.gov.ife.sgrsc.features.documento.repository.DocumentoRepository;
 import br.gov.ife.sgrsc.features.nivelrsc.domain.NivelRsc;
 import br.gov.ife.sgrsc.features.nivelrsc.repository.NivelRscRepository;
 import br.gov.ife.sgrsc.features.resultadosolicitacao.domain.ResultadoSolicitacao;
@@ -15,9 +16,11 @@ import br.gov.ife.sgrsc.features.statussolicitacao.domain.StatusSolicitacao;
 import br.gov.ife.sgrsc.features.statussolicitacao.repository.StatusSolicitacaoRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.time.Year;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,19 +32,22 @@ public class SolicitacaoService {
     private final NivelRscRepository nivelRscRepository;
     private final StatusSolicitacaoRepository statusSolicitacaoRepository;
     private final ResultadoSolicitacaoRepository resultadoSolicitacaoRepository;
+    private final DocumentoRepository documentoRepository;
 
     public SolicitacaoService(
             SolicitacaoRepository solicitacaoRepository,
             ServidorRepository servidorRepository,
             NivelRscRepository nivelRscRepository,
             StatusSolicitacaoRepository statusSolicitacaoRepository,
-            ResultadoSolicitacaoRepository resultadoSolicitacaoRepository
+            ResultadoSolicitacaoRepository resultadoSolicitacaoRepository,
+            DocumentoRepository documentoRepository
     ) {
         this.solicitacaoRepository = solicitacaoRepository;
         this.servidorRepository = servidorRepository;
         this.nivelRscRepository = nivelRscRepository;
         this.statusSolicitacaoRepository = statusSolicitacaoRepository;
         this.resultadoSolicitacaoRepository = resultadoSolicitacaoRepository;
+        this.documentoRepository = documentoRepository;
     }
 
     public List<SolicitacaoResponse> listarTodos() {
@@ -53,6 +59,7 @@ public class SolicitacaoService {
     }
 
     public Solicitacao buscarPorId(Long id) {
+
         return solicitacaoRepository.findByIdAndDeletedAtIsNull(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
@@ -83,7 +90,10 @@ public class SolicitacaoService {
         return solicitacaoRepository.save(solicitacao);
     }
 
-    public Solicitacao atualizar(Long id, SolicitacaoRequest request) {
+    public Solicitacao atualizar(
+            Long id,
+            SolicitacaoRequest request
+    ) {
 
         Solicitacao solicitacao = buscarPorId(id);
 
@@ -102,23 +112,131 @@ public class SolicitacaoService {
     public void excluir(Long id) {
 
         Solicitacao solicitacao = buscarPorId(id);
+
+        validarSolicitacaoEmRascunho(solicitacao);
+
         solicitacao.marcarComoExcluido();
 
         solicitacaoRepository.save(solicitacao);
     }
 
-    private void validarSolicitacaoEmRascunho(Solicitacao solicitacao) {
+    @Transactional
+    public SolicitacaoResponse protocolar(Long id) {
 
-        String codigo = solicitacao
-                .getStatusSolicitacao()
-                .getCodigo();
+        Solicitacao solicitacao = buscarPorId(id);
 
-        if (!"RASCUNHO".equals(codigo)) {
+        validarSolicitacaoParaProtocolo(solicitacao);
+
+        StatusSolicitacao statusProtocolada = statusSolicitacaoRepository
+                .findByCodigoAndDeletedAtIsNull("PROTOCOLADA")
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Status PROTOCOLADA não encontrado."
+                ));
+
+        LocalDateTime agora = LocalDateTime.now();
+
+        solicitacao.setNumeroProtocolo(
+                gerarNumeroProtocolo(solicitacao)
+        );
+
+        solicitacao.setDataProtocolo(agora);
+        solicitacao.setStatusSolicitacao(statusProtocolada);
+
+        Solicitacao solicitacaoProtocolada =
+                solicitacaoRepository.save(solicitacao);
+
+        return SolicitacaoMapper.toResponse(solicitacaoProtocolada);
+    }
+
+    private void validarSolicitacaoEmRascunho(
+            Solicitacao solicitacao
+    ) {
+
+        StatusSolicitacao status = solicitacao.getStatusSolicitacao();
+
+        if (status == null || !"RASCUNHO".equals(status.getCodigo())) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
                     "Somente solicitações em rascunho podem ser editadas."
             );
         }
+    }
+
+    private void validarSolicitacaoParaProtocolo(
+            Solicitacao solicitacao
+    ) {
+
+        validarSolicitacaoEmRascunhoParaProtocolo(solicitacao);
+
+        if (solicitacao.getNumeroProtocolo() != null
+                && !solicitacao.getNumeroProtocolo().isBlank()) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "A solicitação já possui número de protocolo."
+            );
+        }
+
+        if (solicitacao.getDataProtocolo() != null) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "A solicitação já foi protocolada."
+            );
+        }
+
+        if (solicitacao.getServidor() == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNPROCESSABLE_ENTITY,
+                    "A solicitação não possui servidor associado."
+            );
+        }
+
+        if (solicitacao.getNivelRsc() == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNPROCESSABLE_ENTITY,
+                    "A solicitação não possui nível RSC associado."
+            );
+        }
+
+        boolean possuiDocumento = documentoRepository
+                .existsBySolicitacaoIdAndDeletedAtIsNull(
+                        solicitacao.getId()
+                );
+
+        if (!possuiDocumento) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNPROCESSABLE_ENTITY,
+                    "A solicitação deve possuir pelo menos um documento para ser protocolada."
+            );
+        }
+    }
+
+    private void validarSolicitacaoEmRascunhoParaProtocolo(
+            Solicitacao solicitacao
+    ) {
+
+        StatusSolicitacao status = solicitacao.getStatusSolicitacao();
+
+        if (status == null || !"RASCUNHO".equals(status.getCodigo())) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Somente solicitações em rascunho podem ser protocoladas."
+            );
+        }
+    }
+
+    private String gerarNumeroProtocolo(
+            Solicitacao solicitacao
+    ) {
+
+        int ano = Year.now().getValue();
+
+        return String.format(
+                "RSC-%d-%06d",
+                ano,
+                solicitacao.getId()
+        );
     }
 
     private Servidor buscarServidor(Long id) {
@@ -171,10 +289,12 @@ public class SolicitacaoService {
 
     private ResultadoSolicitacao buscarResultadoSolicitacao(Long id) {
 
-        return resultadoSolicitacaoRepository.findByIdAndDeletedAtIsNull(id)
+        return resultadoSolicitacaoRepository
+                .findByIdAndDeletedAtIsNull(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Resultado da solicitação não encontrado."
                 ));
     }
 }
+

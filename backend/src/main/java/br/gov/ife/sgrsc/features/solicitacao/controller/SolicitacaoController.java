@@ -23,7 +23,9 @@ public class SolicitacaoController {
 
     private final SolicitacaoService solicitacaoService;
 
-    public SolicitacaoController(SolicitacaoService solicitacaoService) {
+    public SolicitacaoController(
+            SolicitacaoService solicitacaoService
+    ) {
         this.solicitacaoService = solicitacaoService;
     }
 
@@ -33,13 +35,17 @@ public class SolicitacaoController {
     }
 
     @GetMapping("/{id}")
-    public Solicitacao buscarPorId(@PathVariable Long id) {
+    public Solicitacao buscarPorId(
+            @PathVariable Long id
+    ) {
         return solicitacaoService.buscarPorId(id);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Solicitacao criar(@RequestBody SolicitacaoRequest request) {
+    public Solicitacao criar(
+            @RequestBody SolicitacaoRequest request
+    ) {
         return solicitacaoService.criar(request);
     }
 
@@ -51,9 +57,18 @@ public class SolicitacaoController {
         return solicitacaoService.atualizar(id, request);
     }
 
+    @PostMapping("/{id}/protocolar")
+    public SolicitacaoResponse protocolar(
+            @PathVariable Long id
+    ) {
+        return solicitacaoService.protocolar(id);
+    }
+
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void excluir(@PathVariable Long id) {
+    public void excluir(
+            @PathVariable Long id
+    ) {
         solicitacaoService.excluir(id);
     }
 }

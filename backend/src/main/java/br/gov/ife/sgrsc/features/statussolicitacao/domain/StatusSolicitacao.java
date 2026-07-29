@@ -9,7 +9,7 @@ import jakarta.persistence.Table;
 @Table(name = "status_solicitacao")
 public class StatusSolicitacao extends BaseEntity {
 
-    @Column(name = "codigo", nullable = false, unique = true, length = 20)
+    @Column(name = "codigo", nullable = false, unique = true, length = 50)
     private String codigo;
 
     @Column(name = "nome", nullable = false, length = 100)
