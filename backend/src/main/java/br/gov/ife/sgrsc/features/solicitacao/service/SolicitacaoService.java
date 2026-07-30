@@ -2,6 +2,7 @@ package br.gov.ife.sgrsc.features.solicitacao.service;
 
 import br.gov.ife.sgrsc.features.documento.repository.DocumentoRepository;
 import br.gov.ife.sgrsc.features.historico.service.HistoricoService;
+import br.gov.ife.sgrsc.features.memorial.repository.MemorialRepository;
 import br.gov.ife.sgrsc.features.nivelrsc.domain.NivelRsc;
 import br.gov.ife.sgrsc.features.nivelrsc.repository.NivelRscRepository;
 import br.gov.ife.sgrsc.features.resultadosolicitacao.domain.ResultadoSolicitacao;
@@ -34,6 +35,7 @@ public class SolicitacaoService {
     private final StatusSolicitacaoRepository statusSolicitacaoRepository;
     private final ResultadoSolicitacaoRepository resultadoSolicitacaoRepository;
     private final DocumentoRepository documentoRepository;
+    private final MemorialRepository memorialRepository;
     private final HistoricoService historicoService;
 
     public SolicitacaoService(
@@ -43,6 +45,7 @@ public class SolicitacaoService {
             StatusSolicitacaoRepository statusSolicitacaoRepository,
             ResultadoSolicitacaoRepository resultadoSolicitacaoRepository,
             DocumentoRepository documentoRepository,
+            MemorialRepository memorialRepository,
             HistoricoService historicoService
     ) {
         this.solicitacaoRepository = solicitacaoRepository;
@@ -51,6 +54,7 @@ public class SolicitacaoService {
         this.statusSolicitacaoRepository = statusSolicitacaoRepository;
         this.resultadoSolicitacaoRepository = resultadoSolicitacaoRepository;
         this.documentoRepository = documentoRepository;
+        this.memorialRepository = memorialRepository;
         this.historicoService = historicoService;
     }
 
@@ -215,6 +219,18 @@ public class SolicitacaoService {
             throw new ResponseStatusException(
                     HttpStatus.UNPROCESSABLE_ENTITY,
                     "A solicitação deve possuir pelo menos um documento para ser protocolada."
+            );
+        }
+
+        boolean possuiMemorial = memorialRepository
+                .existsBySolicitacaoIdAndDeletedAtIsNull(
+                        solicitacao.getId()
+                );
+
+        if (!possuiMemorial) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNPROCESSABLE_ENTITY,
+                    "A solicitação deve possuir um memorial para ser protocolada."
             );
         }
     }
