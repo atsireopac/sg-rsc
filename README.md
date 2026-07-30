@@ -1,4 +1,3 @@
-````markdown
 # SG-RSC
 
 ![Java](https://img.shields.io/badge/Java-25-blue)
@@ -416,4 +415,4 @@ http://localhost:4200
 # Licença
 
 Este projeto está licenciado sob a licença **MIT**.
-````
+
