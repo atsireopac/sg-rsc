@@ -6,7 +6,7 @@
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue)
 ![MinIO](https://img.shields.io/badge/MinIO-Object_Storage-C72E49)
 ![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED)
-![Status](https://img.shields.io/badge/Status-Sprint_7_Concluída-brightgreen)
+![Status](https://img.shields.io/badge/Status-Sprint_8_Concluída-brightgreen)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
 Sistema de Gestão do Reconhecimento de Saberes e Competências (RSC-PCCTAE)
@@ -106,15 +106,16 @@ backend/
 ├── config
 ├── features
 │   ├── atividade
+│   ├── criterio
 │   ├── documento
 │   ├── health
 │   ├── legislacao
-│   ├── requisito
-│   ├── criterio
 │   ├── memorial
-│   ├── solicitacao
+│   ├── requisito
 │   ├── servidor
-│   └── situacaofuncional
+│   ├── situacaofuncional
+│   ├── solicitacao
+│   └── statusavaliacao
 ├── security
 └── shared
 ```
@@ -178,6 +179,18 @@ backend/
 - DTOs específicos
 - Mapper Pattern
 
+## Status da Avaliação
+
+- CRUD completo
+- Parametrização dos status de avaliação
+- Associação com a entidade Avaliação
+- DTOs Request/Response/Summary
+- Mapper Pattern
+- Service Layer
+- Controller REST
+- Migração Flyway V11
+- Testes completos dos endpoints REST via curl
+
 ## Documentos
 
 - Upload de documentos
@@ -191,6 +204,20 @@ backend/
 ## Monitoramento
 
 - Endpoint `/api/health`
+
+# Módulos Implementados
+
+- ✅ Health Check
+- ✅ Documentos
+- ✅ Base Legal
+- ✅ Solicitações
+- ✅ Memorial
+- ✅ Atividades Declaradas
+- ✅ Status da Avaliação
+- 🚧 Avaliação
+- 🚧 Motor de Pontuação
+- 🚧 Pareceres
+- 🚧 Recursos
 
 ---
 
@@ -260,13 +287,27 @@ backend/
 - Ajustes de Segurança
 - Testes completos dos endpoints REST
 
+## ✅ Sprint 8
+
+- Módulo Status da Avaliação
+- CRUD completo
+- Entidade StatusAvaliacao
+- Associação com Avaliação
+- DTOs Request/Response/Summary
+- Mapper Pattern
+- Service Layer
+- Controller REST
+- Flyway V11
+- Ajustes de segurança
+- Testes completos via curl
+
 ## 🚧 Próxima Sprint
 
-- Motor de cálculo automático da pontuação
+- Tratamento global de exceções (GlobalExceptionHandler)
+- Padronização das respostas de erro da API
+- Paginação e filtros dos endpoints REST
+- Evolução do módulo Avaliação
 - Fluxo da Comissão Avaliadora
-- Pareceres
-- Consolidação da pontuação
-- Recursos administrativos
 
 ---
 
@@ -366,6 +407,14 @@ http://localhost:4200
 - POST `/api/atividades/{atividadeId}/documentos`
 - DELETE `/api/atividades/{atividadeId}/documentos/{documentoId}`
 
+## Status da Avaliação
+
+- POST `/api/status-avaliacoes`
+- GET `/api/status-avaliacoes`
+- GET `/api/status-avaliacoes/{id}`
+- PUT `/api/status-avaliacoes/{id}`
+- DELETE `/api/status-avaliacoes/{id}`
+
 ---
 
 # Status Atual
@@ -384,8 +433,12 @@ http://localhost:4200
 - Módulo Memorial;
 - Módulo Atividades Declaradas;
 - Associação entre Atividades e Documentos;
-- Migrações Flyway V1 a V10;
+- Migrações Flyway V1 a V11;
 - Testes funcionais completos dos endpoints REST.
+- Módulo Status da Avaliação;
+- Migração Flyway V11;
+- Parametrização dos status de avaliação;
+- Testes completos dos endpoints REST do módulo.
 
 ## Em Desenvolvimento
 
@@ -409,6 +462,7 @@ http://localhost:4200
 | **v0.6.0** | Módulo de Solicitações |
 | **v0.7.0** | Módulo Memorial |
 | **v0.8.0** | Módulo Atividades Declaradas, associação entre atividades e documentos, Flyway V9/V10, carga inicial da Base Legal e validação completa dos endpoints REST |
+| **v0.9.0** | Módulo Status da Avaliação, CRUD completo, associação com Avaliação, Flyway V11, DTOs Request/Response/Summary, ajustes no Spring Security e validação completa dos endpoints REST |
 
 ---
 

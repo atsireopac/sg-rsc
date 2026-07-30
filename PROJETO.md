@@ -11,6 +11,7 @@
 | **1.4** | **29/07/2026** | **Erik Barbosa** | **Implementação do módulo de Solicitações, geração automática de protocolo, integração com documentos, histórico de movimentações (auditoria funcional), validação da protocolização e evolução do fluxo administrativo do RSC.** |
 | **1.5** | **30/07/2026** | **Erik Barbosa** | **Implementação do módulo Memorial, CRUD completo, controle de versão, validação de edição apenas em solicitações em rascunho, DTOs específicos para criação e atualização, consultas por identificador e por solicitação, exclusão lógica e validação dos endpoints REST.** |
 | **1.6** | **30/07/2026** | **Erik Barbosa** | **Implementação do módulo Atividades Declaradas, associação de atividades aos critérios pretendidos, vínculo entre atividades e documentos, migração V9, carga inicial da Base Legal por meio da migração V10, testes completos dos endpoints REST e validação da integração com o armazenamento de documentos.** |
+| **1.7** | **30/07/2026** | **Erik Barbosa** | **Implementação do módulo Status da Avaliação, CRUD completo, migração Flyway V11, entidade StatusAvaliacao, integração com Avaliação, DTOs Request/Response/Summary, Mapper Pattern, Service Layer, Controller REST, ajustes no Spring Security e validação completa dos endpoints REST via curl.** |
 
 
 # Glossário
@@ -1274,6 +1275,7 @@ O sistema será composto, inicialmente, pelas seguintes entidades:
 - Recurso
 - Auditoria
 - Notificação
+- Status da Avaliação
 
 ---
 
@@ -1451,7 +1453,27 @@ Relacionamentos:
 
 ---
 
-# 4.12 Entidade Parecer
+# 4.12 Entidade Status da Avaliação
+
+Representa os possíveis estados de uma avaliação realizada pela Comissão de RSC.
+
+Essa entidade foi criada para parametrizar os estados do processo de avaliação, evitando valores fixos no código-fonte e permitindo futura evolução do fluxo administrativo.
+
+### Atributos
+
+- id
+- codigo
+- nome
+- descricao
+- ativo
+
+### Relacionamentos
+
+- pode estar associado a várias Avaliações;
+- representa o estado atual de cada avaliação;
+- permite parametrização dos fluxos de análise da Comissão.
+
+# 4.13 Entidade Parecer
 
 Representa a decisão emitida pela Comissão.
 
@@ -1469,7 +1491,7 @@ Relacionamentos:
 
 ---
 
-# 4.13 Entidade Comissão
+# 4.14 Entidade Comissão
 
 Representa a comissão responsável pela análise.
 
@@ -1487,7 +1509,7 @@ Relacionamentos:
 
 ---
 
-# 4.14 Entidade Complementação
+# 4.15 Entidade Complementação
 
 Representa pedidos de documentos adicionais.
 
@@ -1505,7 +1527,7 @@ Relacionamentos:
 
 ---
 
-# 4.15 Entidade Recurso
+# 4.16 Entidade Recurso
 
 Representa recurso administrativo apresentado pelo servidor.
 
@@ -1522,7 +1544,7 @@ Relacionamentos:
 
 ---
 
-# 4.16 Entidade Auditoria
+# 4.17 Entidade Auditoria
 
 Registra todas as ações realizadas no sistema.
 
@@ -1541,7 +1563,7 @@ Relacionamentos:
 
 ---
 
-# 4.17 Entidade Notificação
+# 4.18 Entidade Notificação
 
 Representa mensagens enviadas pelo sistema.
 
@@ -1559,7 +1581,7 @@ Relacionamentos:
 
 ---
 
-# 4.18 Relacionamentos
+# 4.19 Relacionamentos
 
 Servidor
 
@@ -1591,7 +1613,7 @@ Durante todo o fluxo serão registrados:
 
 ---
 
-# 4.19 Evolução do Modelo
+# 4.20 Evolução do Modelo
 
 O Modelo de Domínio poderá evoluir conforme novas necessidades forem identificadas durante o desenvolvimento do projeto ou em decorrência de alterações na legislação.
 
@@ -1671,6 +1693,7 @@ O banco será composto inicialmente pelas seguintes tabelas:
 - recurso
 - notificacao
 - auditoria
+- status_avaliacao
 
 ---
 
@@ -1727,6 +1750,10 @@ Usuário
 Usuário
 
 1 ---- N Auditoria
+
+Status da Avaliação
+
+1 ---- N Avaliação
 
 ---
 
@@ -3031,10 +3058,22 @@ Este capítulo registra a evolução incremental do desenvolvimento do SG-RSC, p
   - associação entre atividade e documento;
   - remoção do vínculo preservando o documento armazenado.
 
-  ## Próxima Sprint
+  ## Sprint 8
 
-- Implementação do motor de cálculo automático da pontuação.
-- Associação automática entre critérios e regras de avaliação.
-- Consolidação da pontuação por solicitação.
-- Implementação do fluxo de análise pela Comissão.
-- Registro de pareceres e decisões da Comissão.
+- Implementação do módulo Status da Avaliação.
+- CRUD completo de Status da Avaliação.
+- Criação da entidade StatusAvaliacao.
+- Migração Flyway V11 para criação da tabela e carga inicial dos status padrão.
+- Associação entre Avaliação e Status da Avaliação.
+- Implementação de Repository, DTOs Request/Response/Summary, Mapper, Service e Controller REST.
+- Ajustes na configuração do Spring Security para disponibilização dos endpoints.
+- Testes funcionais completos utilizando curl (GET, POST, PUT e DELETE).
+- Validação da integração entre PostgreSQL, Flyway, JPA, Spring Security e API REST.
+
+## Próxima Sprint
+
+- Implementação do tratamento global de exceções (GlobalExceptionHandler).
+- Padronização das respostas de erro da API.
+- Implementação de paginação e filtros nos endpoints REST.
+- Evolução do módulo de Avaliação.
+- Início do fluxo de análise da Comissão de RSC.
