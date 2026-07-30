@@ -1,8 +1,9 @@
 package br.gov.ife.sgrsc.features.memorial.service;
 
 import br.gov.ife.sgrsc.features.memorial.domain.Memorial;
-import br.gov.ife.sgrsc.features.memorial.dto.MemorialRequest;
+import br.gov.ife.sgrsc.features.memorial.dto.MemorialCreateRequest;
 import br.gov.ife.sgrsc.features.memorial.dto.MemorialResponse;
+import br.gov.ife.sgrsc.features.memorial.dto.MemorialUpdateRequest;
 import br.gov.ife.sgrsc.features.memorial.mapper.MemorialMapper;
 import br.gov.ife.sgrsc.features.memorial.repository.MemorialRepository;
 import br.gov.ife.sgrsc.features.solicitacao.domain.Solicitacao;
@@ -30,7 +31,9 @@ public class MemorialService {
     }
 
     @Transactional
-    public MemorialResponse criar(MemorialRequest request) {
+    public MemorialResponse criar(
+            MemorialCreateRequest request
+    ) {
 
         Solicitacao solicitacao = buscarSolicitacao(
                 request.getSolicitacaoId()
@@ -56,9 +59,18 @@ public class MemorialService {
         memorial.setTexto(request.getTexto().trim());
         memorial.setVersao(1);
 
-        Memorial memorialSalvo = memorialRepository.save(memorial);
+        Memorial memorialSalvo =
+                memorialRepository.save(memorial);
 
         return MemorialMapper.toResponse(memorialSalvo);
+    }
+
+    @Transactional(readOnly = true)
+    public MemorialResponse buscarPorId(Long id) {
+
+        Memorial memorial = buscarEntidadePorId(id);
+
+        return MemorialMapper.toResponse(memorial);
     }
 
     @Transactional(readOnly = true)
@@ -86,42 +98,30 @@ public class MemorialService {
     @Transactional
     public MemorialResponse atualizar(
             Long id,
-            MemorialRequest request
+            MemorialUpdateRequest request
     ) {
 
-        Memorial memorial = buscarPorId(id);
+        Memorial memorial = buscarEntidadePorId(id);
 
-        Solicitacao solicitacao = memorial.getSolicitacao();
-
-        validarSolicitacaoEmRascunho(solicitacao);
-
-        if (request.getSolicitacaoId() == null) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "O identificador da solicitação é obrigatório."
-            );
-        }
-
-        if (!solicitacao.getId().equals(request.getSolicitacaoId())) {
-            throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,
-                    "Não é permitido transferir o memorial para outra solicitação."
-            );
-        }
+        validarSolicitacaoEmRascunho(
+                memorial.getSolicitacao()
+        );
 
         memorial.setTexto(request.getTexto().trim());
         memorial.setVersao(memorial.getVersao() + 1);
 
         Memorial memorialAtualizado =
-                memorialRepository.save(memorial);
+                memorialRepository.saveAndFlush(memorial);
 
-        return MemorialMapper.toResponse(memorialAtualizado);
+        return MemorialMapper.toResponse(
+                memorialAtualizado
+        );
     }
 
     @Transactional
     public void excluir(Long id) {
 
-        Memorial memorial = buscarPorId(id);
+        Memorial memorial = buscarEntidadePorId(id);
 
         validarSolicitacaoEmRascunho(
                 memorial.getSolicitacao()
@@ -144,7 +144,7 @@ public class MemorialService {
                 );
     }
 
-    private Memorial buscarPorId(Long id) {
+    private Memorial buscarEntidadePorId(Long id) {
 
         if (id == null) {
             throw new ResponseStatusException(

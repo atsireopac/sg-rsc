@@ -1,7 +1,8 @@
 package br.gov.ife.sgrsc.features.memorial.controller;
 
-import br.gov.ife.sgrsc.features.memorial.dto.MemorialRequest;
+import br.gov.ife.sgrsc.features.memorial.dto.MemorialCreateRequest;
 import br.gov.ife.sgrsc.features.memorial.dto.MemorialResponse;
+import br.gov.ife.sgrsc.features.memorial.dto.MemorialUpdateRequest;
 import br.gov.ife.sgrsc.features.memorial.service.MemorialService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -29,7 +30,7 @@ public class MemorialController {
 
     @PostMapping
     public ResponseEntity<MemorialResponse> criar(
-            @Valid @RequestBody MemorialRequest request
+            @Valid @RequestBody MemorialCreateRequest request
     ) {
 
         MemorialResponse response =
@@ -38,6 +39,17 @@ public class MemorialController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(response);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<MemorialResponse> buscarPorId(
+            @PathVariable Long id
+    ) {
+
+        MemorialResponse response =
+                memorialService.buscarPorId(id);
+
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/solicitacao/{solicitacaoId}")
@@ -56,7 +68,7 @@ public class MemorialController {
     @PutMapping("/{id}")
     public ResponseEntity<MemorialResponse> atualizar(
             @PathVariable Long id,
-            @Valid @RequestBody MemorialRequest request
+            @Valid @RequestBody MemorialUpdateRequest request
     ) {
 
         MemorialResponse response =

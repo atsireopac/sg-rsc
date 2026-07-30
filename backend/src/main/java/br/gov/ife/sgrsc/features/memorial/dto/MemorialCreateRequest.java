@@ -3,7 +3,7 @@ package br.gov.ife.sgrsc.features.memorial.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
-public class MemorialRequest {
+public class MemorialCreateRequest {
 
     @NotNull(message = "O identificador da solicitação é obrigatório.")
     private Long solicitacaoId;
