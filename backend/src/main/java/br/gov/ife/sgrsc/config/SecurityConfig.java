@@ -43,7 +43,9 @@ public class SecurityConfig {
                                 "/api/requisitos",
                                 "/api/requisitos/**",
                                 "/api/criterios",
-                                "/api/criterios/**"
+                                "/api/criterios/**",
+                                "/api/atividades",
+                                "/api/atividades/**"
                         ).permitAll()
 
                         .anyRequest().authenticated()
