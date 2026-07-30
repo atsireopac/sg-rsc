@@ -2,6 +2,7 @@ package br.gov.ife.sgrsc.features.avaliacao.domain;
 
 import br.gov.ife.sgrsc.features.comissao.domain.Comissao;
 import br.gov.ife.sgrsc.features.solicitacao.domain.Solicitacao;
+import br.gov.ife.sgrsc.features.statusavaliacao.domain.StatusAvaliacao;
 import br.gov.ife.sgrsc.shared.domain.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -23,6 +24,10 @@ public class Avaliacao extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "comissao_id", nullable = false)
     private Comissao comissao;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "status_avaliacao_id", nullable = false)
+    private StatusAvaliacao statusAvaliacao;
 
     @Column(name = "data_inicio", nullable = false)
     private LocalDateTime dataInicio;
@@ -47,6 +52,14 @@ public class Avaliacao extends BaseEntity {
 
     public void setComissao(Comissao comissao) {
         this.comissao = comissao;
+    }
+
+    public StatusAvaliacao getStatusAvaliacao() {
+        return statusAvaliacao;
+    }
+
+    public void setStatusAvaliacao(StatusAvaliacao statusAvaliacao) {
+        this.statusAvaliacao = statusAvaliacao;
     }
 
     public LocalDateTime getDataInicio() {
