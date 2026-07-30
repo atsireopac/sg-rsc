@@ -9,6 +9,7 @@
 | **1.2** | **29/07/2026** | **Erik Barbosa** | **Implementação do módulo de documentos, integração com MinIO para armazenamento de arquivos, inclusão dos fluxos de upload e download, atualização da arquitetura da solução e documentação da estratégia de armazenamento.** |
 | **1.3** | **29/07/2026** | **Erik Barbosa** | **Implementação do módulo Base Legal, CRUD completo de Legislação, Requisito e Critério, DTOs Request/Response, Mappers, Soft Delete, consolidação da arquitetura Feature-First e validação dos endpoints REST do backend.** |
 | **1.4** | **29/07/2026** | **Erik Barbosa** | **Implementação do módulo de Solicitações, geração automática de protocolo, integração com documentos, histórico de movimentações (auditoria funcional), validação da protocolização e evolução do fluxo administrativo do RSC.** |
+| **1.5** | **30/07/2026** | **Erik Barbosa** | **Implementação do módulo Memorial, CRUD completo, controle de versão, validação de edição apenas em solicitações em rascunho, DTOs específicos para criação e atualização, consultas por identificador e por solicitação, exclusão lógica e validação dos endpoints REST.** |
 
 
 # Glossário
@@ -1137,7 +1138,7 @@ Ao longo do desenvolvimento do SG-RSC, esta matriz será continuamente atualizad
 | UC001 | Autenticar Usuário | RN001 | Autenticação | Usuário | POST /auth/login | Login | TS001 | Planejado |
 | UC002 | Criar Solicitação | RN001, RN002, RN100 | Solicitações | Solicitação | POST /solicitacoes | Nova Solicitação | TS002 | Planejado |
 | UC003 | Anexar Documentos | RN102 | Documentos | Documento | POST /documentos | Upload de Documentos | TS003 | Implementado |
-| UC004 | Gerar Memorial | RN101 | Memorial | Memorial | POST /memorial | Memorial | TS004 | Planejado |
+| UC004 | Gerar Memorial | RN101 | Memorial | Memorial | `/api/memoriais` | Memorial | TS004 | Implementado |
 | UC005 | Protocolar Solicitação | RN101, RN102, RN103, RN104 | Solicitações | Solicitação | POST /solicitacoes/protocolar | Protocolar Solicitação | TS005 | Implementado |
 | UC006 | Consultar Processo | RN005 | Solicitações | Solicitação | GET /solicitacoes/{id} | Consulta da Solicitação | TS006 | Planejado |
 | UC007 | Solicitar Complementação | RN107 | Comissão | Complementação | POST /complementacoes | Solicitar Complementação | TS007 | Planejado |
@@ -2868,9 +2869,21 @@ Este capítulo registra a evolução incremental do desenvolvimento do SG-RSC, p
 - Mapper Pattern.
 - Testes completos do fluxo de protocolização.
 
-## Próxima Sprint
+## Sprint 6
 
 - Implementação do módulo Memorial.
+- CRUD completo do Memorial.
+- Associação do Memorial à Solicitação.
+- Controle de versão do Memorial.
+- Validação de edição apenas para solicitações em rascunho.
+- Exclusão lógica.
+- DTOs específicos para criação e atualização.
+- Consulta de memorial por identificador.
+- Consulta de memorial por solicitação.
+- Testes funcionais dos endpoints REST.
+
+## Próxima Sprint
+
 - Associação de documentos aos critérios.
 - Cálculo automático da pontuação.
 - Início do fluxo de análise pela Comissão.
