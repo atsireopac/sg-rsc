@@ -1,89 +1,89 @@
+````markdown
 # SG-RSC
 
-![Java](https://img.shields.io/badge/Java-25-blue) ![Spring
-Boot](https://img.shields.io/badge/Spring_Boot-3.5-success)
+![Java](https://img.shields.io/badge/Java-25-blue)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.5-success)
 ![Angular](https://img.shields.io/badge/Angular-17-red)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue)
 ![MinIO](https://img.shields.io/badge/MinIO-Object_Storage-C72E49)
 ![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED)
-![Status](https://img.shields.io/badge/Status-Sprint_4_Concluída-brightgreen)
+![Status](https://img.shields.io/badge/Status-Sprint_7_Concluída-brightgreen)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
-Sistema de Gestão do Reconhecimento de Saberes e Competências
-(RSC-PCCTAE)
+Sistema de Gestão do Reconhecimento de Saberes e Competências (RSC-PCCTAE)
 
-> Sistema web desenvolvido em Java 25, Spring Boot 3.5 e Angular 17 para
-> gerenciamento do processo de Reconhecimento de Saberes e Competências
-> (RSC-PCCTAE), utilizando arquitetura Feature-First, autenticação via
-> Keycloak, PostgreSQL e armazenamento de documentos no MinIO.
+> Sistema web desenvolvido utilizando **Java 25**, **Spring Boot 3.5** e **Angular 17** para informatizar todo o processo de Reconhecimento de Saberes e Competências (RSC-PCCTAE), seguindo arquitetura **Feature-First**, autenticação via **Keycloak**, banco de dados **PostgreSQL** e armazenamento de documentos no **MinIO**.
 
-------------------------------------------------------------------------
+---
 
 # Sobre o Projeto
 
-O **SG-RSC** tem como objetivo informatizar todo o processo de
-solicitação, análise, avaliação e homologação do Reconhecimento de
-Saberes e Competências (RSC) destinado aos servidores
-Técnico-Administrativos em Educação (PCCTAE).
+O **SG-RSC** é uma aplicação web desenvolvida para informatizar todo o processo de solicitação, análise, avaliação, homologação e acompanhamento do **Reconhecimento de Saberes e Competências (RSC)** destinado aos servidores Técnico-Administrativos em Educação (PCCTAE).
 
-O projeto é desenvolvido de forma incremental, priorizando organização
-por funcionalidades, baixo acoplamento, facilidade de manutenção e
-escalabilidade.
+O sistema foi concebido seguindo princípios de arquitetura moderna, organização por funcionalidades (**Feature-First**), baixo acoplamento, alta coesão, escalabilidade e facilidade de manutenção.
 
-------------------------------------------------------------------------
+O desenvolvimento ocorre de forma incremental, utilizando metodologia baseada em sprints, permitindo evolução contínua da aplicação.
+
+---
 
 # Objetivos
 
--   Automatizar o processo de concessão do RSC.
--   Apoiar a DGP e as Comissões Avaliadoras.
--   Parametrizar a legislação vigente.
--   Centralizar documentos comprobatórios.
--   Automatizar o cálculo de pontuação.
--   Garantir rastreabilidade e auditoria.
+- Automatizar todo o processo de concessão do RSC.
+- Parametrizar a legislação vigente.
+- Gerenciar solicitações de RSC.
+- Gerenciar memoriais descritivos.
+- Gerenciar atividades declaradas.
+- Centralizar documentos comprobatórios.
+- Automatizar o cálculo de pontuação.
+- Apoiar as Comissões Avaliadoras.
+- Garantir rastreabilidade, auditoria e transparência.
 
-------------------------------------------------------------------------
+---
 
 # Tecnologias
 
 ## Backend
 
--   Java 25 LTS
--   Spring Boot 3.5
--   Spring Security
--   Spring Data JPA
--   Flyway
--   Maven
--   OpenAPI (Swagger)
+- Java 25 LTS
+- Spring Boot 3.5
+- Spring Security
+- Spring Data JPA
+- Flyway
+- Maven
+- OpenAPI (Swagger)
 
 ## Frontend
 
--   Angular 17
--   TypeScript
+- Angular 17
+- TypeScript
 
 ## Banco de Dados
 
--   PostgreSQL 16
+- PostgreSQL 16
+
+## Armazenamento
+
+- MinIO
 
 ## Infraestrutura
 
--   Docker
--   Docker Compose
--   MinIO
--   Git
--   GitHub
+- Docker
+- Docker Compose
+- Git
+- GitHub
 
 ## Autenticação
 
--   Keycloak
--   OAuth2
--   OpenID Connect (OIDC)
--   JWT
+- Keycloak
+- OAuth2
+- OpenID Connect (OIDC)
+- JWT
 
-------------------------------------------------------------------------
+---
 
 # Arquitetura
 
-``` text
+```text
                          Angular 17
                               │
                               ▼
@@ -102,157 +102,219 @@ escalabilidade.
 
 ## Organização do Backend
 
-``` text
+```text
 backend/
 ├── config
 ├── features
+│   ├── atividade
 │   ├── documento
 │   ├── health
 │   ├── legislacao
-│   │   ├── controller
-│   │   ├── dto
-│   │   ├── entity
-│   │   ├── mapper
-│   │   ├── repository
-│   │   └── service
+│   ├── requisito
+│   ├── criterio
+│   ├── memorial
+│   ├── solicitacao
 │   ├── servidor
-│   ├── situacaofuncional
-│   └── solicitacao
+│   └── situacaofuncional
 ├── security
 └── shared
 ```
 
-------------------------------------------------------------------------
+---
 
 # Funcionalidades Implementadas
 
 ## Infraestrutura
 
--   Java 25
--   Spring Boot 3.5
--   PostgreSQL 16
--   Docker
--   Flyway
--   Spring Security
--   OpenAPI (Swagger)
--   Arquitetura Feature-First
+- Java 25
+- Spring Boot 3.5
+- PostgreSQL 16
+- Docker
+- Docker Compose
+- Flyway
+- Spring Security
+- OpenAPI (Swagger)
+- Arquitetura Feature-First
+
+## Segurança
+
+- Integração com Keycloak
+- OAuth2 / OpenID Connect
+- JWT
+- Configuração de autorização por endpoints
 
 ## Base Legal
 
--   CRUD de Legislação
--   CRUD de Requisito
--   CRUD de Critério
--   DTOs Request/Response
--   Mapper Pattern
--   Soft Delete
--   Testes dos endpoints REST
+- CRUD de Legislação
+- CRUD de Requisitos
+- CRUD de Critérios
+- Carga inicial da Base Legal (Flyway V10)
+- DTOs Request/Response
+- Mapper Pattern
+- Soft Delete
+- Testes REST
+
+## Solicitações
+
+- CRUD de Solicitações
+- Geração automática de protocolo
+- Controle de status
+- Histórico de protocolização
+- Integração com documentos
+
+## Memorial
+
+- CRUD completo
+- Associação à Solicitação
+- Controle de edição
+- Versionamento
+- Exclusão lógica
+
+## Atividades Declaradas
+
+- CRUD completo
+- Associação opcional ao Critério Pretendido
+- Consulta por Solicitação
+- Exclusão lógica
+- DTOs específicos
+- Mapper Pattern
 
 ## Documentos
 
--   Upload de documentos
--   Download de documentos
--   Persistência de metadados
--   Armazenamento no MinIO
--   Exclusão lógica
+- Upload de documentos
+- Download de documentos
+- Persistência dos metadados
+- Armazenamento físico no MinIO
+- Exclusão lógica
+- Associação N:N entre Atividades Declaradas e Documentos
+- Reutilização de documentos em diferentes atividades
 
 ## Monitoramento
 
--   Endpoint `/api/health`
+- Endpoint `/api/health`
 
-------------------------------------------------------------------------
+---
 
 # Roadmap
 
 ## ✅ Sprint 1
 
--   Estrutura inicial
--   Spring Boot
--   PostgreSQL
--   Docker
--   Flyway
--   Arquitetura Feature-First
+- Estrutura inicial do backend
+- Spring Boot
+- PostgreSQL
+- Docker
+- Flyway
+- Arquitetura Feature-First
 
 ## ✅ Sprint 2
 
--   Spring Security
--   Estrutura para Keycloak
--   OAuth2 / OIDC
--   JWT
--   Health Check
+- Spring Security
+- Keycloak
+- OAuth2 / OIDC
+- JWT
+- Endpoint Health
 
 ## ✅ Sprint 3
 
--   Módulo de Documentos
--   Integração com MinIO
--   Upload e Download
--   Swagger
+- Módulo de Documentos
+- Integração com MinIO
+- Upload
+- Download
+- Soft Delete
 
 ## ✅ Sprint 4
 
--   Módulo Base Legal
--   CRUD de Legislação
--   CRUD de Requisito
--   CRUD de Critério
--   DTOs
--   Mappers
--   Soft Delete
--   Testes REST
+- Módulo Base Legal
+- CRUD de Legislação
+- CRUD de Requisitos
+- CRUD de Critérios
+- DTOs
+- Mapper Pattern
+- Soft Delete
+- Testes REST
 
-## 🚧 Sprint 5
+## ✅ Sprint 5
 
--   Solicitação de RSC
--   Associação Documento × Critério
--   Memorial
--   Fluxo de Protocolo
+- Módulo de Solicitações
+- CRUD de Solicitações
+- Geração de protocolo
+- Histórico
+- Integração com Documentos
 
-## Sprint 6
+## ✅ Sprint 6
 
--   Fluxo da Comissão
--   Pareceres
--   Motor de Pontuação
--   Recursos
+- Módulo Memorial
+- CRUD completo
+- Associação à Solicitação
+- Versionamento
+- Validações
+- Soft Delete
 
-## Sprint 7
+## ✅ Sprint 7
 
--   Dashboard
--   Relatórios
--   Indicadores
--   Auditoria
+- Módulo Atividades Declaradas
+- CRUD completo
+- Associação opcional ao Critério
+- Associação N:N entre Atividades e Documentos
+- Migração Flyway V9
+- Carga inicial da Base Legal (V10)
+- Ajustes de Segurança
+- Testes completos dos endpoints REST
 
-------------------------------------------------------------------------
+## 🚧 Próxima Sprint
+
+- Motor de cálculo automático da pontuação
+- Fluxo da Comissão Avaliadora
+- Pareceres
+- Consolidação da pontuação
+- Recursos administrativos
+
+---
 
 # Como Executar
 
 ## Pré-requisitos
 
--   Java 25
--   Maven
--   Docker Desktop
--   Node.js
--   Angular CLI
+- Java 25
+- Maven
+- Docker Desktop
+- Node.js
+- Angular CLI
 
 ## Infraestrutura
 
-``` bash
+```bash
 docker compose up -d
 ```
 
-Serviços: - PostgreSQL - Keycloak - MinIO
+Serviços disponíveis:
+
+- PostgreSQL
+- Keycloak
+- MinIO
 
 ## Backend
 
-``` bash
+```bash
 cd backend
 ./mvnw spring-boot:run
 ```
 
-Health:
+Health Check:
 
-    GET http://localhost:8080/api/health
+```
+GET http://localhost:8080/api/health
+```
+
+Swagger:
+
+```
+http://localhost:8080/swagger-ui.html
+```
 
 ## Frontend
 
-``` bash
+```bash
 cd frontend
 npm install
 npm start
@@ -260,69 +322,98 @@ npm start
 
 Acesso:
 
-    http://localhost:4200
+```
+http://localhost:4200
+```
 
-------------------------------------------------------------------------
+---
 
 # API REST
 
-Swagger:
+## Monitoramento
 
-    http://localhost:8080/swagger-ui.html
+- GET `/api/health`
 
-## Principais Endpoints
+## Base Legal
 
--   GET /api/health
--   CRUD /api/legislacoes
--   CRUD /api/requisitos
--   CRUD /api/criterios
+- CRUD `/api/legislacoes`
+- CRUD `/api/requisitos`
+- CRUD `/api/criterios`
 
-------------------------------------------------------------------------
+## Solicitações
+
+- CRUD `/api/solicitacoes`
+
+## Memorial
+
+- CRUD `/api/memoriais`
+
+## Documentos
+
+- POST `/api/documentos`
+- GET `/api/documentos/{id}`
+- GET `/api/documentos/solicitacao/{id}`
+
+## Atividades Declaradas
+
+- POST `/api/atividades`
+- GET `/api/atividades/{id}`
+- GET `/api/atividades/solicitacao/{id}`
+- PUT `/api/atividades/{id}`
+- DELETE `/api/atividades/{id}`
+
+### Associação Documento × Atividade
+
+- POST `/api/atividades/{atividadeId}/documentos`
+- DELETE `/api/atividades/{atividadeId}/documentos/{documentoId}`
+
+---
 
 # Status Atual
 
-O backend possui sua primeira funcionalidade de negócio completamente
-implementada.
+## Concluído
 
-Concluído:
+- Infraestrutura completa do projeto;
+- Arquitetura Feature-First;
+- Integração com PostgreSQL;
+- Integração com MinIO;
+- Spring Security;
+- Keycloak;
+- OpenAPI (Swagger);
+- Módulo Base Legal;
+- Módulo Solicitações;
+- Módulo Memorial;
+- Módulo Atividades Declaradas;
+- Associação entre Atividades e Documentos;
+- Migrações Flyway V1 a V10;
+- Testes funcionais completos dos endpoints REST.
 
--   Infraestrutura da aplicação;
--   Módulo Base Legal;
--   CRUD de Legislação;
--   CRUD de Requisito;
--   CRUD de Critério;
--   Integração com MinIO;
--   OpenAPI (Swagger);
--   Testes manuais dos endpoints REST.
+## Em Desenvolvimento
 
-Próxima etapa:
+- Motor de cálculo da pontuação.
+- Fluxo de avaliação da Comissão.
+- Pareceres.
+- Recursos administrativos.
+- Dashboard gerencial.
 
--   Implementação do módulo de Solicitação de RSC.
-
-------------------------------------------------------------------------
+---
 
 # Histórico de Versões
 
-  -----------------------------------------------------------------------
-  Versão                          Descrição
-  ------------------------------- ---------------------------------------
-  v0.1.0                          Estrutura inicial do projeto
+| Versão | Descrição |
+|---------|-----------|
+| **v0.1.0** | Estrutura inicial do projeto |
+| **v0.2.0** | Arquitetura Feature-First |
+| **v0.3.0** | Infraestrutura (PostgreSQL, Docker e Flyway) |
+| **v0.4.0** | Módulo de Documentos e integração com MinIO |
+| **v0.5.0** | Módulo Base Legal |
+| **v0.6.0** | Módulo de Solicitações |
+| **v0.7.0** | Módulo Memorial |
+| **v0.8.0** | Módulo Atividades Declaradas, associação entre atividades e documentos, Flyway V9/V10, carga inicial da Base Legal e validação completa dos endpoints REST |
 
-  v0.2.0                          Arquitetura Feature-First
-
-  v0.3.0                          PostgreSQL, Docker, Flyway e
-                                  infraestrutura
-
-  v0.4.0                          Módulo de Documentos e integração com
-                                  MinIO
-
-  v0.5.0                          Módulo Base Legal (Legislação,
-                                  Requisito e Critério), DTOs, Mappers,
-                                  Soft Delete e testes REST
-  -----------------------------------------------------------------------
-
-------------------------------------------------------------------------
+---
 
 # Licença
 
 Este projeto está licenciado sob a licença **MIT**.
+````

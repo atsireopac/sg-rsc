@@ -10,6 +10,7 @@
 | **1.3** | **29/07/2026** | **Erik Barbosa** | **Implementação do módulo Base Legal, CRUD completo de Legislação, Requisito e Critério, DTOs Request/Response, Mappers, Soft Delete, consolidação da arquitetura Feature-First e validação dos endpoints REST do backend.** |
 | **1.4** | **29/07/2026** | **Erik Barbosa** | **Implementação do módulo de Solicitações, geração automática de protocolo, integração com documentos, histórico de movimentações (auditoria funcional), validação da protocolização e evolução do fluxo administrativo do RSC.** |
 | **1.5** | **30/07/2026** | **Erik Barbosa** | **Implementação do módulo Memorial, CRUD completo, controle de versão, validação de edição apenas em solicitações em rascunho, DTOs específicos para criação e atualização, consultas por identificador e por solicitação, exclusão lógica e validação dos endpoints REST.** |
+| **1.6** | **30/07/2026** | **Erik Barbosa** | **Implementação do módulo Atividades Declaradas, associação de atividades aos critérios pretendidos, vínculo entre atividades e documentos, migração V9, carga inicial da Base Legal por meio da migração V10, testes completos dos endpoints REST e validação da integração com o armazenamento de documentos.** |
 
 
 # Glossário
@@ -826,6 +827,50 @@ Servidor.
 
 RN102 – Documentação.
 
+## UC003A – Gerenciar Atividades Declaradas
+
+### Objetivo
+
+Permitir que o servidor cadastre, consulte, altere e remova as atividades desenvolvidas que serão utilizadas para comprovação dos critérios do Reconhecimento de Saberes e Competências (RSC).
+
+### Ator
+
+Servidor.
+
+### Pré-condições
+
+- O usuário deve estar autenticado.
+- Deve existir uma solicitação em andamento.
+- A solicitação deve permitir edição.
+
+### Fluxo Principal
+
+1. O servidor acessa a solicitação.
+2. Seleciona a opção **Adicionar Atividade**.
+3. Informa o título, a descrição e o período de realização da atividade.
+4. Seleciona, opcionalmente, o critério pretendido relacionado à atividade.
+5. Salva a atividade.
+6. O sistema registra a atividade na solicitação.
+7. O servidor poderá vincular um ou mais documentos comprobatórios à atividade.
+
+### Fluxos Alternativos
+
+- Solicitação inexistente.
+- Solicitação não permite edição.
+- Critério informado inexistente.
+- Documento inexistente.
+
+### Pós-condições
+
+- A atividade permanece vinculada à solicitação.
+- Os documentos vinculados permanecem armazenados no MinIO.
+- Os vínculos entre atividade e documentos poderão ser alterados posteriormente sem excluir os documentos da solicitação.
+
+### Regras de Negócio
+
+- RN102 – Documentação.
+- RN105 – Reutilização de atividades.
+
 ## UC004 – Gerar Memorial
 
 Objetivo
@@ -1138,6 +1183,7 @@ Ao longo do desenvolvimento do SG-RSC, esta matriz será continuamente atualizad
 | UC001 | Autenticar Usuário | RN001 | Autenticação | Usuário | POST /auth/login | Login | TS001 | Planejado |
 | UC002 | Criar Solicitação | RN001, RN002, RN100 | Solicitações | Solicitação | POST /solicitacoes | Nova Solicitação | TS002 | Planejado |
 | UC003 | Anexar Documentos | RN102 | Documentos | Documento | POST /documentos | Upload de Documentos | TS003 | Implementado |
+| UC003A | Gerenciar Atividades Declaradas | RN102, RN105 | Atividades Declaradas | Atividade Declarada | `/api/atividades` | Atividades Declaradas | TS003A | **Implementado** |
 | UC004 | Gerar Memorial | RN101 | Memorial | Memorial | `/api/memoriais` | Memorial | TS004 | Implementado |
 | UC005 | Protocolar Solicitação | RN101, RN102, RN103, RN104 | Solicitações | Solicitação | POST /solicitacoes/protocolar | Protocolar Solicitação | TS005 | Implementado |
 | UC006 | Consultar Processo | RN005 | Solicitações | Solicitação | GET /solicitacoes/{id} | Consulta da Solicitação | TS006 | Planejado |
@@ -1212,35 +1258,22 @@ Cada entidade possuirá atributos, relacionamentos e regras de negócio específ
 
 O sistema será composto, inicialmente, pelas seguintes entidades:
 
-• Usuário
-
-• Servidor
-
-• Solicitação
-
-• Memorial
-
-• Legislação
-
-• Requisito
-
-• Critério
-
-• Documento
-
-• Pontuação
-
-• Parecer
-
-• Comissão
-
-• Complementação
-
-• Recurso
-
-• Auditoria
-
-• Notificação
+- Usuário
+- Servidor
+- Solicitação
+- Memorial
+- Legislação
+- Requisito
+- Critério
+- Atividade Declarada
+- Documento
+- Pontuação
+- Parecer
+- Comissão
+- Complementação
+- Recurso
+- Auditoria
+- Notificação
 
 ---
 
@@ -1336,7 +1369,30 @@ Relacionamentos:
 
 ---
 
-# 4.8 Entidade Documento
+# 4.8 Entidade Atividade Declarada
+
+Representa cada atividade declarada pelo servidor como evidência de sua trajetória profissional e que poderá ser utilizada para comprovação dos critérios previstos na legislação do RSC.
+
+Cada atividade descreve um fato ou realização do servidor e pode estar associada a um critério pretendido e a um ou mais documentos comprobatórios.
+
+### Atributos
+
+- id
+- título
+- descrição
+- dataInício
+- dataFim
+- dataCriação
+- dataAtualização
+
+### Relacionamentos
+
+- pertence a uma Solicitação;
+- pode estar associada a um Critério;
+- pode possuir um ou mais Documentos;
+- participa do processo de avaliação da solicitação.
+
+# 4.9 Entidade Documento
 
 Representa qualquer documento anexado ao processo.
 
@@ -1356,7 +1412,7 @@ Relacionamentos:
 
 ---
 
-# 4.9 Entidade Critério
+# 4.10 Entidade Critério
 
 Representa um critério previsto no Decreto nº 13.048/2026.
 
@@ -1369,14 +1425,16 @@ Atributos:
 - pontuação
 - ativo
 
-Relacionamentos:
+### Relacionamentos
 
-- pode estar vinculado a vários Documentos;
+- pertence a um Requisito;
+- pode estar associado a várias Atividades Declaradas;
+- pode ser comprovado por um ou mais Documentos;
 - participa do cálculo da Pontuação.
 
 ---
 
-# 4.10 Entidade Pontuação
+# 4.11 Entidade Pontuação
 
 Representa o resultado da avaliação dos critérios.
 
@@ -1393,7 +1451,7 @@ Relacionamentos:
 
 ---
 
-# 4.11 Entidade Parecer
+# 4.12 Entidade Parecer
 
 Representa a decisão emitida pela Comissão.
 
@@ -1411,7 +1469,7 @@ Relacionamentos:
 
 ---
 
-# 4.12 Entidade Comissão
+# 4.13 Entidade Comissão
 
 Representa a comissão responsável pela análise.
 
@@ -1429,7 +1487,7 @@ Relacionamentos:
 
 ---
 
-# 4.13 Entidade Complementação
+# 4.14 Entidade Complementação
 
 Representa pedidos de documentos adicionais.
 
@@ -1447,7 +1505,7 @@ Relacionamentos:
 
 ---
 
-# 4.14 Entidade Recurso
+# 4.15 Entidade Recurso
 
 Representa recurso administrativo apresentado pelo servidor.
 
@@ -1464,7 +1522,7 @@ Relacionamentos:
 
 ---
 
-# 4.15 Entidade Auditoria
+# 4.16 Entidade Auditoria
 
 Registra todas as ações realizadas no sistema.
 
@@ -1483,7 +1541,7 @@ Relacionamentos:
 
 ---
 
-# 4.16 Entidade Notificação
+# 4.17 Entidade Notificação
 
 Representa mensagens enviadas pelo sistema.
 
@@ -1501,7 +1559,7 @@ Relacionamentos:
 
 ---
 
-# 4.17 Relacionamentos
+# 4.18 Relacionamentos
 
 Servidor
 
@@ -1509,49 +1567,31 @@ Servidor
 
 Solicitação
 
-↓
+├── Memorial
 
-Memorial
+├── Atividades Declaradas
 
-↓
+│     ├── Critério Pretendido
 
-Legislação
+│     └── Documentos
 
-↓
+├── Histórico
 
-Requisito
+├── Pontuação
 
-↓
+├── Parecer
 
-Critério
-
-↓
-
-Documento
-
-↓
-
-Pontuação
-
-↓
-
-Parecer
-
-↓
-
-Recurso
+└── Recurso
 
 Durante todo o fluxo serão registrados:
 
 - Auditoria
-
 - Notificações
-
 - Complementações
 
 ---
 
-# 4.18 Evolução do Modelo
+# 4.19 Evolução do Modelo
 
 O Modelo de Domínio poderá evoluir conforme novas necessidades forem identificadas durante o desenvolvimento do projeto ou em decorrência de alterações na legislação.
 
@@ -1611,15 +1651,18 @@ Para manter a padronização do banco de dados serão adotadas as seguintes conv
 
 O banco será composto inicialmente pelas seguintes tabelas:
 
-- keycloakUserId (As credenciais de autenticação (login e senha) não serão armazenadas pelo SG-RSC. Essas informações serão gerenciadas pelo Keycloak. A aplicação manterá apenas a referência ao usuário autenticado por meio do identificador único (keycloakUserId).)
+- usuario
 - servidor
 - solicitacao
 - memorial
 - legislacao
 - requisito
 - criterio
+- atividade_declarada
+- atividade_documento
 - documento
-- documento_criterio
+- tipo_documento
+- historico_solicitacao
 - pontuacao
 - parecer
 - comissao
@@ -1643,11 +1686,23 @@ Solicitação
 
 Solicitação
 
+1 ---- N Atividade Declarada
+
+Solicitação
+
 1 ---- N Documento
 
-Documento
+Critério
 
-N ---- N Critério
+1 ---- N Atividade Declarada
+
+Atividade Declarada
+
+N ---- N Documento
+
+Solicitação
+
+1 ---- N Histórico
 
 Solicitação
 
@@ -1673,14 +1728,6 @@ Usuário
 
 1 ---- N Auditoria
 
-Comissão
-
-1 ---- N Membros
-
-Comissão
-
-1 ---- N Solicitações
-
 ---
 
 # 5.6 Cardinalidades
@@ -1689,8 +1736,11 @@ Comissão
 |---------|----------|---------------|
 | Servidor | Solicitação | 1:N |
 | Solicitação | Memorial | 1:1 |
+| Solicitação | Atividade Declarada | 1:N |
 | Solicitação | Documento | 1:N |
-| Documento | Critério | N:N |
+| Critério | Atividade Declarada | 1:N |
+| Atividade Declarada | Documento | N:N |
+| Solicitação | Histórico | 1:N |
 | Solicitação | Pontuação | 1:1 |
 | Solicitação | Parecer | 1:N |
 | Solicitação | Complementação | 1:N |
@@ -1722,13 +1772,14 @@ Todas as relações utilizarão Foreign Keys.
 
 Exemplos:
 
-Solicitação somente poderá existir se houver Servidor.
-
-Documento somente poderá existir se houver Solicitação.
-
-Parecer somente poderá existir se houver Solicitação.
-
-Pontuação somente poderá existir se houver Solicitação.
+- Solicitação somente poderá existir se houver Servidor.
+- Memorial somente poderá existir se houver Solicitação.
+- Atividade Declarada somente poderá existir se houver Solicitação.
+- Documento somente poderá existir se houver Solicitação.
+- Uma Atividade Declarada poderá estar associada a um Critério existente.
+- O vínculo entre Atividade Declarada e Documento somente poderá ser criado para registros válidos.
+- Parecer somente poderá existir se houver Solicitação.
+- Pontuação somente poderá existir se houver Solicitação.
 
 ---
 
@@ -1809,7 +1860,11 @@ Usuário
 │      ├── Solicitação
 │      │        │
 │      │        ├── Memorial
+│      │        ├── Atividade Declarada
+│      │        │        ├── Critério Pretendido
+│      │        │        └── Documento(s)
 │      │        ├── Documento
+│      │        ├── Histórico
 │      │        ├── Pontuação
 │      │        ├── Parecer
 │      │        ├── Complementação
@@ -1862,7 +1917,7 @@ O modelo de avaliação foi concebido seguindo os seguintes princípios:
 
 # 6.3 Estrutura do Modelo
 
-A avaliação será organizada em quatro níveis:
+A avaliação do Reconhecimento de Saberes e Competências será organizada em cinco níveis:
 
 Nível 1
 
@@ -1878,14 +1933,19 @@ Critério
 
 Nível 3
 
-Documento
+Atividade Declarada
 
 ↓
 
 Nível 4
 
-Avaliação
+Documento Comprobatório
 
+↓
+
+Nível 5
+
+Avaliação
 ---
 
 # 6.4 Requisito
@@ -1944,23 +2004,35 @@ Cada critério possuirá:
 
 # 6.6 Documento Comprobatório
 
-Cada critério poderá possuir um ou mais documentos comprobatórios.
+Os documentos representam as evidências utilizadas para comprovar as atividades declaradas pelo servidor.
 
-Exemplos:
+Cada documento é armazenado fisicamente no MinIO e possui seus metadados persistidos no PostgreSQL.
 
-Portaria.
+Um documento poderá ser associado a uma ou mais Atividades Declaradas, permitindo sua reutilização quando representar evidência para diferentes atividades relacionadas ao processo de avaliação.
 
-Certificado.
+Cada documento armazenará, entre outras informações:
 
-Declaração.
+- nome original;
+- nome do arquivo armazenado;
+- tipo MIME;
+- tamanho do arquivo;
+- data de envio;
+- tipo de documento;
+- status do documento.
 
-Publicação.
-
-Relatório.
-
-Manual.
+A associação entre Atividade Declarada e Documento é realizada por meio de uma entidade de vínculo, preservando a integridade referencial e permitindo a gestão independente dos documentos e das atividades.
 
 ---
+
+# 6.6.1 Atividade Declarada
+
+A Atividade Declarada representa cada experiência profissional, acadêmica, administrativa ou técnica informada pelo servidor como evidência para obtenção do Reconhecimento de Saberes e Competências.
+
+Cada atividade poderá ser associada, opcionalmente, a um Critério Pretendido da Base Legal, permitindo orientar a análise da Comissão durante o processo de avaliação.
+
+Além disso, uma atividade poderá possuir um ou mais documentos comprobatórios vinculados, demonstrando as evidências apresentadas pelo servidor.
+
+Essa modelagem permite separar claramente a descrição da atividade das evidências documentais, proporcionando maior flexibilidade e rastreabilidade durante o processo de avaliação.
 
 # 6.7 Avaliação
 
@@ -1978,14 +2050,19 @@ Para cada critério será registrado:
 
 # 6.8 Motor de Cálculo
 
-O sistema calculará automaticamente:
+O cálculo da pontuação será realizado automaticamente pelo sistema com base nas atividades declaradas, nos critérios parametrizados e nas evidências documentais apresentadas pelo servidor.
 
-- pontuação total;
-- critérios atendidos;
-- critérios pendentes;
-- requisitos obrigatórios;
-- elegibilidade ao nível pretendido.
+O motor de avaliação deverá:
 
+- identificar os critérios associados às atividades declaradas;
+- verificar a existência de documentação comprobatória;
+- calcular automaticamente a pontuação obtida;
+- identificar critérios pendentes;
+- validar requisitos obrigatórios;
+- calcular a pontuação total da solicitação;
+- verificar a elegibilidade ao nível de RSC pretendido.
+
+Embora o cálculo automático ainda não esteja implementado, toda a estrutura necessária para sua parametrização já foi incorporada ao modelo de domínio e ao banco de dados.
 ---
 
 # 6.9 Parametrização
@@ -2045,15 +2122,15 @@ Além disso, todas as avaliações realizadas pela Comissão deverão permanecer
 
 ## Status da Implementação
 
-A primeira versão do módulo **Base Legal** já foi implementada no backend do SG-RSC.
+A primeira versão do módulo **Base Legal** foi implementada no backend do SG-RSC e atualmente está integrada ao módulo de Atividades Declaradas.
 
 Nesta etapa foram desenvolvidas as seguintes entidades de domínio:
 
 - Legislação;
 - Requisito;
-- Critério.
-
-Essas entidades são responsáveis pela parametrização da legislação aplicável ao processo de Reconhecimento de Saberes e Competências, permitindo que futuras alterações normativas sejam refletidas por meio de cadastro de dados, reduzindo a necessidade de alterações no código-fonte.
+- Critério;
+- Atividade Declarada;
+- Vínculo entre Atividade Declarada e Documento.
 
 O módulo foi implementado seguindo a arquitetura Feature-First, contemplando:
 
@@ -2064,7 +2141,14 @@ O módulo foi implementado seguindo a arquitetura Feature-First, contemplando:
 - DTOs de requisição e resposta;
 - mapeadores (Mapper Pattern);
 - exclusão lógica (Soft Delete);
-- testes funcionais dos endpoints REST.
+- migrações Flyway para criação das estruturas e carga inicial dos dados;
+- associação entre atividades e critérios pretendidos;
+- associação entre atividades e documentos comprobatórios;
+- testes funcionais completos dos endpoints REST.
+
+### Evolução Prevista
+
+A próxima etapa do desenvolvimento consistirá na implementação do motor de cálculo da pontuação, que utilizará as atividades declaradas, os critérios parametrizados e os documentos comprobatórios para calcular automaticamente a pontuação obtida pelo servidor, respeitando as regras estabelecidas pelo Decreto nº 13.048/2026.
 
 Fim do Capítulo 6.
 
@@ -2090,8 +2174,8 @@ A solução será composta pelos seguintes componentes:
 
 - Front-end Web;
 - API REST;
-- Banco de Dados;
-- Armazenamento de Arquivos;
+- Banco de Dados PostgreSQL;
+- Armazenamento de Arquivos (MinIO);
 - Serviço de Autenticação;
 - Serviço de Auditoria;
 - Serviço de Notificações.
@@ -2814,6 +2898,47 @@ Novas ADRs poderão ser incorporadas ao longo da evolução do projeto para docu
 
 A manutenção deste histórico contribuirá para a rastreabilidade das decisões técnicas, facilitará a integração de novos desenvolvedores ao projeto e servirá como referência para futuras evoluções da aplicação.
 
+# ADR-011 – Modelagem de Atividades Declaradas
+
+## Status
+
+Aceita
+
+## Contexto
+
+O processo de solicitação do RSC exige que o servidor informe as atividades realizadas e apresente documentos comprobatórios.
+
+Uma mesma atividade pode possuir vários documentos e um mesmo documento pode ser utilizado para comprovar mais de uma atividade.
+
+Era necessário definir uma modelagem que permitisse reutilização de documentos sem duplicação de dados.
+
+## Decisão
+
+Foi criada a entidade **Atividade Declarada** como parte do domínio da aplicação.
+
+Os documentos permanecem pertencendo à Solicitação.
+
+A relação entre Atividade Declarada e Documento foi modelada como **N:N**, utilizando a entidade intermediária `atividade_documento`.
+
+A remoção do vínculo entre atividade e documento não remove o documento armazenado, apenas a associação.
+
+## Consequências
+
+### Benefícios
+
+- reutilização de documentos;
+- eliminação de duplicidade;
+- maior flexibilidade para futuras regras de negócio;
+- melhor aderência ao domínio do RSC;
+- maior rastreabilidade das evidências.
+
+### Impactos
+
+- criação da tabela `atividade_documento`;
+- implementação dos endpoints de associação;
+- atualização do modelo de domínio;
+- atualização das migrações Flyway.
+
 ---
 
 Fim do Capítulo 8.
@@ -2882,8 +3007,34 @@ Este capítulo registra a evolução incremental do desenvolvimento do SG-RSC, p
 - Consulta de memorial por solicitação.
 - Testes funcionais dos endpoints REST.
 
-## Próxima Sprint
+## Sprint 7
 
-- Associação de documentos aos critérios.
-- Cálculo automático da pontuação.
-- Início do fluxo de análise pela Comissão.
+- Implementação do módulo de Atividades Declaradas.
+- CRUD completo de Atividades Declaradas.
+- Associação opcional entre Atividade Declarada e Critério Pretendido.
+- Associação N:N entre Atividades Declaradas e Documentos.
+- Criação da tabela de vínculo `atividade_documento`.
+- Migração Flyway V9 para criação das tabelas do módulo.
+- Migração Flyway V10 para carga inicial da Base Legal (Legislação, Requisitos e Critérios).
+- Ajustes na configuração de segurança para os novos endpoints REST.
+- DTOs Request/Response específicos.
+- Mapper Pattern.
+- Exclusão lógica (Soft Delete).
+- Testes funcionais completos dos endpoints REST.
+- Validação do fluxo completo de:
+  - criação da atividade;
+  - consulta por identificador;
+  - consulta por solicitação;
+  - atualização da atividade;
+  - exclusão lógica;
+  - upload de documento;
+  - associação entre atividade e documento;
+  - remoção do vínculo preservando o documento armazenado.
+
+  ## Próxima Sprint
+
+- Implementação do motor de cálculo automático da pontuação.
+- Associação automática entre critérios e regras de avaliação.
+- Consolidação da pontuação por solicitação.
+- Implementação do fluxo de análise pela Comissão.
+- Registro de pareceres e decisões da Comissão.
