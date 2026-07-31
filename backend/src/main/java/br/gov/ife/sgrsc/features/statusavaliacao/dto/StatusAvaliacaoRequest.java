@@ -5,15 +5,15 @@ import jakarta.validation.constraints.Size;
 
 public class StatusAvaliacaoRequest {
 
-    @NotBlank
-    @Size(max = 50)
+    @NotBlank(message = "não pode ficar em branco")
+    @Size(max = 20, message = "deve possuir no máximo 20 caracteres")
     private String codigo;
 
-    @NotBlank
-    @Size(max = 100)
+    @NotBlank(message = "não pode ficar em branco")
+    @Size(max = 100, message = "deve possuir no máximo 100 caracteres")
     private String nome;
 
-    @Size(max = 500)
+    @Size(max = 500, message = "deve possuir no máximo 500 caracteres")
     private String descricao;
 
     private Boolean ativo;
