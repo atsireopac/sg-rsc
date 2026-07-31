@@ -13,6 +13,7 @@
 | **1.6** | **30/07/2026** | **Erik Barbosa** | **Implementação do módulo Atividades Declaradas, associação de atividades aos critérios pretendidos, vínculo entre atividades e documentos, migração V9, carga inicial da Base Legal por meio da migração V10, testes completos dos endpoints REST e validação da integração com o armazenamento de documentos.** |
 | **1.7** | **30/07/2026** | **Erik Barbosa** | **Implementação do módulo Status da Avaliação, CRUD completo, migração Flyway V11, entidade StatusAvaliacao, integração com Avaliação, DTOs Request/Response/Summary, Mapper Pattern, Service Layer, Controller REST, ajustes no Spring Security e validação completa dos endpoints REST via curl.** |
 | **1.8** | **31/07/2026** | **Erik Barbosa** | **Implementação da infraestrutura de tratamento global de exceções da API REST, criação do GlobalExceptionHandler, padronização das respostas de erro, tratamento das validações Bean Validation e criação das exceções de domínio BusinessException e ResourceNotFoundException.** |
+| **1.8** | **31/07/2026** | **Erik Barbosa** | **Implementação da padronização global de tratamento de exceções da API REST (GlobalExceptionHandler), criação das exceções de negócio e recurso não encontrado, padronização das respostas de erro, implementação de paginação e filtros nos endpoints REST utilizando Spring Data Pageable e criação do PageResponse para respostas paginadas.** |
 
 
 # Glossário
@@ -2472,6 +2473,74 @@ A adoção de um tratamento global de exceções proporciona diversos benefício
 
 Essa abordagem também facilita a inclusão de novos tipos de exceções específicas do domínio do SG-RSC, mantendo o comportamento uniforme da API e preservando a arquitetura **Feature-First** adotada pelo projeto.
 
+# 7.6.4 Paginação e Filtros dos Endpoints REST
+
+Com o crescimento do volume de dados manipulados pelo SG-RSC, foi adotada uma estratégia padronizada de paginação, ordenação e filtragem dos endpoints REST utilizando os recursos nativos do Spring Data.
+
+Os endpoints de consulta passaram a aceitar parâmetros de paginação, ordenação e filtros, permitindo consultas mais eficientes e reduzindo a quantidade de dados trafegados entre o backend e o frontend.
+
+## Parâmetros suportados
+
+| Parâmetro | Descrição |
+|-----------|-----------|
+| `page` | Número da página (iniciando em 0). |
+| `size` | Quantidade de registros por página. |
+| `sort` | Campo utilizado para ordenação (`campo,direção`). |
+| `termo` | Texto utilizado na pesquisa por código ou nome. |
+| `ativo` | Filtra registros ativos ou inativos. |
+
+### Exemplo
+
+```http
+GET /api/status-avaliacoes?page=0&size=10&sort=nome,asc
+```
+
+```http
+GET /api/status-avaliacoes?termo=analise
+```
+
+```http
+GET /api/status-avaliacoes?ativo=true
+```
+
+```http
+GET /api/status-avaliacoes?termo=analise&ativo=true
+```
+
+## Resposta Padronizada
+
+Os endpoints paginados retornam uma estrutura padronizada denominada `PageResponse`, composta pelos seguintes atributos:
+
+- `content`
+- `page`
+- `size`
+- `totalElements`
+- `totalPages`
+- `first`
+- `last`
+
+Exemplo:
+
+```json
+{
+  "content": [
+    {
+      "id": 1,
+      "codigo": "EM_ANDAMENTO",
+      "nome": "Em Andamento"
+    }
+  ],
+  "page": 0,
+  "size": 10,
+  "totalElements": 1,
+  "totalPages": 1,
+  "first": true,
+  "last": true
+}
+```
+
+A utilização dessa estrutura padroniza o consumo da API pelo frontend Angular e facilita a adoção da mesma estratégia em todos os módulos do sistema.
+
 # 7.7 Organização do Backend
 
 ```text
@@ -3179,10 +3248,14 @@ Este capítulo registra a evolução incremental do desenvolvimento do SG-RSC, p
 - Testes funcionais completos utilizando curl (GET, POST, PUT e DELETE).
 - Validação da integração entre PostgreSQL, Flyway, JPA, Spring Security e API REST.
 
-## Sprint 9 (Em andamento)
+## Sprint 9
 
-- Implementação do tratamento global de exceções.
+- Implementação do tratamento global de exceções da API REST.
+- Criação do `GlobalExceptionHandler`.
+- Criação das exceções `BusinessException` e `ResourceNotFoundException`.
 - Padronização das respostas de erro da API.
-- Implementação de paginação e filtros nos endpoints REST.
-- Evolução do módulo de Avaliação.
-- Início do fluxo de análise da Comissão de RSC.
+- Padronização das mensagens de validação dos DTOs.
+- Implementação de paginação utilizando Spring Data `Pageable`.
+- Implementação de filtros por termo e situação.
+- Criação da classe `PageResponse` para respostas paginadas.
+- Aplicação da paginação e filtros no módulo **Status da Avaliação**, estabelecendo o padrão para os demais módulos do sistema.
