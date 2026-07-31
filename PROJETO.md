@@ -12,6 +12,7 @@
 | **1.5** | **30/07/2026** | **Erik Barbosa** | **Implementação do módulo Memorial, CRUD completo, controle de versão, validação de edição apenas em solicitações em rascunho, DTOs específicos para criação e atualização, consultas por identificador e por solicitação, exclusão lógica e validação dos endpoints REST.** |
 | **1.6** | **30/07/2026** | **Erik Barbosa** | **Implementação do módulo Atividades Declaradas, associação de atividades aos critérios pretendidos, vínculo entre atividades e documentos, migração V9, carga inicial da Base Legal por meio da migração V10, testes completos dos endpoints REST e validação da integração com o armazenamento de documentos.** |
 | **1.7** | **30/07/2026** | **Erik Barbosa** | **Implementação do módulo Status da Avaliação, CRUD completo, migração Flyway V11, entidade StatusAvaliacao, integração com Avaliação, DTOs Request/Response/Summary, Mapper Pattern, Service Layer, Controller REST, ajustes no Spring Security e validação completa dos endpoints REST via curl.** |
+| **1.8** | **31/07/2026** | **Erik Barbosa** | **Implementação da infraestrutura de tratamento global de exceções da API REST, criação do GlobalExceptionHandler, padronização das respostas de erro, tratamento das validações Bean Validation e criação das exceções de domínio BusinessException e ResourceNotFoundException.** |
 
 
 # Glossário
@@ -2411,6 +2412,66 @@ Essa estrutura permitirá registrar futuramente novas movimentações, como:
 - recurso;
 - decisão final.
 
+# 7.6.3 Tratamento Global de Exceções
+
+Com o crescimento do número de módulos do SG-RSC, tornou-se necessário padronizar o tratamento das exceções lançadas pela aplicação.
+
+Para evitar duplicação de código nos controllers e garantir respostas consistentes aos consumidores da API, foi adotado um mecanismo centralizado de tratamento de erros utilizando o recurso **`@RestControllerAdvice`** do Spring Framework.
+
+Toda exceção lançada pelas camadas de serviço (**Service Layer**) passa a ser interceptada pelo **GlobalExceptionHandler**, responsável por converter exceções Java em respostas HTTP padronizadas.
+
+Atualmente são tratadas as seguintes categorias de exceções:
+
+- **ResourceNotFoundException**: utilizada quando um recurso solicitado não é encontrado.
+- **BusinessException**: utilizada para representar violações de regras de negócio.
+- **MethodArgumentNotValidException**: utilizada para tratar erros de validação dos DTOs anotados com Bean Validation.
+- **Exception**: tratamento genérico para exceções inesperadas.
+
+Todas as respostas de erro seguem uma estrutura única, representada pela classe **ApiErrorResponse**, contendo as seguintes informações:
+
+| Campo | Descrição |
+|--------|-----------|
+| `timestamp` | Data e hora da ocorrência do erro. |
+| `status` | Código HTTP retornado pela API. |
+| `error` | Descrição textual do código HTTP. |
+| `message` | Mensagem detalhando o motivo do erro. |
+| `path` | Endpoint da requisição que originou a exceção. |
+
+### Exemplo de resposta para recurso inexistente
+
+```json
+{
+  "timestamp": "2026-07-31T18:41:04.400945253",
+  "status": 404,
+  "error": "Not Found",
+  "message": "Status da avaliação não encontrado.",
+  "path": "/api/status-avaliacoes/99999"
+}
+```
+
+### Exemplo de resposta para erro de validação
+
+```json
+{
+  "timestamp": "2026-07-31T18:46:25.546376232",
+  "status": 400,
+  "error": "Bad Request",
+  "message": "nome: não pode ficar em branco; codigo: não pode ficar em branco",
+  "path": "/api/status-avaliacoes"
+}
+```
+
+A adoção de um tratamento global de exceções proporciona diversos benefícios para a arquitetura da aplicação:
+
+- padronização das respostas de erro da API;
+- redução da duplicação de código nos controllers;
+- separação das responsabilidades entre regras de negócio e tratamento de erros;
+- maior facilidade de manutenção e evolução da aplicação;
+- integração simplificada com o frontend Angular;
+- melhoria da experiência do usuário ao fornecer mensagens de erro claras e consistentes.
+
+Essa abordagem também facilita a inclusão de novos tipos de exceções específicas do domínio do SG-RSC, mantendo o comportamento uniforme da API e preservando a arquitetura **Feature-First** adotada pelo projeto.
+
 # 7.7 Organização do Backend
 
 ```text
@@ -2475,7 +2536,6 @@ relatorios
 auditoria
 
 configuracoes
-```
 
 ---
 
@@ -2966,6 +3026,55 @@ A remoção do vínculo entre atividade e documento não remove o documento arma
 - atualização do modelo de domínio;
 - atualização das migrações Flyway.
 
+# ADR-012 – Tratamento Global de Exceções
+
+## Status
+
+Aceita
+
+## Contexto
+
+À medida que novos módulos do SG-RSC foram sendo implementados, cada serviço passou a lançar exceções específicas relacionadas às regras de negócio e à inexistência de recursos.
+
+O tratamento dessas exceções diretamente nos controllers geraria duplicação de código, inconsistência nas respostas da API REST e maior dificuldade de manutenção.
+
+Além disso, o frontend Angular necessita receber respostas padronizadas para facilitar a exibição de mensagens ao usuário.
+
+## Decisão
+
+Centralizar o tratamento de exceções utilizando uma classe anotada com @RestControllerAdvice.
+
+Foi criado um modelo único de resposta (ApiErrorResponse) contendo:
+
+- timestamp;
+- status HTTP;
+- descrição do erro;
+- mensagem;
+- caminho da requisição.
+
+Também foram criadas exceções específicas para representar erros de domínio da aplicação:
+
+- BusinessException;
+- ResourceNotFoundException.
+
+As validações do Bean Validation passaram a ser tratadas centralizadamente, retornando mensagens amigáveis ao cliente da API.
+
+## Consequências
+
+### Benefícios
+
+- Padronização das respostas da API.
+- Redução de código duplicado.
+- Facilidade para manutenção.
+- Melhor integração com o frontend Angular.
+- Centralização das regras de tratamento de erros.
+- Maior legibilidade do código.
+
+### Desvantagens
+
+- Necessidade de criação de exceções específicas para novas regras de negócio.
+- Pequeno aumento da quantidade de classes compartilhadas.
+
 ---
 
 Fim do Capítulo 8.
@@ -3070,9 +3179,9 @@ Este capítulo registra a evolução incremental do desenvolvimento do SG-RSC, p
 - Testes funcionais completos utilizando curl (GET, POST, PUT e DELETE).
 - Validação da integração entre PostgreSQL, Flyway, JPA, Spring Security e API REST.
 
-## Próxima Sprint
+## Sprint 9 (Em andamento)
 
-- Implementação do tratamento global de exceções (GlobalExceptionHandler).
+- Implementação do tratamento global de exceções.
 - Padronização das respostas de erro da API.
 - Implementação de paginação e filtros nos endpoints REST.
 - Evolução do módulo de Avaliação.
