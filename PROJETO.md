@@ -16,6 +16,7 @@
 | **1.8** | **31/07/2026** | **Erik Barbosa** | **Implementação da padronização global de tratamento de exceções da API REST (GlobalExceptionHandler), criação das exceções de negócio e recurso não encontrado, padronização das respostas de erro, implementação de paginação e filtros nos endpoints REST utilizando Spring Data Pageable e criação do PageResponse para respostas paginadas.** |
 | **1.9** | **02/08/2026** | **Erik Barbosa** | **Implementação do módulo Comissão, CRUD completo de Comissões e Membros da Comissão, validação de presidente único por comissão, paginação e filtros dos endpoints REST, enum PapelMembroComissao, integração com Servidor e preparação da infraestrutura para o módulo Avaliação.** |
 | **1.10** | **02/08/2026** | **Erik Barbosa** | **Implementação do módulo Avaliação, incluindo criação da entidade Avaliação, integração com Comissões, Status da Avaliação e Solicitações, início do fluxo administrativo de análise, registro automático do histórico da solicitação, migração Flyway V12, paginação e filtros dos endpoints REST, validações das regras de negócio e testes completos da API via curl.** |
+| **1.11** | **02/08/2026** | **Erik Barbosa** | **Conclusão da modelagem oficial da Base Legal do RSC-PCCTAE, implementação dos Grupos de Critérios, Regras de Complexidade por Nível de RSC, carga oficial dos 59 critérios previstos no Decreto nº 13.048/2026 por meio das migrações Flyway V13, V14 e V15, parametrização do motor de regras e atualização das entidades, DTOs, serviços e repositórios para suportar o novo modelo de domínio.** |
 
 
 # Glossário
@@ -1809,6 +1810,59 @@ O Modelo de Domínio poderá evoluir conforme novas necessidades forem identific
 
 Novas entidades poderão ser incorporadas sem comprometer a arquitetura geral da aplicação.
 
+## 4.23 Entidade Grupo de Critérios
+
+Representa os grupos oficiais definidos pelo Decreto nº 13.048/2026 utilizados para organização dos critérios do RSC.
+
+### Atributos
+
+- id
+- código
+- número romano
+- nome
+- descrição
+- ordem
+- ativo
+
+### Relacionamentos
+
+- pertence a uma Legislação;
+- possui diversos Critérios;
+- participa das Regras de Complexidade dos níveis de RSC.
+
+---
+
+## 4.24 Entidade Regra de Complexidade do Nível
+
+Representa as regras mínimas exigidas para obtenção de cada nível do RSC.
+
+### Atributos
+
+- id
+- nível do RSC
+- quantidade mínima de itens
+- descrição
+
+### Relacionamentos
+
+- pertence a um Nível de RSC;
+- possui diversos Grupos de Critérios obrigatórios.
+
+---
+
+## 4.25 Entidade Regra de Complexidade do Grupo
+
+Representa a associação entre um Grupo de Critérios e uma Regra de Complexidade.
+
+### Atributos
+
+- id
+
+### Relacionamentos
+
+- pertence a uma Regra de Complexidade;
+- referencia um Grupo de Critérios.
+
 ---
 
 Fim do Capítulo 4.
@@ -1884,6 +1938,9 @@ O banco será composto inicialmente pelas seguintes tabelas:
 - notificacao
 - auditoria
 - status_avaliacao
+- grupo_criterio
+- regra_complexidade_nivel
+- regra_complexidade_grupo
 
 ---
 
@@ -1944,6 +2001,22 @@ Usuário
 Status da Avaliação
 
 1 ---- N Avaliação
+
+Legislação
+
+1 ---- N Grupo de Critério
+
+Grupo de Critério
+
+1 ---- N Critério
+
+Nível RSC
+
+1 ---- N Regra de Complexidade
+
+Regra de Complexidade
+
+N ---- N Grupo de Critério
 
 ---
 
@@ -2420,6 +2493,77 @@ Essa infraestrutura servirá de base para os próximos módulos de:
 - deferimento e indeferimento;
 - recursos administrativos.
 
+## 6.14 Evolução da Base Legal Oficial do RSC-PCCTAE
+
+Com a implementação das migrações **Flyway V13, V14 e V15**, o SG-RSC passou a utilizar integralmente a estrutura oficial prevista no Decreto nº 13.048/2026 para representação dos critérios de avaliação do Reconhecimento de Saberes e Competências.
+
+A Base Legal deixou de utilizar uma estrutura simplificada de critérios e passou a ser composta por entidades específicas capazes de representar fielmente a organização prevista na legislação.
+
+Foram implementadas as seguintes estruturas:
+
+- Grupos de Critérios;
+- Critérios Oficiais;
+- Regras de Complexidade por Nível de RSC;
+- Associação entre Grupos e Níveis de RSC;
+- Tipos parametrizados de cálculo da pontuação.
+
+### Grupo de Critérios
+
+Os critérios passaram a ser organizados em seis grupos oficiais:
+
+| Código | Grupo |
+|--------|-------|
+| GRUPO_I | Participação em Grupos de Trabalho, Comissões, Comitês, Núcleos, Representações ou Similares |
+| GRUPO_II | Participação e Atuação em Projetos Institucionais |
+| GRUPO_III | Recebimento de Premiação por Projetos Implementados |
+| GRUPO_IV | Designação para Responsabilidades Técnico-Administrativas ou Especializadas |
+| GRUPO_V | Exercício de Função, Cargo de Direção ou Assessoramento |
+| GRUPO_VI | Produção, Prospecção e Difusão de Conhecimento Científico ou Técnico |
+
+### Critérios Oficiais
+
+A migração V15 realizou a carga completa dos critérios previstos na legislação, totalizando:
+
+| Grupo | Quantidade |
+|--------|-----------:|
+| Grupo I | 10 |
+| Grupo II | 11 |
+| Grupo III | 3 |
+| Grupo IV | 8 |
+| Grupo V | 8 |
+| Grupo VI | 19 |
+| **Total** | **59 critérios** |
+
+Os critérios simplificados utilizados durante o desenvolvimento inicial permaneceram registrados apenas para fins históricos, porém foram automaticamente inativados.
+
+### Regras de Complexidade
+
+Foi criada uma estrutura parametrizável para representar as exigências mínimas de cada nível do RSC.
+
+Essa estrutura é composta pelas entidades:
+
+- RegraComplexidadeNivel;
+- RegraComplexidadeGrupo.
+
+Essas entidades permitem que o sistema valide automaticamente:
+
+- quantidade mínima de grupos atendidos;
+- quantidade mínima de itens por grupo;
+- elegibilidade ao nível pretendido.
+
+Toda a lógica permanece parametrizada no banco de dados, eliminando regras fixas no código-fonte.
+
+### Parametrização do Motor de Regras
+
+Os critérios passaram a armazenar informações adicionais utilizadas pelo futuro motor de cálculo, incluindo:
+
+- ordem de apresentação;
+- grupo de critérios;
+- tipo de cálculo;
+- observações;
+- pontuação parametrizada.
+
+Essa estrutura permitirá que futuras alterações legislativas sejam implementadas exclusivamente por parametrização no banco de dados, preservando a arquitetura desacoplada do sistema.
 ---
 
 Fim do Capítulo 6.
@@ -2847,6 +2991,21 @@ Durante o início da avaliação o sistema realiza automaticamente:
 - validação da existência da Comissão e do Status da Avaliação.
 
 Todos os endpoints do módulo foram validados por meio de testes funcionais utilizando `curl`, confirmando o correto funcionamento do fluxo administrativo e das validações implementadas.
+
+# 7.6.7 Infraestrutura da Base Legal Oficial
+
+A Base Legal do SG-RSC foi evoluída para representar integralmente a estrutura oficial prevista no Decreto nº 13.048/2026.
+
+As migrações Flyway V13, V14 e V15 implementaram:
+
+- modelagem completa da Base Legal;
+- cadastro dos seis grupos oficiais;
+- parametrização dos seis níveis de RSC;
+- regras de complexidade;
+- carga oficial dos 59 critérios do Decreto;
+- desativação dos critérios simplificados utilizados durante o desenvolvimento inicial.
+
+Essa infraestrutura constitui a base do futuro motor de cálculo da pontuação, permitindo que todas as regras de elegibilidade permaneçam parametrizadas no banco de dados e independentes do código Java.
 
 ---
 
