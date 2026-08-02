@@ -17,6 +17,10 @@
 | **1.9** | **02/08/2026** | **Erik Barbosa** | **Implementação do módulo Comissão, CRUD completo de Comissões e Membros da Comissão, validação de presidente único por comissão, paginação e filtros dos endpoints REST, enum PapelMembroComissao, integração com Servidor e preparação da infraestrutura para o módulo Avaliação.** |
 | **1.10** | **02/08/2026** | **Erik Barbosa** | **Implementação do módulo Avaliação, incluindo criação da entidade Avaliação, integração com Comissões, Status da Avaliação e Solicitações, início do fluxo administrativo de análise, registro automático do histórico da solicitação, migração Flyway V12, paginação e filtros dos endpoints REST, validações das regras de negócio e testes completos da API via curl.** |
 | **1.11** | **02/08/2026** | **Erik Barbosa** | **Conclusão da modelagem oficial da Base Legal do RSC-PCCTAE, implementação dos Grupos de Critérios, Regras de Complexidade por Nível de RSC, carga oficial dos 59 critérios previstos no Decreto nº 13.048/2026 por meio das migrações Flyway V13, V14 e V15, parametrização do motor de regras e atualização das entidades, DTOs, serviços e repositórios para suportar o novo modelo de domínio.** |
+Adicionar a seguinte linha na tabela de versões:
+
+| **1.12** | **02/08/2026** | **Erik Barbosa** | **Implementação da primeira versão do Motor de Pontuação do RSC, incluindo migração Flyway V16, cálculo automático da pontuação parametrizado pela Base Legal, homologação integral e parcial pela Comissão, validações de regras de negócio, novos endpoints REST de cálculo e homologação, expansão do modelo de domínio da entidade Pontuação e testes funcionais completos do fluxo de avaliação via curl.** |
+
 
 
 # Glossário
@@ -1318,7 +1322,7 @@ Ao longo do desenvolvimento do SG-RSC, esta matriz será continuamente atualizad
 | UC006 | Consultar Processo | RN005 | Solicitações | Solicitação | GET /solicitacoes/{id} | Consulta da Solicitação | TS006 | Planejado |
 | UC007 | Solicitar Complementação | RN107 | Comissão | Complementação | POST /complementacoes | Solicitar Complementação | TS007 | Planejado |
 | UC008 | Responder Complementação | RN107 | Comissão | Complementação | POST /complementacoes/responder | Responder Complementação | TS008 | Planejado |
-| UC009 | Calcular Pontuação | RN103, RN104, RN105 | Pontuação | Pontuação | POST /pontuacao/calcular | Cálculo da Pontuação | TS009 | Planejado |
+| UC009 | Calcular Pontuação | RN103, RN104, RN105 | Pontuação | Pontuação | **POST /api/pontuacoes/calcular** | Cálculo da Pontuação | TS009 | **Implementado** |
 | UC010 | Emitir Parecer | RN107 | Comissão | Parecer | POST /pareceres | Parecer Técnico | TS010 | Planejado |
 | UC011 | Interpor Recurso | RN005 | Recursos | Recurso | POST /recursos | Recurso Administrativo | TS011 | Planejado |
 | UC012 | Julgar Recurso | RN005 | Recursos | Recurso | POST /recursos/julgar | Julgamento do Recurso | TS012 | Planejado |
@@ -1567,21 +1571,39 @@ Atributos:
 
 ---
 
-# 4.11 Entidade Pontuação
+### 4.11 Entidade Pontuação
 
-Representa o resultado da avaliação dos critérios.
+Representa o resultado do cálculo e da homologação da pontuação realizada durante a avaliação de uma solicitação.
 
-Atributos:
+Cada registro de pontuação corresponde à avaliação de uma Atividade Declarada em relação a um Critério Oficial da Base Legal.
+
+#### Atributos
 
 - id
-- pontosCalculados
+- quantidadeDeclarada
+- quantidadeHomologada
+- pontosUnitarios
+- pontosDeclarados
 - pontosHomologados
-- dataCálculo
+- status
+- justificativa
+- createdAt
+- updatedAt
 
-Relacionamentos:
+#### Relacionamentos
 
-- pertence a uma Solicitação.
+- pertence a uma Avaliação;
+- referencia uma Atividade Declarada;
+- referencia um Critério Oficial;
+- participa do cálculo da pontuação total da solicitação.
 
+#### Regras
+
+- a pontuação declarada é calculada automaticamente pelo sistema;
+- a comissão poderá homologar integral ou parcialmente a pontuação;
+- não poderá existir mais de uma pontuação ativa para a mesma atividade dentro de uma avaliação;
+- a quantidade homologada nunca poderá ser superior à quantidade declarada;
+- toda alteração realizada pela comissão deverá possuir justificativa quando houver divergência da pontuação calculada.
 ---
 
 # 4.12 Entidade Status da Avaliação
@@ -2564,6 +2586,90 @@ Os critérios passaram a armazenar informações adicionais utilizadas pelo futu
 - pontuação parametrizada.
 
 Essa estrutura permitirá que futuras alterações legislativas sejam implementadas exclusivamente por parametrização no banco de dados, preservando a arquitetura desacoplada do sistema.
+
+### 6.15 Implementação do Motor de Pontuação
+
+Foi implementada a primeira versão funcional do Motor de Pontuação do SG-RSC.
+
+Nesta etapa o sistema passou a calcular automaticamente a pontuação das atividades declaradas utilizando exclusivamente informações parametrizadas na Base Legal oficial do Decreto nº 13.048/2026.
+
+O cálculo utiliza:
+
+- Critério Oficial;
+- Atividade Declarada;
+- Quantidade Declarada;
+- Pontuação Unitária cadastrada;
+- Avaliação da Comissão.
+
+O sistema realiza automaticamente:
+
+- cálculo da pontuação declarada;
+- persistência da pontuação calculada;
+- impedimento de duplicidade de pontuação para a mesma atividade na mesma avaliação;
+- homologação integral;
+- homologação parcial;
+- validação da quantidade homologada;
+- registro da justificativa da comissão.
+
+### Estrutura implementada
+
+Foram desenvolvidos os seguintes componentes:
+
+- Migração Flyway **V16__prepare_scoring_engine.sql**;
+- atualização da entidade **AtividadeDeclarada**;
+- atualização da entidade **Pontuacao**;
+- **PontuacaoRepository**;
+- DTOs específicos para cálculo e homologação;
+- **PontuacaoMapper**;
+- **PontuacaoService**;
+- **PontuacaoController**;
+- validações das regras de negócio;
+- integração com a Base Legal oficial;
+- tratamento padronizado de exceções utilizando **GlobalExceptionHandler**.
+
+### Endpoints REST
+
+| Método | Endpoint | Descrição |
+|---------|----------|-----------|
+| **POST** | `/api/pontuacoes/calcular` | Calcula automaticamente a pontuação de uma atividade declarada. |
+| **GET** | `/api/pontuacoes/{id}` | Consulta uma pontuação específica. |
+| **GET** | `/api/pontuacoes/avaliacao/{id}` | Lista todas as pontuações de uma avaliação. |
+| **PUT** | `/api/pontuacoes/{id}/homologar` | Homologa integral ou parcialmente uma pontuação calculada. |
+
+### Regras de Negócio Implementadas
+
+- cálculo automático utilizando a pontuação parametrizada do Critério;
+- validação da existência da Avaliação;
+- validação da existência da Atividade Declarada;
+- validação da existência do Critério;
+- impedimento de duplicidade de pontuação para a mesma atividade;
+- homologação integral da pontuação;
+- homologação parcial da pontuação;
+- validação da quantidade homologada;
+- validação da pontuação homologada;
+- registro da justificativa da comissão;
+- atualização do status da pontuação.
+
+### Testes Realizados
+
+O módulo foi validado por meio de testes funcionais utilizando requisições HTTP via `curl`, contemplando os seguintes cenários:
+
+- criação de Solicitação;
+- cadastro de Atividade Declarada;
+- envio de Documento;
+- criação do Memorial;
+- protocolização da Solicitação;
+- início da Avaliação;
+- cálculo automático da Pontuação;
+- consulta individual da Pontuação;
+- listagem das Pontuações por Avaliação;
+- homologação integral;
+- homologação parcial;
+- tentativa de criação de pontuação duplicada;
+- tentativa de homologação com quantidade superior à declarada;
+- validação das regras de negócio e das mensagens de erro retornadas pela API.
+
+A implementação desta etapa representa a primeira versão operacional do Motor de Pontuação do SG-RSC, permitindo que a Comissão realize o cálculo e a homologação das atividades declaradas com base na Base Legal oficial parametrizada no sistema. Essa infraestrutura servirá como fundamento para as próximas funcionalidades relacionadas ao parecer técnico, consolidação da pontuação por grupo de critérios, validação automática das regras de complexidade dos níveis de RSC e decisão final da Comissão.
 ---
 
 Fim do Capítulo 6.

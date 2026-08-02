@@ -7,7 +7,7 @@
 ![MinIO](https://img.shields.io/badge/MinIO-Object_Storage-C72E49)
 ![Keycloak](https://img.shields.io/badge/Keycloak-26.7.0-4D4D4D)
 ![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED)
-![Status](https://img.shields.io/badge/Status-Sprint_11-Concluída-brightgreen)
+![Status](https://img.shields.io/badge/Status-Sprint_12-Concluída-brightgreen)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
 Sistema de Gestão do Reconhecimento de Saberes e Competências (RSC-PCCTAE)
@@ -52,18 +52,25 @@ O desenvolvimento ocorre de forma incremental, por meio de sprints, permitindo q
 
 ## Motor de Regras do RSC
 
-Foi implementada toda a infraestrutura necessária para suportar o futuro Motor de Cálculo da Pontuação do RSC.
+O SG-RSC possui uma arquitetura totalmente parametrizada para avaliação do Reconhecimento de Saberes e Competências (RSC), permitindo que alterações na legislação sejam refletidas por meio de parametrizações no banco de dados, sem necessidade de alterações no código-fonte.
 
-Nesta etapa foram desenvolvidos:
+Atualmente o sistema já implementa:
 
-* Organização dos critérios em Grupos Oficiais.
-* Regras parametrizadas por Nível de RSC.
-* Associação entre Níveis e Grupos obrigatórios.
-* Tipos parametrizados de cálculo.
-* Estrutura preparada para validação automática da elegibilidade.
-* Parametrização completa da legislação sem regras fixas no código Java.
+* Organização dos Critérios em Grupos Oficiais.
+* Parametrização dos três níveis do RSC.
+* Regras de Complexidade por Nível.
+* Regras de Complexidade por Grupo.
+* Tipos parametrizados de cálculo dos critérios.
+* Carga oficial dos 59 critérios previstos no Decreto nº 13.048/2026.
+* Primeira versão do Motor de Pontuação.
+* Cálculo automático da pontuação das atividades declaradas.
+* Homologação integral da pontuação pela Comissão.
+* Homologação parcial da pontuação pela Comissão.
+* Validação de duplicidade de pontuação.
+* Validação dos limites da quantidade homologada.
+* Estrutura preparada para futura consolidação automática do resultado final do RSC.
 
-Toda a lógica permanece armazenada no banco de dados, permitindo futuras alterações legislativas sem necessidade de recompilação da aplicação.
+Toda a lógica permanece armazenada no banco de dados, permitindo futuras alterações legislativas sem necessidade de recompilar a aplicação.
 
 # Tecnologias
 
@@ -290,6 +297,23 @@ Estrutura da resposta paginada:
 * Remoção do vínculo sem exclusão do documento armazenado.
 * Reutilização de documentos comprobatórios.
 
+## Motor de Pontuação
+
+* Cálculo automático da pontuação.
+* Associação entre Avaliação, Atividade Declarada e Critério Oficial.
+* Parametrização pela Base Legal.
+* Persistência da pontuação calculada.
+* Homologação integral.
+* Homologação parcial.
+* Controle de quantidade declarada.
+* Controle de quantidade homologada.
+* Registro dos pontos unitários.
+* Registro dos pontos declarados.
+* Registro dos pontos homologados.
+* Justificativa da Comissão.
+* Validação de duplicidade.
+* Endpoints REST completos.
+
 ## Documentos
 
 * Upload de documentos.
@@ -506,13 +530,31 @@ Estrutura da resposta paginada:
 * Atualização dos repositórios.
 * Preparação da infraestrutura do Motor de Pontuação.
 
+## ✅ Sprint 12 — Motor de Pontuação
+
+### Concluído
+
+* Migração Flyway V16.
+* Ampliação da entidade Atividade Declarada.
+* Ampliação da entidade Pontuação.
+* Implementação do cálculo automático.
+* Implementação da homologação integral.
+* Implementação da homologação parcial.
+* DTOs.
+* Mapper.
+* Repository.
+* Service.
+* Controller.
+* Endpoints REST.
+* Integração com a Base Legal.
+* Testes funcionais completos via curl.
+
 ### Próximas etapas
 
-* Implementação do cálculo automático da pontuação.
-* Validação da complexidade dos níveis.
-* Consolidação da elegibilidade ao RSC.
-* Avaliação dos documentos comprobatórios.
-
+* Motor de Complexidade.
+* Consolidação automática da elegibilidade.
+* Geração do parecer técnico.
+* Consolidação do resultado da avaliação.
 ---
 
 # Como Executar
@@ -708,6 +750,14 @@ PRESIDENTE
 MEMBRO
 SECRETARIO
 ```
+## Pontuações
+
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| POST | `/api/pontuacoes/calcular` | Calcula automaticamente a pontuação. |
+| GET | `/api/pontuacoes/{id}` | Consulta uma pontuação. |
+| GET | `/api/pontuacoes/avaliacao/{id}` | Lista as pontuações de uma avaliação. |
+| PUT | `/api/pontuacoes/{id}/homologar` | Homologa integral ou parcialmente uma pontuação. |
 
 ---
 
@@ -744,12 +794,18 @@ SECRETARIO
 * Regra de presidente único.
 * Migrações Flyway V1 a V11.
 * Testes funcionais dos endpoints REST.
+* Motor de Pontuação.
+* Cálculo automático das atividades.
+* Homologação integral.
+* Homologação parcial.
+* Integração entre Avaliação, Atividade Declarada e Critérios Oficiais.
+* Migração Flyway V16.
 
 ## Em Desenvolvimento
 
 ## Em Desenvolvimento
 
-* Motor de cálculo automático da pontuação.
+* Motor de Complexidade.
 * Validação da elegibilidade ao RSC.
 * Avaliação das evidências documentais.
 * Parecer técnico.
@@ -777,6 +833,7 @@ SECRETARIO
 | **v0.10.0** | Tratamento global de exceções, respostas padronizadas, paginação e filtros         |
 | **v0.11.0** | Módulo de Comissões, gestão dos membros, papéis e regras de composição             |
 | **v0.12.0** | Base Legal oficial do Decreto nº 13.048/2026, Grupos de Critérios, Regras de Complexidade, parametrização do Motor de Regras e carga oficial dos 59 critérios (Flyway V13, V14 e V15). |
+| **v0.13.0** | Motor de Pontuação completo, migração Flyway V16, cálculo automático da pontuação, homologação integral e parcial, integração com a Base Legal oficial e testes funcionais completos. |
 
 ---
 
