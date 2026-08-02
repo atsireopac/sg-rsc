@@ -1,7 +1,3 @@
-# SG-RSC --- README (Estrutura Profissional)
-
-> Modelo de README profissional para o projeto SG-RSC.
-
 # SG-RSC
 
 Sistema de Gestão do Reconhecimento de Saberes e Competências
