@@ -4,6 +4,8 @@ import br.gov.ife.sgrsc.features.servidor.domain.Servidor;
 import br.gov.ife.sgrsc.shared.domain.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -23,8 +25,9 @@ public class MembroComissao extends BaseEntity {
     @JoinColumn(name = "servidor_id", nullable = false)
     private Servidor servidor;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "papel", nullable = false, length = 50)
-    private String papel;
+    private PapelMembroComissao papel;
 
     @Column(name = "data_inicio", nullable = false)
     private LocalDate dataInicio;
@@ -33,7 +36,7 @@ public class MembroComissao extends BaseEntity {
     private LocalDate dataFim;
 
     @Column(name = "ativo", nullable = false)
-    private Boolean ativo;
+    private Boolean ativo = true;
 
     public Comissao getComissao() {
         return comissao;
@@ -51,11 +54,11 @@ public class MembroComissao extends BaseEntity {
         this.servidor = servidor;
     }
 
-    public String getPapel() {
+    public PapelMembroComissao getPapel() {
         return papel;
     }
 
-    public void setPapel(String papel) {
+    public void setPapel(PapelMembroComissao papel) {
         this.papel = papel;
     }
 
