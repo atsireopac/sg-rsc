@@ -14,6 +14,7 @@
 | **1.7** | **30/07/2026** | **Erik Barbosa** | **Implementação do módulo Status da Avaliação, CRUD completo, migração Flyway V11, entidade StatusAvaliacao, integração com Avaliação, DTOs Request/Response/Summary, Mapper Pattern, Service Layer, Controller REST, ajustes no Spring Security e validação completa dos endpoints REST via curl.** |
 | **1.8** | **31/07/2026** | **Erik Barbosa** | **Implementação da infraestrutura de tratamento global de exceções da API REST, criação do GlobalExceptionHandler, padronização das respostas de erro, tratamento das validações Bean Validation e criação das exceções de domínio BusinessException e ResourceNotFoundException.** |
 | **1.8** | **31/07/2026** | **Erik Barbosa** | **Implementação da padronização global de tratamento de exceções da API REST (GlobalExceptionHandler), criação das exceções de negócio e recurso não encontrado, padronização das respostas de erro, implementação de paginação e filtros nos endpoints REST utilizando Spring Data Pageable e criação do PageResponse para respostas paginadas.** |
+| **1.9** | **02/08/2026** | **Erik Barbosa** | **Implementação do módulo Comissão, CRUD completo de Comissões e Membros da Comissão, validação de presidente único por comissão, paginação e filtros dos endpoints REST, enum PapelMembroComissao, integração com Servidor e preparação da infraestrutura para o módulo Avaliação.** |
 
 
 # Glossário
@@ -1130,6 +1131,74 @@ Valor novo.
 
 ---
 
+## UC016 – Gerenciar Comissões
+
+### Objetivo
+
+Permitir o cadastro, alteração, consulta, listagem e inativação das Comissões responsáveis pela avaliação das solicitações de RSC.
+
+### Ator
+
+Administrador.
+
+### Pré-condições
+
+- Usuário autenticado.
+- Perfil com permissão administrativa.
+
+### Fluxo Principal
+
+1. Cadastrar comissão.
+2. Informar período de vigência.
+3. Informar descrição.
+4. Ativar comissão.
+5. Salvar.
+
+### Fluxos Alternativos
+
+- Data final anterior à data inicial.
+- Comissão inexistente.
+
+### Pós-condições
+
+A comissão ficará disponível para vinculação de membros e futuras avaliações.
+
+---
+
+## UC017 – Gerenciar Membros da Comissão
+
+### Objetivo
+
+Permitir a composição da comissão por servidores da instituição.
+
+### Ator
+
+Administrador.
+
+### Pré-condições
+
+- Comissão cadastrada.
+- Servidor cadastrado.
+
+### Fluxo Principal
+
+1. Selecionar comissão.
+2. Selecionar servidor.
+3. Informar papel.
+4. Informar período de atuação.
+5. Salvar.
+
+### Fluxos Alternativos
+
+- Comissão já possui presidente ativo.
+- Período inválido.
+- Servidor inexistente.
+
+### Regras de Negócio
+
+- Apenas um PRESIDENTE ativo por comissão.
+- Todo membro deve estar vinculado a um servidor.
+
 # 3.5 Matriz de Permissões
 
 | Funcionalidade | Servidor | Comissão | DGP | Administrador |
@@ -1144,6 +1213,8 @@ Valor novo.
 | Relatórios | | | ✔ | ✔ |
 | Parametrizar Sistema | | | | ✔ |
 | Auditoria | | | | ✔ |
+| Gerenciar Comissões | | | ✔ | ✔ |
+| Gerenciar Membros da Comissão | | | ✔ | ✔ |
 
 ---
 
@@ -1199,6 +1270,8 @@ Ao longo do desenvolvimento do SG-RSC, esta matriz será continuamente atualizad
 | UC013 | Gerenciar Critérios | RN104 | Administração | Critério | POST /criterios | Cadastro de Critérios | TS013 | Planejado |
 | UC014 | Emitir Relatórios | RN005 | Relatórios | Relatório | GET /relatorios | Relatórios Gerenciais | TS014 | Planejado |
 | UC015 | Consultar Auditoria | RN005 | Auditoria | Auditoria | GET /auditoria | Auditoria | TS015 | Planejado |
+| UC016 | Gerenciar Comissões | RN107 | Comissão | Comissão | /api/comissoes | Cadastro de Comissão | TS016 | Implementado |
+| UC017 | Gerenciar Membros da Comissão | RN107 | Comissão | MembroComissao | /api/comissoes/{id}/membros | Composição da Comissão | TS017 | Implementado |
 
 ---
 
@@ -1495,19 +1568,46 @@ Relacionamentos:
 
 # 4.14 Entidade Comissão
 
-Representa a comissão responsável pela análise.
+Representa a comissão responsável pela análise das solicitações de RSC.
 
-Atributos:
+### Atributos
 
 - id
 - nome
-- dataCriação
-- status
+- descrição
+- dataInicio
+- dataFim
+- ativa
 
-Relacionamentos:
+### Relacionamentos
 
 - possui vários membros;
-- analisa várias Solicitações.
+- participa de várias avaliações;
+- é composta por servidores da instituição.
+
+---
+
+# 4.15 Entidade Membro da Comissão
+
+Representa cada servidor designado para compor uma Comissão de RSC.
+
+### Atributos
+
+- id
+- papel
+- dataInicio
+- dataFim
+- ativo
+
+### Relacionamentos
+
+- pertence a uma Comissão;
+- referencia um Servidor.
+
+### Regras
+
+- Apenas um PRESIDENTE ativo poderá existir em cada comissão.
+- Um servidor poderá participar de diferentes comissões ao longo do tempo.
 
 ---
 
@@ -1809,6 +1909,9 @@ Exemplos:
 - O vínculo entre Atividade Declarada e Documento somente poderá ser criado para registros válidos.
 - Parecer somente poderá existir se houver Solicitação.
 - Pontuação somente poderá existir se houver Solicitação.
+- Todo Membro da Comissão deverá estar vinculado a uma Comissão existente.
+- Todo Membro da Comissão deverá referenciar um Servidor existente.
+- Cada Comissão poderá possuir apenas um PRESIDENTE ativo.
 
 ---
 
@@ -2179,6 +2282,22 @@ O módulo foi implementado seguindo a arquitetura Feature-First, contemplando:
 
 A próxima etapa do desenvolvimento consistirá na implementação do motor de cálculo da pontuação, que utilizará as atividades declaradas, os critérios parametrizados e os documentos comprobatórios para calcular automaticamente a pontuação obtida pelo servidor, respeitando as regras estabelecidas pelo Decreto nº 13.048/2026.
 
+## 6.12 Infraestrutura da Comissão de Avaliação
+
+Foi implementado o módulo responsável pela administração das Comissões de Avaliação do RSC.
+
+Nesta etapa foram desenvolvidas:
+
+- cadastro de Comissões;
+- cadastro de Membros da Comissão;
+- integração com o cadastro de Servidores;
+- validação de presidente único por comissão;
+- controle de vigência dos membros;
+- consultas paginadas;
+- filtros por situação e termo de pesquisa.
+
+Essa estrutura servirá de base para o módulo de Avaliação, no qual cada análise será obrigatoriamente realizada por membros previamente designados em uma comissão.
+
 Fim do Capítulo 6.
 
 # Capítulo 7 – Arquitetura do Sistema
@@ -2540,6 +2659,32 @@ Exemplo:
 ```
 
 A utilização dessa estrutura padroniza o consumo da API pelo frontend Angular e facilita a adoção da mesma estratégia em todos os módulos do sistema.
+
+# 7.6.5 API REST – Módulo Comissão
+
+O módulo Comissão é responsável pelo gerenciamento das comissões avaliadoras e da composição de seus membros.
+
+### Endpoints
+
+| Método | Endpoint | Descrição |
+|---------|----------|-----------|
+| POST | /api/comissoes | Criar comissão |
+| GET | /api/comissoes | Listar comissões |
+| GET | /api/comissoes/{id} | Consultar comissão |
+| PUT | /api/comissoes/{id} | Atualizar comissão |
+| DELETE | /api/comissoes/{id} | Exclusão lógica |
+| POST | /api/comissoes/{id}/membros | Adicionar membro |
+| GET | /api/comissoes/{id}/membros | Listar membros |
+| PUT | /api/membros-comissao/{id} | Atualizar membro |
+| DELETE | /api/membros-comissao/{id} | Exclusão lógica do membro |
+
+### Regras Implementadas
+
+- Apenas um presidente ativo por comissão.
+- Integração obrigatória com o cadastro de servidores.
+- Validação do período de vigência.
+- Exclusão lógica.
+- Paginação e filtros nas consultas.
 
 # 7.7 Organização do Backend
 
@@ -3045,6 +3190,39 @@ A implementação segue a arquitetura Feature-First, utilizando DTOs específico
 
 - Necessidade de manutenção da base legal cadastrada.
 - Maior dependência da consistência dos dados parametrizados.
+
+# 8.13 ADR-011 – Modelagem da Comissão de Avaliação
+
+## Status
+
+Aceita.
+
+## Contexto
+
+As Comissões responsáveis pela avaliação do RSC possuem composição variável ao longo do tempo e seus membros são designados por ato administrativo.
+
+Era necessário permitir a manutenção dessas informações sem alterações no código-fonte.
+
+## Decisão
+
+Modelar Comissão e Membro da Comissão como entidades independentes, vinculadas ao cadastro de Servidores.
+
+Foi adotada a validação de apenas um PRESIDENTE ativo por comissão.
+
+## Consequências
+
+### Benefícios
+
+- Maior flexibilidade.
+- Histórico das composições.
+- Preparação para o módulo Avaliação.
+- Reutilização das comissões.
+- Melhor rastreabilidade.
+
+### Desvantagens
+
+- Maior número de entidades.
+- Necessidade de validações adicionais.
 
 # 8.10 Considerações Finais
 
