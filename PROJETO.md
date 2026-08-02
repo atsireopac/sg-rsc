@@ -15,6 +15,7 @@
 | **1.8** | **31/07/2026** | **Erik Barbosa** | **Implementação da infraestrutura de tratamento global de exceções da API REST, criação do GlobalExceptionHandler, padronização das respostas de erro, tratamento das validações Bean Validation e criação das exceções de domínio BusinessException e ResourceNotFoundException.** |
 | **1.8** | **31/07/2026** | **Erik Barbosa** | **Implementação da padronização global de tratamento de exceções da API REST (GlobalExceptionHandler), criação das exceções de negócio e recurso não encontrado, padronização das respostas de erro, implementação de paginação e filtros nos endpoints REST utilizando Spring Data Pageable e criação do PageResponse para respostas paginadas.** |
 | **1.9** | **02/08/2026** | **Erik Barbosa** | **Implementação do módulo Comissão, CRUD completo de Comissões e Membros da Comissão, validação de presidente único por comissão, paginação e filtros dos endpoints REST, enum PapelMembroComissao, integração com Servidor e preparação da infraestrutura para o módulo Avaliação.** |
+| **1.10** | **02/08/2026** | **Erik Barbosa** | **Implementação do módulo Avaliação, incluindo criação da entidade Avaliação, integração com Comissões, Status da Avaliação e Solicitações, início do fluxo administrativo de análise, registro automático do histórico da solicitação, migração Flyway V12, paginação e filtros dos endpoints REST, validações das regras de negócio e testes completos da API via curl.** |
 
 
 # Glossário
@@ -1199,6 +1200,59 @@ Administrador.
 - Apenas um PRESIDENTE ativo por comissão.
 - Todo membro deve estar vinculado a um servidor.
 
+---
+
+## UC018 – Iniciar Avaliação
+
+### Objetivo
+
+Permitir que a Comissão inicie oficialmente a análise de uma solicitação protocolada.
+
+### Ator
+
+Comissão de RSC.
+
+### Pré-condições
+
+- Solicitação existente.
+- Solicitação em status **Protocolada**.
+- Comissão cadastrada.
+- Status da Avaliação **Em Andamento** cadastrado.
+- Não existir avaliação ativa para a solicitação.
+
+### Fluxo Principal
+
+1. A Comissão seleciona uma solicitação protocolada.
+2. O sistema valida todas as regras de negócio.
+3. O sistema cria uma Avaliação.
+4. O sistema associa a Comissão responsável.
+5. O sistema define automaticamente o status da Avaliação como **Em Andamento**.
+6. O sistema altera o status da Solicitação para **Em Análise**.
+7. O sistema registra a data de início da avaliação.
+8. O sistema cria automaticamente um registro no Histórico da Solicitação.
+9. A avaliação passa a ficar disponível para consulta e acompanhamento.
+
+### Fluxos Alternativos
+
+- Solicitação inexistente.
+- Comissão inexistente.
+- Solicitação não protocolada.
+- Avaliação já iniciada para a solicitação.
+
+### Pós-condições
+
+- Avaliação criada.
+- Solicitação em análise.
+- Histórico atualizado.
+- Comissão vinculada à solicitação.
+
+### Regras de Negócio
+
+- RN005 – Auditoria.
+- RN107 – Controle do fluxo de avaliação.
+
+---
+
 # 3.5 Matriz de Permissões
 
 | Funcionalidade | Servidor | Comissão | DGP | Administrador |
@@ -1272,6 +1326,7 @@ Ao longo do desenvolvimento do SG-RSC, esta matriz será continuamente atualizad
 | UC015 | Consultar Auditoria | RN005 | Auditoria | Auditoria | GET /auditoria | Auditoria | TS015 | Planejado |
 | UC016 | Gerenciar Comissões | RN107 | Comissão | Comissão | /api/comissoes | Cadastro de Comissão | TS016 | Implementado |
 | UC017 | Gerenciar Membros da Comissão | RN107 | Comissão | MembroComissao | /api/comissoes/{id}/membros | Composição da Comissão | TS017 | Implementado |
+| UC018 | Iniciar Avaliação | RN005, RN107 | Avaliação | Avaliação | POST /api/avaliacoes/iniciar | Painel da Comissão | TS018 | Implementado |
 
 ---
 
@@ -1611,7 +1666,40 @@ Representa cada servidor designado para compor uma Comissão de RSC.
 
 ---
 
-# 4.15 Entidade Complementação
+---
+
+# 4.16 Entidade Avaliação
+
+Representa o processo de análise de uma Solicitação realizado por uma Comissão de RSC.
+
+Cada solicitação protocolada poderá originar uma Avaliação, responsável por controlar todo o fluxo administrativo de análise, desde sua abertura até a emissão do parecer final.
+
+### Atributos
+
+- id
+- dataInicio
+- dataFim
+- observacoes
+- createdAt
+- updatedAt
+
+### Relacionamentos
+
+- pertence a uma Solicitação;
+- pertence a uma Comissão;
+- possui um Status da Avaliação;
+- registra movimentações no Histórico da Solicitação.
+
+### Regras
+
+- somente solicitações protocoladas poderão iniciar uma avaliação;
+- uma solicitação não poderá possuir mais de uma avaliação ativa;
+- o início da avaliação altera automaticamente o status da solicitação para **Em Análise**;
+- o início da avaliação gera automaticamente um evento no Histórico da Solicitação.
+
+---
+
+# 4.17 Entidade Complementação
 
 Representa pedidos de documentos adicionais.
 
@@ -1629,7 +1717,7 @@ Relacionamentos:
 
 ---
 
-# 4.16 Entidade Recurso
+# 4.18 Entidade Recurso
 
 Representa recurso administrativo apresentado pelo servidor.
 
@@ -1646,7 +1734,7 @@ Relacionamentos:
 
 ---
 
-# 4.17 Entidade Auditoria
+# 4.19 Entidade Auditoria
 
 Registra todas as ações realizadas no sistema.
 
@@ -1665,7 +1753,7 @@ Relacionamentos:
 
 ---
 
-# 4.18 Entidade Notificação
+# 4.20 Entidade Notificação
 
 Representa mensagens enviadas pelo sistema.
 
@@ -1683,7 +1771,7 @@ Relacionamentos:
 
 ---
 
-# 4.19 Relacionamentos
+# 4.21 Relacionamentos
 
 Servidor
 
@@ -1715,7 +1803,7 @@ Durante todo o fluxo serão registrados:
 
 ---
 
-# 4.20 Evolução do Modelo
+# 4.22 Evolução do Modelo
 
 O Modelo de Domínio poderá evoluir conforme novas necessidades forem identificadas durante o desenvolvimento do projeto ou em decorrência de alterações na legislação.
 
@@ -2298,6 +2386,42 @@ Nesta etapa foram desenvolvidas:
 
 Essa estrutura servirá de base para o módulo de Avaliação, no qual cada análise será obrigatoriamente realizada por membros previamente designados em uma comissão.
 
+---
+
+## 6.13 Implementação do Fluxo Inicial de Avaliação
+
+Foi implementada a primeira etapa do fluxo administrativo de avaliação das solicitações de RSC.
+
+Nesta etapa o sistema realiza automaticamente:
+
+- validação do status da solicitação;
+- criação da Avaliação;
+- associação da Comissão responsável;
+- associação do Status da Avaliação;
+- alteração automática da Solicitação para o status **Em Análise**;
+- registro da data de início da avaliação;
+- criação automática do evento **AVALIACAO_INICIADA** no Histórico da Solicitação.
+
+Também foram implementados:
+
+- paginação das avaliações;
+- filtros por Comissão;
+- filtros por Status da Avaliação;
+- consulta por identificador;
+- validações para impedir múltiplas avaliações simultâneas para uma mesma solicitação.
+
+Todos os endpoints foram validados por meio de testes funcionais utilizando requisições HTTP via `curl`, contemplando cenários de sucesso e de validação das regras de negócio.
+
+Essa infraestrutura servirá de base para os próximos módulos de:
+
+- cálculo da pontuação;
+- parecer técnico;
+- homologação da avaliação;
+- deferimento e indeferimento;
+- recursos administrativos.
+
+---
+
 Fim do Capítulo 6.
 
 # Capítulo 7 – Arquitetura do Sistema
@@ -2685,6 +2809,46 @@ O módulo Comissão é responsável pelo gerenciamento das comissões avaliadora
 - Validação do período de vigência.
 - Exclusão lógica.
 - Paginação e filtros nas consultas.
+
+# 7.6.6 API REST – Módulo Avaliação
+
+O módulo Avaliação é responsável por iniciar e controlar o fluxo administrativo de análise das solicitações protocoladas.
+
+Durante o início da avaliação o sistema realiza automaticamente:
+
+- criação da Avaliação;
+- associação da Comissão responsável;
+- definição do Status da Avaliação;
+- alteração do status da Solicitação para **Em Análise**;
+- registro da data de início;
+- criação automática do evento **AVALIACAO_INICIADA** no Histórico da Solicitação.
+
+## Endpoints
+
+| Método | Endpoint | Descrição |
+|---------|----------|-----------|
+| POST | `/api/avaliacoes/iniciar` | Inicia uma avaliação. |
+| GET | `/api/avaliacoes` | Lista avaliações com paginação e filtros. |
+| GET | `/api/avaliacoes/{id}` | Consulta uma avaliação pelo identificador. |
+
+## Filtros Disponíveis
+
+- comissão;
+- status da avaliação;
+- paginação;
+- ordenação.
+
+## Regras Implementadas
+
+- somente solicitações protocoladas poderão iniciar avaliação;
+- uma solicitação não poderá possuir mais de uma avaliação ativa;
+- integração automática com o Histórico da Solicitação;
+- alteração automática do status da Solicitação para **Em Análise**;
+- validação da existência da Comissão e do Status da Avaliação.
+
+Todos os endpoints do módulo foram validados por meio de testes funcionais utilizando `curl`, confirmando o correto funcionamento do fluxo administrativo e das validações implementadas.
+
+---
 
 # 7.7 Organização do Backend
 
