@@ -7,7 +7,12 @@ import java.util.List;
 import java.util.Optional;
 
 public interface CriterioRepository extends JpaRepository<Criterio, Long> {
+
+    List<Criterio> findByAtivoTrueAndDeletedAtIsNull();
+
+    List<Criterio> findByRequisitoIdAndAtivoTrueAndDeletedAtIsNull(Long requisitoId);
+
     List<Criterio> findByDeletedAtIsNull();
-    List<Criterio> findByRequisitoIdAndDeletedAtIsNull(Long requisitoId);
+
     Optional<Criterio> findByIdAndDeletedAtIsNull(Long id);
 }

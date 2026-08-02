@@ -3,6 +3,8 @@ package br.gov.ife.sgrsc.features.legislacao.domain;
 import br.gov.ife.sgrsc.shared.domain.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -14,9 +16,13 @@ import java.math.BigDecimal;
 @Table(name = "criterio")
 public class Criterio extends BaseEntity {
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "requisito_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "requisito_id")
     private Requisito requisito;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "grupo_criterio_id")
+    private GrupoCriterio grupoCriterio;
 
     @Column(name = "codigo", nullable = false, length = 20)
     private String codigo;
@@ -30,6 +36,16 @@ public class Criterio extends BaseEntity {
     @Column(name = "pontos", nullable = false, precision = 6, scale = 2)
     private BigDecimal pontos;
 
+    @Column(name = "ordem")
+    private Integer ordem;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo_calculo", length = 60)
+    private TipoCalculoCriterio tipoCalculo;
+
+    @Column(name = "observacao")
+    private String observacao;
+
     @Column(name = "ativo", nullable = false)
     private Boolean ativo;
 
@@ -39,6 +55,14 @@ public class Criterio extends BaseEntity {
 
     public void setRequisito(Requisito requisito) {
         this.requisito = requisito;
+    }
+
+    public GrupoCriterio getGrupoCriterio() {
+        return grupoCriterio;
+    }
+
+    public void setGrupoCriterio(GrupoCriterio grupoCriterio) {
+        this.grupoCriterio = grupoCriterio;
     }
 
     public String getCodigo() {
@@ -71,6 +95,30 @@ public class Criterio extends BaseEntity {
 
     public void setPontos(BigDecimal pontos) {
         this.pontos = pontos;
+    }
+
+    public Integer getOrdem() {
+        return ordem;
+    }
+
+    public void setOrdem(Integer ordem) {
+        this.ordem = ordem;
+    }
+
+    public TipoCalculoCriterio getTipoCalculo() {
+        return tipoCalculo;
+    }
+
+    public void setTipoCalculo(TipoCalculoCriterio tipoCalculo) {
+        this.tipoCalculo = tipoCalculo;
+    }
+
+    public String getObservacao() {
+        return observacao;
+    }
+
+    public void setObservacao(String observacao) {
+        this.observacao = observacao;
     }
 
     public Boolean getAtivo() {

@@ -23,6 +23,12 @@ public class NivelRsc extends BaseEntity {
     @Column(name = "percentual_incentivo", precision = 5, scale = 2)
     private BigDecimal percentualIncentivo;
 
+    @Column(name = "pontos_minimos", precision = 6, scale = 2)
+    private BigDecimal pontosMinimos;
+
+    @Column(name = "itens_minimos")
+    private Integer itensMinimos;
+
     @Column(name = "ativo", nullable = false)
     private Boolean ativo = true;
 
@@ -56,6 +62,22 @@ public class NivelRsc extends BaseEntity {
 
     public void setPercentualIncentivo(BigDecimal percentualIncentivo) {
         this.percentualIncentivo = percentualIncentivo;
+    }
+
+    public BigDecimal getPontosMinimos() {
+        return pontosMinimos;
+    }
+
+    public void setPontosMinimos(BigDecimal pontosMinimos) {
+        this.pontosMinimos = pontosMinimos;
+    }
+
+    public Integer getItensMinimos() {
+        return itensMinimos;
+    }
+
+    public void setItensMinimos(Integer itensMinimos) {
+        this.itensMinimos = itensMinimos;
     }
 
     public Boolean getAtivo() {

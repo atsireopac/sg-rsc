@@ -5,9 +5,17 @@ import java.math.BigDecimal;
 public class NivelRscRequest {
 
     private String codigo;
+
     private String nome;
+
     private String descricao;
+
     private BigDecimal percentualIncentivo;
+
+    private BigDecimal pontosMinimos;
+
+    private Integer itensMinimos;
+
     private Boolean ativo;
 
     public String getCodigo() {
@@ -40,6 +48,22 @@ public class NivelRscRequest {
 
     public void setPercentualIncentivo(BigDecimal percentualIncentivo) {
         this.percentualIncentivo = percentualIncentivo;
+    }
+
+    public BigDecimal getPontosMinimos() {
+        return pontosMinimos;
+    }
+
+    public void setPontosMinimos(BigDecimal pontosMinimos) {
+        this.pontosMinimos = pontosMinimos;
+    }
+
+    public Integer getItensMinimos() {
+        return itensMinimos;
+    }
+
+    public void setItensMinimos(Integer itensMinimos) {
+        this.itensMinimos = itensMinimos;
     }
 
     public Boolean getAtivo() {
