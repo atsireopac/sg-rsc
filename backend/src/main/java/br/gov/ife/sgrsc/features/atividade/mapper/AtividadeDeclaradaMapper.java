@@ -30,6 +30,7 @@ public class AtividadeDeclaradaMapper {
                 atividade.getDescricao(),
                 atividade.getDataInicio(),
                 atividade.getDataFim(),
+                atividade.getQuantidadeDeclarada(),
                 documentos,
                 atividade.getCreatedAt(),
                 atividade.getUpdatedAt()

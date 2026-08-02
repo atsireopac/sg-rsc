@@ -55,7 +55,9 @@ public class SecurityConfig {
                                 "/api/avaliacoes",
                                 "/api/avaliacoes/**",
                                 "/api/memoriais",
-                                "/api/memoriais/**"
+                                "/api/memoriais/**",
+                                "/api/pontuacoes",
+                                "/api/pontuacoes/**"
                         ).permitAll()
 
                         .anyRequest().authenticated()

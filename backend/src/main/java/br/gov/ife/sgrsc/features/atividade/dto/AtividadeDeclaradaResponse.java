@@ -1,5 +1,6 @@
 package br.gov.ife.sgrsc.features.atividade.dto;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -21,6 +22,8 @@ public record AtividadeDeclaradaResponse(
         LocalDate dataInicio,
 
         LocalDate dataFim,
+
+        BigDecimal quantidadeDeclarada,
 
         List<DocumentoVinculadoResponse> documentos,
 

@@ -56,59 +56,39 @@ public class AtividadeDeclaradaService {
     public AtividadeDeclaradaResponse criar(
             AtividadeDeclaradaCreateRequest request
     ) {
-        Solicitacao solicitacao = buscarSolicitacao(
-                request.solicitacaoId()
-        );
-
+        Solicitacao solicitacao = buscarSolicitacao(request.solicitacaoId());
         validarSolicitacaoEmRascunho(solicitacao);
-
-        validarPeriodo(
-                request.dataInicio(),
-                request.dataFim()
-        );
+        validarPeriodo(request.dataInicio(), request.dataFim());
 
         Criterio criterioPretendido = buscarCriterioOpcional(
                 request.criterioPretendidoId()
         );
 
         AtividadeDeclarada atividade = new AtividadeDeclarada();
-
         atividade.setSolicitacao(solicitacao);
         atividade.setCriterioPretendido(criterioPretendido);
         atividade.setTitulo(request.titulo().trim());
         atividade.setDescricao(request.descricao().trim());
         atividade.setDataInicio(request.dataInicio());
         atividade.setDataFim(request.dataFim());
+        atividade.setQuantidadeDeclarada(request.quantidadeDeclarada());
 
-        AtividadeDeclarada atividadeSalva =
-                atividadeRepository.save(atividade);
+        AtividadeDeclarada atividadeSalva = atividadeRepository.save(atividade);
 
-        return atividadeMapper.toResponse(
-                atividadeSalva,
-                List.of()
-        );
+        return atividadeMapper.toResponse(atividadeSalva, List.of());
     }
 
     @Transactional(readOnly = true)
     public AtividadeDeclaradaResponse buscarPorId(Long id) {
-
-        AtividadeDeclarada atividade =
-                buscarEntidadePorId(id);
-
-        return montarResponse(atividade);
+        return montarResponse(buscarEntidadePorId(id));
     }
 
     @Transactional(readOnly = true)
-    public List<AtividadeDeclaradaResponse> listarPorSolicitacao(
-            Long solicitacaoId
-    ) {
-        Solicitacao solicitacao =
-                buscarSolicitacao(solicitacaoId);
+    public List<AtividadeDeclaradaResponse> listarPorSolicitacao(Long solicitacaoId) {
+        Solicitacao solicitacao = buscarSolicitacao(solicitacaoId);
 
         return atividadeRepository
-                .findAllBySolicitacaoIdAndDeletedAtIsNullOrderByIdAsc(
-                        solicitacao.getId()
-                )
+                .findAllBySolicitacaoIdAndDeletedAtIsNullOrderByIdAsc(solicitacao.getId())
                 .stream()
                 .map(this::montarResponse)
                 .toList();
@@ -119,17 +99,9 @@ public class AtividadeDeclaradaService {
             Long id,
             AtividadeDeclaradaUpdateRequest request
     ) {
-        AtividadeDeclarada atividade =
-                buscarEntidadePorId(id);
-
-        validarSolicitacaoEmRascunho(
-                atividade.getSolicitacao()
-        );
-
-        validarPeriodo(
-                request.dataInicio(),
-                request.dataFim()
-        );
+        AtividadeDeclarada atividade = buscarEntidadePorId(id);
+        validarSolicitacaoEmRascunho(atividade.getSolicitacao());
+        validarPeriodo(request.dataInicio(), request.dataFim());
 
         Criterio criterioPretendido = buscarCriterioOpcional(
                 request.criterioPretendidoId()
@@ -140,6 +112,7 @@ public class AtividadeDeclaradaService {
         atividade.setDescricao(request.descricao().trim());
         atividade.setDataInicio(request.dataInicio());
         atividade.setDataFim(request.dataFim());
+        atividade.setQuantidadeDeclarada(request.quantidadeDeclarada());
 
         AtividadeDeclarada atividadeAtualizada =
                 atividadeRepository.saveAndFlush(atividade);
@@ -149,28 +122,18 @@ public class AtividadeDeclaradaService {
 
     @Transactional
     public void excluir(Long id) {
+        AtividadeDeclarada atividade = buscarEntidadePorId(id);
+        validarSolicitacaoEmRascunho(atividade.getSolicitacao());
 
-        AtividadeDeclarada atividade =
-                buscarEntidadePorId(id);
+        List<AtividadeDeclaradaDocumento> vinculos = vinculoRepository
+                .findAllByAtividadeDeclaradaIdAndDeletedAtIsNullOrderByIdAsc(
+                        atividade.getId()
+                );
 
-        validarSolicitacaoEmRascunho(
-                atividade.getSolicitacao()
-        );
-
-        List<AtividadeDeclaradaDocumento> vinculos =
-                vinculoRepository
-                        .findAllByAtividadeDeclaradaIdAndDeletedAtIsNullOrderByIdAsc(
-                                atividade.getId()
-                        );
-
-        vinculos.forEach(
-                AtividadeDeclaradaDocumento::marcarComoExcluido
-        );
-
+        vinculos.forEach(AtividadeDeclaradaDocumento::marcarComoExcluido);
         vinculoRepository.saveAll(vinculos);
 
         atividade.marcarComoExcluido();
-
         atividadeRepository.save(atividade);
     }
 
@@ -179,27 +142,17 @@ public class AtividadeDeclaradaService {
             Long atividadeId,
             DocumentoVinculoRequest request
     ) {
-        AtividadeDeclarada atividade =
-                buscarEntidadePorId(atividadeId);
+        AtividadeDeclarada atividade = buscarEntidadePorId(atividadeId);
+        validarSolicitacaoEmRascunho(atividade.getSolicitacao());
 
-        validarSolicitacaoEmRascunho(
-                atividade.getSolicitacao()
-        );
+        Documento documento = buscarDocumento(request.documentoId());
+        validarDocumentoDaMesmaSolicitacao(atividade, documento);
 
-        Documento documento =
-                buscarDocumento(request.documentoId());
-
-        validarDocumentoDaMesmaSolicitacao(
-                atividade,
-                documento
-        );
-
-        boolean vinculoExistente =
-                vinculoRepository
-                        .existsByAtividadeDeclaradaIdAndDocumentoIdAndDeletedAtIsNull(
-                                atividade.getId(),
-                                documento.getId()
-                        );
+        boolean vinculoExistente = vinculoRepository
+                .existsByAtividadeDeclaradaIdAndDocumentoIdAndDeletedAtIsNull(
+                        atividade.getId(),
+                        documento.getId()
+                );
 
         if (vinculoExistente) {
             throw new ResponseStatusException(
@@ -208,28 +161,18 @@ public class AtividadeDeclaradaService {
             );
         }
 
-        AtividadeDeclaradaDocumento vinculo =
-                new AtividadeDeclaradaDocumento();
-
+        AtividadeDeclaradaDocumento vinculo = new AtividadeDeclaradaDocumento();
         vinculo.setAtividadeDeclarada(atividade);
         vinculo.setDocumento(documento);
-
         vinculoRepository.save(vinculo);
 
         return montarResponse(atividade);
     }
 
     @Transactional
-    public void desvincularDocumento(
-            Long atividadeId,
-            Long documentoId
-    ) {
-        AtividadeDeclarada atividade =
-                buscarEntidadePorId(atividadeId);
-
-        validarSolicitacaoEmRascunho(
-                atividade.getSolicitacao()
-        );
+    public void desvincularDocumento(Long atividadeId, Long documentoId) {
+        AtividadeDeclarada atividade = buscarEntidadePorId(atividadeId);
+        validarSolicitacaoEmRascunho(atividade.getSolicitacao());
 
         if (documentoId == null) {
             throw new ResponseStatusException(
@@ -238,39 +181,30 @@ public class AtividadeDeclaradaService {
             );
         }
 
-        AtividadeDeclaradaDocumento vinculo =
-                vinculoRepository
-                        .findByAtividadeDeclaradaIdAndDocumentoIdAndDeletedAtIsNull(
-                                atividade.getId(),
-                                documentoId
-                        )
-                        .orElseThrow(() -> new ResponseStatusException(
-                                HttpStatus.NOT_FOUND,
-                                "Vínculo entre atividade e documento não encontrado."
-                        ));
+        AtividadeDeclaradaDocumento vinculo = vinculoRepository
+                .findByAtividadeDeclaradaIdAndDocumentoIdAndDeletedAtIsNull(
+                        atividade.getId(),
+                        documentoId
+                )
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Vínculo entre atividade e documento não encontrado."
+                ));
 
         vinculo.marcarComoExcluido();
-
         vinculoRepository.save(vinculo);
     }
 
-    private AtividadeDeclaradaResponse montarResponse(
-            AtividadeDeclarada atividade
-    ) {
-        List<AtividadeDeclaradaDocumento> vinculos =
-                vinculoRepository
-                        .findAllByAtividadeDeclaradaIdAndDeletedAtIsNullOrderByIdAsc(
-                                atividade.getId()
-                        );
+    private AtividadeDeclaradaResponse montarResponse(AtividadeDeclarada atividade) {
+        List<AtividadeDeclaradaDocumento> vinculos = vinculoRepository
+                .findAllByAtividadeDeclaradaIdAndDeletedAtIsNullOrderByIdAsc(
+                        atividade.getId()
+                );
 
-        return atividadeMapper.toResponse(
-                atividade,
-                vinculos
-        );
+        return atividadeMapper.toResponse(atividade, vinculos);
     }
 
     private AtividadeDeclarada buscarEntidadePorId(Long id) {
-
         if (id == null) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
@@ -287,7 +221,6 @@ public class AtividadeDeclaradaService {
     }
 
     private Solicitacao buscarSolicitacao(Long id) {
-
         if (id == null) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
@@ -304,7 +237,6 @@ public class AtividadeDeclaradaService {
     }
 
     private Criterio buscarCriterioOpcional(Long id) {
-
         if (id == null) {
             return null;
         }
@@ -318,7 +250,6 @@ public class AtividadeDeclaradaService {
     }
 
     private Documento buscarDocumento(Long id) {
-
         if (id == null) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
@@ -338,19 +269,13 @@ public class AtividadeDeclaradaService {
             AtividadeDeclarada atividade,
             Documento documento
     ) {
-        Solicitacao solicitacaoAtividade =
-                atividade.getSolicitacao();
+        Solicitacao solicitacaoAtividade = atividade.getSolicitacao();
+        Solicitacao solicitacaoDocumento = documento.getSolicitacao();
 
-        Solicitacao solicitacaoDocumento =
-                documento.getSolicitacao();
-
-        boolean mesmaSolicitacao =
-                solicitacaoAtividade != null
-                        && solicitacaoDocumento != null
-                        && solicitacaoAtividade.getId() != null
-                        && solicitacaoAtividade.getId().equals(
-                                solicitacaoDocumento.getId()
-                        );
+        boolean mesmaSolicitacao = solicitacaoAtividade != null
+                && solicitacaoDocumento != null
+                && solicitacaoAtividade.getId() != null
+                && solicitacaoAtividade.getId().equals(solicitacaoDocumento.getId());
 
         if (!mesmaSolicitacao) {
             throw new ResponseStatusException(
@@ -360,14 +285,10 @@ public class AtividadeDeclaradaService {
         }
     }
 
-    private void validarPeriodo(
-            LocalDate dataInicio,
-            LocalDate dataFim
-    ) {
+    private void validarPeriodo(LocalDate dataInicio, LocalDate dataFim) {
         if (dataInicio != null
                 && dataFim != null
                 && dataFim.isBefore(dataInicio)) {
-
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "A data final da atividade não pode ser anterior à data inicial."
@@ -375,15 +296,10 @@ public class AtividadeDeclaradaService {
         }
     }
 
-    private void validarSolicitacaoEmRascunho(
-            Solicitacao solicitacao
-    ) {
-        StatusSolicitacao status =
-                solicitacao.getStatusSolicitacao();
+    private void validarSolicitacaoEmRascunho(Solicitacao solicitacao) {
+        StatusSolicitacao status = solicitacao.getStatusSolicitacao();
 
-        if (status == null
-                || !STATUS_RASCUNHO.equals(status.getCodigo())) {
-
+        if (status == null || !STATUS_RASCUNHO.equals(status.getCodigo())) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
                     "As atividades somente podem ser alteradas enquanto a solicitação estiver em rascunho."

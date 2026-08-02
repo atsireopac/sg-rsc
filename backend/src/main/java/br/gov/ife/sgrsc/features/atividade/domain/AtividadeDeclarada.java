@@ -10,6 +10,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
@@ -36,6 +37,13 @@ public class AtividadeDeclarada extends BaseEntity {
     @Column(name = "data_fim")
     private LocalDate dataFim;
 
+    @Column(
+            name = "quantidade_declarada",
+            precision = 10,
+            scale = 2
+    )
+    private BigDecimal quantidadeDeclarada;
+
     public Solicitacao getSolicitacao() {
         return solicitacao;
     }
@@ -48,7 +56,9 @@ public class AtividadeDeclarada extends BaseEntity {
         return criterioPretendido;
     }
 
-    public void setCriterioPretendido(Criterio criterioPretendido) {
+    public void setCriterioPretendido(
+            Criterio criterioPretendido
+    ) {
         this.criterioPretendido = criterioPretendido;
     }
 
@@ -82,5 +92,15 @@ public class AtividadeDeclarada extends BaseEntity {
 
     public void setDataFim(LocalDate dataFim) {
         this.dataFim = dataFim;
+    }
+
+    public BigDecimal getQuantidadeDeclarada() {
+        return quantidadeDeclarada;
+    }
+
+    public void setQuantidadeDeclarada(
+            BigDecimal quantidadeDeclarada
+    ) {
+        this.quantidadeDeclarada = quantidadeDeclarada;
     }
 }

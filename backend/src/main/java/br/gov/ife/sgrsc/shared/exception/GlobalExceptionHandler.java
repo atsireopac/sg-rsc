@@ -2,10 +2,12 @@ package br.gov.ife.sgrsc.shared.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
@@ -32,8 +34,14 @@ public class GlobalExceptionHandler {
 
         String mensagem = campos.entrySet()
                 .stream()
-                .map(entry -> entry.getKey() + ": " + entry.getValue())
-                .reduce((primeiro, segundo) -> primeiro + "; " + segundo)
+                .map(entry ->
+                        entry.getKey()
+                                + ": "
+                                + entry.getValue()
+                )
+                .reduce((primeiro, segundo) ->
+                        primeiro + "; " + segundo
+                )
                 .orElse("Dados inválidos.");
 
         ApiErrorResponse error = new ApiErrorResponse(
@@ -44,7 +52,9 @@ public class GlobalExceptionHandler {
                 request.getRequestURI()
         );
 
-        return ResponseEntity.badRequest().body(error);
+        return ResponseEntity
+                .badRequest()
+                .body(error);
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)
@@ -60,7 +70,9 @@ public class GlobalExceptionHandler {
                 request.getRequestURI()
         );
 
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(error);
     }
 
     @ExceptionHandler(BusinessException.class)
@@ -76,7 +88,40 @@ public class GlobalExceptionHandler {
                 request.getRequestURI()
         );
 
-        return ResponseEntity.badRequest().body(error);
+        return ResponseEntity
+                .badRequest()
+                .body(error);
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<ApiErrorResponse>
+    handleResponseStatusException(
+            ResponseStatusException ex,
+            HttpServletRequest request
+    ) {
+        HttpStatusCode status = ex.getStatusCode();
+
+        String mensagem = ex.getReason() != null
+                ? ex.getReason()
+                : "Erro ao processar a requisição.";
+
+        String descricaoStatus =
+                HttpStatus.resolve(status.value()) != null
+                        ? HttpStatus.resolve(status.value())
+                        .getReasonPhrase()
+                        : "Erro HTTP";
+
+        ApiErrorResponse error = new ApiErrorResponse(
+                LocalDateTime.now(),
+                status.value(),
+                descricaoStatus,
+                mensagem,
+                request.getRequestURI()
+        );
+
+        return ResponseEntity
+                .status(status)
+                .body(error);
     }
 
     @ExceptionHandler(Exception.class)
