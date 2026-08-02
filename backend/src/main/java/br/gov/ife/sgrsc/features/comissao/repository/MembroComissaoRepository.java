@@ -32,4 +32,8 @@ public interface MembroComissaoRepository
             PapelMembroComissao papel,
             Long id
     );
+
+    boolean existsByComissaoIdAndAtivoTrueAndDeletedAtIsNull(
+            Long comissaoId
+    );
 }

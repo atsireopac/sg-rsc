@@ -18,6 +18,9 @@ public class HistoricoService {
     public static final String SOLICITACAO_PROTOCOLADA =
             "SOLICITACAO_PROTOCOLADA";
 
+    public static final String AVALIACAO_INICIADA =
+            "AVALIACAO_INICIADA";
+
     private static final String USUARIO_SISTEMA = "system";
 
     private final HistoricoRepository historicoRepository;
@@ -44,6 +47,28 @@ public class HistoricoService {
         historico.setDescricao(
                 "Solicitação protocolada com o número "
                         + solicitacao.getNumeroProtocolo()
+                        + "."
+        );
+        historico.setUsuario(USUARIO_SISTEMA);
+        historico.setDataEvento(LocalDateTime.now());
+
+        return historicoRepository.save(historico);
+    }
+
+    public Historico registrarAvaliacaoIniciada(
+            Solicitacao solicitacao,
+            String nomeComissao
+    ) {
+        TipoHistorico tipoHistorico = buscarTipoHistoricoAtivo(
+                AVALIACAO_INICIADA
+        );
+
+        Historico historico = new Historico();
+        historico.setSolicitacao(solicitacao);
+        historico.setTipoHistorico(tipoHistorico);
+        historico.setDescricao(
+                "Avaliação iniciada pela comissão "
+                        + nomeComissao
                         + "."
         );
         historico.setUsuario(USUARIO_SISTEMA);
