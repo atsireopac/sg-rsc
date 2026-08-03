@@ -398,6 +398,7 @@ Estrutura da resposta paginada:
 * ✅ Membros da Comissão
 * ✅ Avaliação
 * ✅ Motor de Pontuação
+* ✅ Motor de Complexidade
 * 🚧 Pareceres
 * 🚧 Complementações
 * 🚧 Recursos
@@ -549,12 +550,32 @@ Estrutura da resposta paginada:
 * Integração com a Base Legal.
 * Testes funcionais completos via curl.
 
+### Entregas da Sprint
+
+- Migração Flyway V16.
+- Ampliação da entidade Atividade Declarada.
+- Ampliação da entidade Pontuação.
+- Implementação do cálculo automático da pontuação.
+- Homologação integral.
+- Homologação parcial.
+- Implementação do Motor de Complexidade.
+- Consolidação automática por Grupo de Critérios.
+- Consolidação automática dos totais da avaliação.
+- Validação automática das regras parametrizadas por nível de RSC.
+- Cálculo automático da elegibilidade.
+- Implementação da ComplexidadeEngine.
+- Implementação da ComplexidadeService.
+- Implementação da ComplexidadeController.
+- Endpoints REST de consulta da elegibilidade.
+- Testes unitários utilizando JUnit 5.
+- Validação funcional completa via curl.
+
 ### Próximas etapas
 
-* Motor de Complexidade.
-* Consolidação automática da elegibilidade.
-* Geração do parecer técnico.
-* Consolidação do resultado da avaliação.
+- Emissão automática do parecer técnico.
+- Consolidação do resultado final da avaliação.
+- Fluxo de deferimento e indeferimento.
+- Recursos administrativos.
 ---
 
 # Como Executar
@@ -795,18 +816,20 @@ SECRETARIO
 * Migrações Flyway V1 a V11.
 * Testes funcionais dos endpoints REST.
 * Motor de Pontuação.
-* Cálculo automático das atividades.
-* Homologação integral.
-* Homologação parcial.
-* Integração entre Avaliação, Atividade Declarada e Critérios Oficiais.
-* Migração Flyway V16.
-
-## Em Desenvolvimento
-
-## Em Desenvolvimento
-
 * Motor de Complexidade.
-* Validação da elegibilidade ao RSC.
+* Consolidação automática por Grupo de Critérios.
+* Consolidação automática dos totais da avaliação.
+* Validação das regras de complexidade.
+* Cálculo automático da elegibilidade.
+* ComplexidadeEngine.
+* Endpoints REST de consulta da elegibilidade.
+* Testes unitários (JUnit 5).
+
+
+## Em Desenvolvimento
+
+## Em Desenvolvimento
+
 * Avaliação das evidências documentais.
 * Parecer técnico.
 * Homologação da avaliação.
@@ -834,6 +857,7 @@ SECRETARIO
 | **v0.11.0** | Módulo de Comissões, gestão dos membros, papéis e regras de composição             |
 | **v0.12.0** | Base Legal oficial do Decreto nº 13.048/2026, Grupos de Critérios, Regras de Complexidade, parametrização do Motor de Regras e carga oficial dos 59 critérios (Flyway V13, V14 e V15). |
 | **v0.13.0** | Motor de Pontuação completo, migração Flyway V16, cálculo automático da pontuação, homologação integral e parcial, integração com a Base Legal oficial e testes funcionais completos. |
+| **v0.14.0** | Implementação do Motor de Complexidade e Elegibilidade, incluindo consolidação automática das pontuações homologadas por Grupo de Critérios, consolidação dos totais da avaliação, validação das regras parametrizadas por nível de RSC, cálculo automático da elegibilidade, criação da ComplexidadeEngine, ComplexidadeService e ComplexidadeController, novos endpoints REST e testes unitários utilizando JUnit 5. |
 
 ---
 

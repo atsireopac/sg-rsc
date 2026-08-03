@@ -20,6 +20,7 @@
 Adicionar a seguinte linha na tabela de versões:
 
 | **1.12** | **02/08/2026** | **Erik Barbosa** | **Implementação da primeira versão do Motor de Pontuação do RSC, incluindo migração Flyway V16, cálculo automático da pontuação parametrizado pela Base Legal, homologação integral e parcial pela Comissão, validações de regras de negócio, novos endpoints REST de cálculo e homologação, expansão do modelo de domínio da entidade Pontuação e testes funcionais completos do fluxo de avaliação via curl.** |
+| **1.13** | **03/08/2026** | **Erik Barbosa** | Implementação do **Motor de Complexidade e Elegibilidade do RSC**, incluindo consolidação automática das pontuações homologadas por Grupo de Critérios, cálculo dos totais da avaliação, validação das regras de complexidade parametrizadas por nível de RSC, criação da **ComplexidadeEngine**, implementação do **ComplexidadeService** e **ComplexidadeController**, novos endpoints REST para consulta da elegibilidade, testes unitários (JUnit 5) e validação funcional completa via `curl`. |
 
 
 
@@ -2670,6 +2671,80 @@ O módulo foi validado por meio de testes funcionais utilizando requisições HT
 - validação das regras de negócio e das mensagens de erro retornadas pela API.
 
 A implementação desta etapa representa a primeira versão operacional do Motor de Pontuação do SG-RSC, permitindo que a Comissão realize o cálculo e a homologação das atividades declaradas com base na Base Legal oficial parametrizada no sistema. Essa infraestrutura servirá como fundamento para as próximas funcionalidades relacionadas ao parecer técnico, consolidação da pontuação por grupo de critérios, validação automática das regras de complexidade dos níveis de RSC e decisão final da Comissão.
+
+# 6.16 Implementação do Motor de Complexidade e Elegibilidade
+
+Foi implementada a primeira versão do **Motor de Complexidade** do SG-RSC, responsável por validar automaticamente se uma solicitação atende aos requisitos mínimos definidos para o nível de RSC pretendido.
+
+Diferentemente do Motor de Pontuação, cuja responsabilidade é calcular e homologar a pontuação de cada atividade declarada, o Motor de Complexidade consolida os resultados da avaliação e verifica o cumprimento das regras parametrizadas na Base Legal.
+
+Nesta etapa o sistema passou a realizar automaticamente:
+
+- consolidação das pontuações homologadas por Grupo de Critérios;
+- cálculo da pontuação total homologada;
+- cálculo da pontuação total declarada;
+- consolidação da quantidade de itens homologados;
+- consolidação da quantidade de grupos atendidos;
+- validação da pontuação mínima exigida para o nível pretendido;
+- validação da quantidade mínima de itens exigida;
+- validação das regras de complexidade parametrizadas no banco de dados;
+- cálculo automático da elegibilidade ao nível de RSC.
+
+## Arquitetura Implementada
+
+Foram desenvolvidos os seguintes componentes:
+
+- `ComplexidadeEngine`;
+- `ComplexidadeService`;
+- `ComplexidadeController`;
+- `PontuacaoRepository` (consultas de consolidação);
+- `RegraComplexidadeNivelRepository`;
+- `RegraComplexidadeGrupoRepository`;
+- DTOs específicos para consolidação e resultado da elegibilidade.
+
+## Endpoints REST
+
+| Método | Endpoint | Descrição |
+|---------|----------|-----------|
+| **GET** | `/api/complexidade/avaliacao/{id}/resultado` | Calcula e retorna automaticamente o resultado completo da elegibilidade da avaliação. |
+
+## Validações Implementadas
+
+O Motor de Complexidade realiza automaticamente:
+
+- consolidação por Grupo de Critérios;
+- consolidação dos totais da avaliação;
+- validação da pontuação mínima;
+- validação da quantidade mínima de itens;
+- validação das regras parametrizadas por nível de RSC;
+- cálculo da elegibilidade final;
+- identificação dos grupos que atenderam às regras.
+
+## Estrutura Parametrizada
+
+Toda a lógica permanece parametrizada por meio das entidades:
+
+- `RegraComplexidadeNivel`;
+- `RegraComplexidadeGrupo`;
+- `GrupoCriterio`;
+- `NivelRSC`.
+
+Nenhuma regra de elegibilidade permanece fixa no código-fonte.
+
+## Testes Realizados
+
+O módulo foi validado por meio de:
+
+- testes unitários utilizando **JUnit 5**;
+- validação funcional dos endpoints REST utilizando `curl`;
+- cenários positivos e negativos para diferentes níveis de RSC;
+- verificação da consolidação por grupo;
+- verificação da consolidação dos totais da avaliação;
+- validação automática da elegibilidade.
+
+Foram implementados **11 testes unitários**, todos executados com sucesso.
+
+Essa implementação conclui a infraestrutura responsável pela validação automática da elegibilidade das solicitações de RSC, permitindo que futuras etapas, como emissão de parecer técnico, deferimento, indeferimento e recursos administrativos, utilizem diretamente o resultado consolidado produzido pelo Motor de Complexidade.
 ---
 
 Fim do Capítulo 6.
