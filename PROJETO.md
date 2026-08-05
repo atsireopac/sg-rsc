@@ -17,10 +17,9 @@
 | **1.9** | **02/08/2026** | **Erik Barbosa** | **Implementação do módulo Comissão, CRUD completo de Comissões e Membros da Comissão, validação de presidente único por comissão, paginação e filtros dos endpoints REST, enum PapelMembroComissao, integração com Servidor e preparação da infraestrutura para o módulo Avaliação.** |
 | **1.10** | **02/08/2026** | **Erik Barbosa** | **Implementação do módulo Avaliação, incluindo criação da entidade Avaliação, integração com Comissões, Status da Avaliação e Solicitações, início do fluxo administrativo de análise, registro automático do histórico da solicitação, migração Flyway V12, paginação e filtros dos endpoints REST, validações das regras de negócio e testes completos da API via curl.** |
 | **1.11** | **02/08/2026** | **Erik Barbosa** | **Conclusão da modelagem oficial da Base Legal do RSC-PCCTAE, implementação dos Grupos de Critérios, Regras de Complexidade por Nível de RSC, carga oficial dos 59 critérios previstos no Decreto nº 13.048/2026 por meio das migrações Flyway V13, V14 e V15, parametrização do motor de regras e atualização das entidades, DTOs, serviços e repositórios para suportar o novo modelo de domínio.** |
-Adicionar a seguinte linha na tabela de versões:
-
 | **1.12** | **02/08/2026** | **Erik Barbosa** | **Implementação da primeira versão do Motor de Pontuação do RSC, incluindo migração Flyway V16, cálculo automático da pontuação parametrizado pela Base Legal, homologação integral e parcial pela Comissão, validações de regras de negócio, novos endpoints REST de cálculo e homologação, expansão do modelo de domínio da entidade Pontuação e testes funcionais completos do fluxo de avaliação via curl.** |
 | **1.13** | **03/08/2026** | **Erik Barbosa** | Implementação do **Motor de Complexidade e Elegibilidade do RSC**, incluindo consolidação automática das pontuações homologadas por Grupo de Critérios, cálculo dos totais da avaliação, validação das regras de complexidade parametrizadas por nível de RSC, criação da **ComplexidadeEngine**, implementação do **ComplexidadeService** e **ComplexidadeController**, novos endpoints REST para consulta da elegibilidade, testes unitários (JUnit 5) e validação funcional completa via `curl`. |
+| **1.14** | **05/08/2026** | **Erik Barbosa** | **Implementação do módulo Parecer Técnico, incluindo Motor de Parecer, geração automática de fundamentação baseada no Motor de Complexidade, emissão de pareceres, controle de versões, edição antes da assinatura, assinatura eletrônica lógica, bloqueio de alterações após assinatura, consultas individuais e por avaliação, testes unitários e validação funcional completa dos endpoints REST.** |
 
 
 
@@ -1028,21 +1027,51 @@ Justificar alterações.
 
 ---
 
-## UC010 – Emitir Parecer
+## UC010 – Emitir Parecer Técnico
 
-Ator
+### Objetivo
 
-Comissão.
+Permitir que a Comissão registre, revise, assine e consulte pareceres técnicos produzidos durante a avaliação de uma solicitação de RSC.
 
-Fluxo
+### Ator
 
-Abrir solicitação.
+Comissão de RSC.
 
-Registrar fundamentação.
+### Pré-condições
 
-Informar decisão.
+- Deve existir uma Avaliação.
+- A Avaliação deve possuir resultado calculado pelo Motor de Complexidade.
+- Deve existir um Tipo de Parecer ativo.
 
-Assinar eletronicamente.
+### Fluxo Principal
+
+1. A Comissão solicita a geração da sugestão de parecer.
+2. O sistema consulta o Motor de Complexidade.
+3. O Motor de Parecer gera automaticamente uma fundamentação técnica.
+4. A Comissão poderá alterar o texto sugerido.
+5. A Comissão informa o tipo de parecer.
+6. O parecer é emitido.
+7. O parecer permanece editável enquanto não estiver assinado.
+8. Após revisão, o parecer é assinado.
+9. O sistema bloqueia novas alterações.
+
+### Fluxos Alternativos
+
+- Avaliação inexistente.
+- Tipo de parecer inexistente.
+- Parecer já assinado.
+- Parecer inexistente.
+
+### Pós-condições
+
+- Parecer registrado.
+- Histórico preservado.
+- Parecer bloqueado após assinatura.
+
+### Regras de Negócio
+
+- RN103 – Utilização do resultado oficial da avaliação.
+- RN107 – Controle do fluxo de análise.
 
 ---
 
@@ -1324,7 +1353,7 @@ Ao longo do desenvolvimento do SG-RSC, esta matriz será continuamente atualizad
 | UC007 | Solicitar Complementação | RN107 | Comissão | Complementação | POST /complementacoes | Solicitar Complementação | TS007 | Planejado |
 | UC008 | Responder Complementação | RN107 | Comissão | Complementação | POST /complementacoes/responder | Responder Complementação | TS008 | Planejado |
 | UC009 | Calcular Pontuação | RN103, RN104, RN105 | Pontuação | Pontuação | **POST /api/pontuacoes/calcular** | Cálculo da Pontuação | TS009 | **Implementado** |
-| UC010 | Emitir Parecer | RN107 | Comissão | Parecer | POST /pareceres | Parecer Técnico | TS010 | Planejado |
+| UC010 | Emitir Parecer Técnico | RN103, RN107 | Parecer Técnico | Parecer | POST /api/pareceres/avaliacao/{id}/emitir | Parecer Técnico | TS010 | Implementado |
 | UC011 | Interpor Recurso | RN005 | Recursos | Recurso | POST /recursos | Recurso Administrativo | TS011 | Planejado |
 | UC012 | Julgar Recurso | RN005 | Recursos | Recurso | POST /recursos/julgar | Julgamento do Recurso | TS012 | Planejado |
 | UC013 | Gerenciar Critérios | RN104 | Administração | Critério | POST /criterios | Cadastro de Critérios | TS013 | Planejado |
@@ -1629,19 +1658,34 @@ Essa entidade foi criada para parametrizar os estados do processo de avaliação
 
 # 4.13 Entidade Parecer
 
-Representa a decisão emitida pela Comissão.
+Representa o parecer técnico emitido pela Comissão durante a análise de uma Avaliação.
 
-Atributos:
+Cada avaliação poderá possuir diferentes versões de pareceres ao longo do processo, preservando o histórico das alterações.
+
+### Atributos
 
 - id
-- parecer
-- decisão
-- dataParecer
+- texto
+- conclusão
+- versão
+- dataEmissao
+- assinado
+- createdAt
+- updatedAt
 
-Relacionamentos:
+### Relacionamentos
 
-- pertence a uma Solicitação;
-- é emitido por um membro da Comissão.
+- pertence a uma Avaliação;
+- pertence a um Tipo de Parecer;
+- utiliza o resultado produzido pelo Motor de Complexidade;
+- poderá possuir múltiplas versões.
+
+### Regras
+
+- somente pareceres não assinados poderão ser alterados;
+- a assinatura torna o parecer imutável;
+- cada nova emissão incrementa automaticamente a versão;
+- toda emissão registra data de emissão.
 
 ---
 
@@ -2745,6 +2789,74 @@ O módulo foi validado por meio de:
 Foram implementados **11 testes unitários**, todos executados com sucesso.
 
 Essa implementação conclui a infraestrutura responsável pela validação automática da elegibilidade das solicitações de RSC, permitindo que futuras etapas, como emissão de parecer técnico, deferimento, indeferimento e recursos administrativos, utilizem diretamente o resultado consolidado produzido pelo Motor de Complexidade.
+
+# 6.17 Implementação do Motor de Parecer Técnico
+
+Foi implementado o módulo responsável pela emissão dos Pareceres Técnicos da Comissão de RSC.
+
+O Motor de Parecer utiliza diretamente o resultado consolidado produzido pelo Motor de Complexidade para gerar automaticamente uma fundamentação técnica, reduzindo o trabalho manual da Comissão e garantindo padronização das análises.
+
+## Funcionalidades Implementadas
+
+- geração automática da fundamentação;
+- geração automática da conclusão sugerida;
+- emissão de pareceres;
+- controle de versões;
+- consulta individual;
+- listagem de pareceres por avaliação;
+- edição de pareceres não assinados;
+- assinatura lógica do parecer;
+- bloqueio de alterações após assinatura.
+
+## Arquitetura Implementada
+
+Foram desenvolvidos os seguintes componentes:
+
+- ParecerTecnicoEngine;
+- ParecerTecnicoService;
+- ParecerTecnicoController;
+- ParecerRepository;
+- TipoParecerRepository;
+- ParecerMapper;
+- DTOs de emissão, atualização, resposta e sugestão.
+
+## Endpoints REST
+
+| Método | Endpoint | Descrição |
+|---------|----------|-----------|
+| GET | `/api/pareceres/avaliacao/{id}/sugestao` | Gera automaticamente uma sugestão de parecer. |
+| POST | `/api/pareceres/avaliacao/{id}/emitir` | Emite um novo parecer técnico. |
+| PUT | `/api/pareceres/{id}` | Atualiza um parecer ainda não assinado. |
+| POST | `/api/pareceres/{id}/assinar` | Realiza a assinatura lógica do parecer. |
+| GET | `/api/pareceres/{id}` | Consulta um parecer específico. |
+| GET | `/api/pareceres/avaliacao/{id}` | Lista todos os pareceres da avaliação. |
+
+## Regras de Negócio Implementadas
+
+- utilização obrigatória do resultado do Motor de Complexidade;
+- geração automática da fundamentação técnica;
+- geração automática da conclusão sugerida;
+- incremento automático da versão do parecer;
+- impedimento de edição após assinatura;
+- impedimento de nova assinatura de parecer já assinado.
+
+## Testes Realizados
+
+O módulo foi validado por meio de:
+
+- testes unitários do ParecerTecnicoEngine;
+- validação funcional completa utilizando `curl`;
+- emissão de parecer;
+- atualização do parecer;
+- assinatura;
+- tentativa de alteração após assinatura;
+- tentativa de nova assinatura;
+- consulta individual;
+- listagem por avaliação.
+
+Foram executados com sucesso todos os testes automatizados do projeto, totalizando 16 testes unitários, além da validação funcional dos endpoints REST.
+
+Esta implementação conclui o fluxo técnico de avaliação, permitindo que a Comissão produza pareceres fundamentados automaticamente a partir do Motor de Complexidade, preservando o histórico de versões e garantindo a integridade das decisões por meio da assinatura lógica.
 ---
 
 Fim do Capítulo 6.

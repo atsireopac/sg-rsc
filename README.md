@@ -7,7 +7,7 @@
 ![MinIO](https://img.shields.io/badge/MinIO-Object_Storage-C72E49)
 ![Keycloak](https://img.shields.io/badge/Keycloak-26.7.0-4D4D4D)
 ![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED)
-![Status](https://img.shields.io/badge/Status-Sprint_12-Concluída-brightgreen)
+![Status](https://img.shields.io/badge/Status-Sprint_13-Concluída-brightgreen)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
 Sistema de Gestão do Reconhecimento de Saberes e Competências (RSC-PCCTAE)
@@ -69,6 +69,12 @@ Atualmente o sistema já implementa:
 * Validação de duplicidade de pontuação.
 * Validação dos limites da quantidade homologada.
 * Estrutura preparada para futura consolidação automática do resultado final do RSC.
+* Motor de Complexidade e Elegibilidade.
+* Geração automática de sugestões de parecer técnico.
+* Motor de Parecer Técnico integrado ao resultado da avaliação.
+* Controle de versões dos pareceres.
+* Assinatura lógica dos pareceres.
+* Bloqueio de edição após assinatura.
 
 Toda a lógica permanece armazenada no banco de dados, permitindo futuras alterações legislativas sem necessidade de recompilar a aplicação.
 
@@ -314,6 +320,22 @@ Estrutura da resposta paginada:
 * Validação de duplicidade.
 * Endpoints REST completos.
 
+## Parecer Técnico
+
+* Geração automática de sugestão de parecer.
+* Integração com o Motor de Complexidade.
+* Emissão de parecer técnico.
+* Controle automático de versões.
+* Consulta individual.
+* Listagem por Avaliação.
+* Atualização de parecer antes da assinatura.
+* Assinatura lógica.
+* Bloqueio de alterações após assinatura.
+* DTOs específicos.
+* Mapper Pattern.
+* Endpoints REST completos.
+* Testes unitários e testes funcionais via curl.
+
 ## Documentos
 
 * Upload de documentos.
@@ -399,7 +421,7 @@ Estrutura da resposta paginada:
 * ✅ Avaliação
 * ✅ Motor de Pontuação
 * ✅ Motor de Complexidade
-* 🚧 Pareceres
+* ✅ Parecer Técnico
 * 🚧 Complementações
 * 🚧 Recursos
 * 🚧 Dashboard Gerencial
@@ -570,12 +592,43 @@ Estrutura da resposta paginada:
 - Testes unitários utilizando JUnit 5.
 - Validação funcional completa via curl.
 
+## ✅ Sprint 13 — Parecer Técnico
+
+### Concluído
+
+* Implementação do ParecerTecnicoEngine.
+* Integração com o Motor de Complexidade.
+* Geração automática da fundamentação técnica.
+* Emissão de pareceres.
+* Controle de versões.
+* Atualização de pareceres não assinados.
+* Assinatura lógica.
+* Bloqueio de alterações após assinatura.
+* DTOs Request e Response.
+* Mapper Pattern.
+* Service Layer.
+* Controller REST.
+* Endpoints completos.
+* Testes unitários.
+* Validação funcional completa via curl.
+
+### Entregas da Sprint
+
+- Sugestão automática de parecer.
+- Emissão de parecer.
+- Consulta individual.
+- Listagem por avaliação.
+- Atualização.
+- Assinatura.
+- Controle de imutabilidade após assinatura.
+
 ### Próximas etapas
 
-- Emissão automática do parecer técnico.
-- Consolidação do resultado final da avaliação.
-- Fluxo de deferimento e indeferimento.
-- Recursos administrativos.
+- Homologação da Avaliação.
+- Decisão Final.
+- Recursos Administrativos.
+- Geração de PDF do Parecer.
+- Assinatura digital ICP-Brasil.
 ---
 
 # Como Executar
@@ -780,6 +833,17 @@ SECRETARIO
 | GET | `/api/pontuacoes/avaliacao/{id}` | Lista as pontuações de uma avaliação. |
 | PUT | `/api/pontuacoes/{id}/homologar` | Homologa integral ou parcialmente uma pontuação. |
 
+## Parecer Técnico
+
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| GET | `/api/pareceres/avaliacao/{avaliacaoId}/sugestao` | Gera uma sugestão automática de parecer. |
+| POST | `/api/pareceres/avaliacao/{avaliacaoId}/emitir` | Emite um parecer técnico. |
+| PUT | `/api/pareceres/{parecerId}` | Atualiza um parecer não assinado. |
+| POST | `/api/pareceres/{parecerId}/assinar` | Assina um parecer. |
+| GET | `/api/pareceres/{parecerId}` | Consulta um parecer. |
+| GET | `/api/pareceres/avaliacao/{avaliacaoId}` | Lista os pareceres da avaliação. |
+
 ---
 
 # Status Atual
@@ -824,6 +888,16 @@ SECRETARIO
 * ComplexidadeEngine.
 * Endpoints REST de consulta da elegibilidade.
 * Testes unitários (JUnit 5).
+* Motor de Parecer Técnico.
+* ParecerTecnicoEngine.
+* Geração automática da fundamentação.
+* Emissão de pareceres.
+* Controle de versões.
+* Atualização de pareceres.
+* Assinatura lógica.
+* Bloqueio de edição após assinatura.
+* Endpoints REST completos do módulo Parecer.
+* Testes unitários do ParecerTecnicoEngine.
 
 
 ## Em Desenvolvimento
@@ -831,7 +905,7 @@ SECRETARIO
 ## Em Desenvolvimento
 
 * Avaliação das evidências documentais.
-* Parecer técnico.
+* Homologação da avaliação.
 * Homologação da avaliação.
 * Complementações.
 * Recursos administrativos.
@@ -858,6 +932,7 @@ SECRETARIO
 | **v0.12.0** | Base Legal oficial do Decreto nº 13.048/2026, Grupos de Critérios, Regras de Complexidade, parametrização do Motor de Regras e carga oficial dos 59 critérios (Flyway V13, V14 e V15). |
 | **v0.13.0** | Motor de Pontuação completo, migração Flyway V16, cálculo automático da pontuação, homologação integral e parcial, integração com a Base Legal oficial e testes funcionais completos. |
 | **v0.14.0** | Implementação do Motor de Complexidade e Elegibilidade, incluindo consolidação automática das pontuações homologadas por Grupo de Critérios, consolidação dos totais da avaliação, validação das regras parametrizadas por nível de RSC, cálculo automático da elegibilidade, criação da ComplexidadeEngine, ComplexidadeService e ComplexidadeController, novos endpoints REST e testes unitários utilizando JUnit 5. |
+| **v0.15.0** | Implementação completa do módulo Parecer Técnico, incluindo Motor de Parecer, geração automática de fundamentação baseada no Motor de Complexidade, emissão de pareceres, controle de versões, edição antes da assinatura, assinatura lógica, bloqueio de alterações após assinatura, novos endpoints REST, testes unitários e validação funcional completa via curl. |
 
 ---
 
