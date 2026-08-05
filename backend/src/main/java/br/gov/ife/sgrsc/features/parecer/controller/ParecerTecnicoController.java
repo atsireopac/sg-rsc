@@ -1,0 +1,115 @@
+package br.gov.ife.sgrsc.features.parecer.controller;
+
+import br.gov.ife.sgrsc.features.parecer.dto.AtualizarParecerRequest;
+import br.gov.ife.sgrsc.features.parecer.dto.EmitirParecerRequest;
+import br.gov.ife.sgrsc.features.parecer.dto.ParecerResponse;
+import br.gov.ife.sgrsc.features.parecer.dto.SugestaoParecerResponse;
+import br.gov.ife.sgrsc.features.parecer.service.ParecerTecnicoService;
+import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/pareceres")
+public class ParecerTecnicoController {
+
+    private final ParecerTecnicoService parecerTecnicoService;
+
+    public ParecerTecnicoController(
+            ParecerTecnicoService parecerTecnicoService
+    ) {
+        this.parecerTecnicoService = parecerTecnicoService;
+    }
+
+    @GetMapping("/avaliacao/{avaliacaoId}/sugestao")
+    public ResponseEntity<SugestaoParecerResponse>
+    gerarSugestao(
+            @PathVariable Long avaliacaoId
+    ) {
+        SugestaoParecerResponse response =
+                parecerTecnicoService.gerarSugestao(
+                        avaliacaoId
+                );
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/avaliacao/{avaliacaoId}/emitir")
+    public ResponseEntity<ParecerResponse>
+    emitir(
+            @PathVariable Long avaliacaoId,
+            @Valid @RequestBody EmitirParecerRequest request
+    ) {
+        ParecerResponse response =
+                parecerTecnicoService.emitir(
+                        avaliacaoId,
+                        request
+                );
+
+        return ResponseEntity
+                .status(201)
+                .body(response);
+    }
+
+    @PutMapping("/{parecerId}")
+    public ResponseEntity<ParecerResponse>
+    atualizar(
+            @PathVariable Long parecerId,
+            @Valid @RequestBody AtualizarParecerRequest request
+    ) {
+        ParecerResponse response =
+                parecerTecnicoService.atualizar(
+                        parecerId,
+                        request
+                );
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{parecerId}/assinar")
+    public ResponseEntity<ParecerResponse>
+    assinar(
+            @PathVariable Long parecerId
+    ) {
+        ParecerResponse response =
+                parecerTecnicoService.assinar(
+                        parecerId
+                );
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{parecerId}")
+    public ResponseEntity<ParecerResponse>
+    buscarPorId(
+            @PathVariable Long parecerId
+    ) {
+        ParecerResponse response =
+                parecerTecnicoService.buscarPorId(
+                        parecerId
+                );
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/avaliacao/{avaliacaoId}")
+    public ResponseEntity<List<ParecerResponse>>
+    listarPorAvaliacao(
+            @PathVariable Long avaliacaoId
+    ) {
+        List<ParecerResponse> response =
+                parecerTecnicoService.listarPorAvaliacao(
+                        avaliacaoId
+                );
+
+        return ResponseEntity.ok(response);
+    }
+}
