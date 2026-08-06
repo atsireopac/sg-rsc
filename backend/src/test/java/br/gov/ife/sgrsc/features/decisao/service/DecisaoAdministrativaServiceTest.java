@@ -8,6 +8,7 @@ import br.gov.ife.sgrsc.features.decisao.dto.DecisaoAdministrativaResponse;
 import br.gov.ife.sgrsc.features.decisao.dto.RegistrarDecisaoRequest;
 import br.gov.ife.sgrsc.features.decisao.mapper.DecisaoAdministrativaMapper;
 import br.gov.ife.sgrsc.features.decisao.repository.DecisaoAdministrativaRepository;
+import br.gov.ife.sgrsc.features.historico.service.HistoricoService;
 import br.gov.ife.sgrsc.features.parecer.domain.Parecer;
 import br.gov.ife.sgrsc.features.parecer.repository.ParecerRepository;
 import br.gov.ife.sgrsc.features.resultadosolicitacao.domain.ResultadoSolicitacao;
@@ -72,6 +73,9 @@ class DecisaoAdministrativaServiceTest {
     private DecisaoAdministrativaMapper
             decisaoAdministrativaMapper;
 
+    @Mock
+    private HistoricoService historicoService;
+
     private DecisaoAdministrativaService service;
 
     private Avaliacao avaliacao;
@@ -90,7 +94,8 @@ class DecisaoAdministrativaServiceTest {
                 solicitacaoRepository,
                 statusSolicitacaoRepository,
                 statusAvaliacaoRepository,
-                decisaoAdministrativaMapper
+                decisaoAdministrativaMapper,
+                historicoService
         );
 
         solicitacao = new Solicitacao();
@@ -202,6 +207,12 @@ class DecisaoAdministrativaServiceTest {
         assertEquals(1, decisaoSalva.getVersao());
         assertFalse(decisaoSalva.getAssinada());
         assertNotNull(decisaoSalva.getDataDecisao());
+
+        verify(historicoService).registrar(
+                solicitacao,
+                HistoricoService.DECISAO_ADMINISTRATIVA_CRIADA,
+                "Decisão administrativa versão 1 registrada com resultado DEFERIDO."
+        );
     }
 
     @Test
@@ -482,6 +493,15 @@ class DecisaoAdministrativaServiceTest {
 
         verify(decisaoAdministrativaRepository)
                 .saveAndFlush(decisao);
+
+        verify(historicoService).registrar(
+                solicitacao,
+                HistoricoService.DECISAO_ADMINISTRATIVA_ATUALIZADA,
+                "Decisão administrativa versão 1 atualizada. "
+                        + "Resultado anterior: DEFERIDO; resultado atual: DEFERIDO; "
+                        + "fundamentação anterior: Fundamentação administrativa.; "
+                        + "fundamentação atual: Nova fundamentação administrativa.."
+        );
     }
 
     @Test
@@ -602,6 +622,24 @@ class DecisaoAdministrativaServiceTest {
 
         verify(decisaoAdministrativaRepository)
                 .saveAndFlush(decisao);
+
+        verify(historicoService).registrar(
+                solicitacao,
+                HistoricoService.DECISAO_ADMINISTRATIVA_ASSINADA,
+                "Decisão administrativa versão 1 assinada com resultado DEFERIDO."
+        );
+
+        verify(historicoService).registrar(
+                solicitacao,
+                HistoricoService.SOLICITACAO_DEFERIDA,
+                "Solicitação encerrada com resultado DEFERIDO."
+        );
+
+        verify(historicoService).registrar(
+                solicitacao,
+                HistoricoService.AVALIACAO_CONCLUIDA,
+                "Avaliação 3 concluída após assinatura da decisão administrativa."
+        );
     }
 
     @Test

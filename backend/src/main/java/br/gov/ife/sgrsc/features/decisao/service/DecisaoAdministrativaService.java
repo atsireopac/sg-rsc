@@ -8,6 +8,7 @@ import br.gov.ife.sgrsc.features.decisao.dto.DecisaoAdministrativaResponse;
 import br.gov.ife.sgrsc.features.decisao.dto.RegistrarDecisaoRequest;
 import br.gov.ife.sgrsc.features.decisao.mapper.DecisaoAdministrativaMapper;
 import br.gov.ife.sgrsc.features.decisao.repository.DecisaoAdministrativaRepository;
+import br.gov.ife.sgrsc.features.historico.service.HistoricoService;
 import br.gov.ife.sgrsc.features.parecer.domain.Parecer;
 import br.gov.ife.sgrsc.features.parecer.repository.ParecerRepository;
 import br.gov.ife.sgrsc.features.resultadosolicitacao.domain.ResultadoSolicitacao;
@@ -73,6 +74,8 @@ public class DecisaoAdministrativaService {
     private final DecisaoAdministrativaMapper
             decisaoAdministrativaMapper;
 
+    private final HistoricoService historicoService;
+
     public DecisaoAdministrativaService(
             DecisaoAdministrativaRepository
                     decisaoAdministrativaRepository,
@@ -86,7 +89,8 @@ public class DecisaoAdministrativaService {
             StatusAvaliacaoRepository
                     statusAvaliacaoRepository,
             DecisaoAdministrativaMapper
-                    decisaoAdministrativaMapper
+                    decisaoAdministrativaMapper,
+            HistoricoService historicoService
     ) {
         this.decisaoAdministrativaRepository =
                 decisaoAdministrativaRepository;
@@ -102,6 +106,7 @@ public class DecisaoAdministrativaService {
                 statusAvaliacaoRepository;
         this.decisaoAdministrativaMapper =
                 decisaoAdministrativaMapper;
+        this.historicoService = historicoService;
     }
 
     @Transactional
@@ -166,6 +171,16 @@ public class DecisaoAdministrativaService {
                         decisao
                 );
 
+        historicoService.registrar(
+                avaliacao.getSolicitacao(),
+                HistoricoService.DECISAO_ADMINISTRATIVA_CRIADA,
+                "Decisão administrativa versão "
+                        + salva.getVersao()
+                        + " registrada com resultado "
+                        + resultado.getCodigo()
+                        + "."
+        );
+
         return decisaoAdministrativaMapper.toResponse(
                 salva
         );
@@ -220,6 +235,14 @@ public class DecisaoAdministrativaService {
                 decisao.getAvaliacao()
         );
 
+        String resultadoAnterior =
+                decisao.getResultadoSolicitacao() != null
+                        ? decisao.getResultadoSolicitacao().getCodigo()
+                        : null;
+
+        String fundamentacaoAnterior =
+                decisao.getFundamentacao();
+
         ResultadoSolicitacao resultado =
                 validarResultado(
                         request.resultadoCodigo()
@@ -236,6 +259,22 @@ public class DecisaoAdministrativaService {
         DecisaoAdministrativa salva =
                 decisaoAdministrativaRepository
                         .saveAndFlush(decisao);
+
+        historicoService.registrar(
+                decisao.getAvaliacao().getSolicitacao(),
+                HistoricoService.DECISAO_ADMINISTRATIVA_ATUALIZADA,
+                "Decisão administrativa versão "
+                        + salva.getVersao()
+                        + " atualizada. Resultado anterior: "
+                        + resultadoAnterior
+                        + "; resultado atual: "
+                        + salva.getResultadoSolicitacao().getCodigo()
+                        + "; fundamentação anterior: "
+                        + fundamentacaoAnterior
+                        + "; fundamentação atual: "
+                        + salva.getFundamentacao()
+                        + "."
+        );
 
         return decisaoAdministrativaMapper.toResponse(
                 salva
@@ -281,6 +320,43 @@ public class DecisaoAdministrativaService {
         DecisaoAdministrativa salva =
                 decisaoAdministrativaRepository
                         .saveAndFlush(decisao);
+
+        Solicitacao solicitacao =
+                decisao.getAvaliacao().getSolicitacao();
+
+        historicoService.registrar(
+                solicitacao,
+                HistoricoService.DECISAO_ADMINISTRATIVA_ASSINADA,
+                "Decisão administrativa versão "
+                        + salva.getVersao()
+                        + " assinada com resultado "
+                        + salva.getResultadoSolicitacao().getCodigo()
+                        + "."
+        );
+
+        String codigoResultado =
+                salva.getResultadoSolicitacao().getCodigo();
+
+        String codigoHistoricoResultado =
+                RESULTADO_DEFERIDO.equals(codigoResultado)
+                        ? HistoricoService.SOLICITACAO_DEFERIDA
+                        : HistoricoService.SOLICITACAO_INDEFERIDA;
+
+        historicoService.registrar(
+                solicitacao,
+                codigoHistoricoResultado,
+                "Solicitação encerrada com resultado "
+                        + codigoResultado
+                        + "."
+        );
+
+        historicoService.registrar(
+                solicitacao,
+                HistoricoService.AVALIACAO_CONCLUIDA,
+                "Avaliação "
+                        + decisao.getAvaliacao().getId()
+                        + " concluída após assinatura da decisão administrativa."
+        );
 
         return decisaoAdministrativaMapper.toResponse(
                 salva
