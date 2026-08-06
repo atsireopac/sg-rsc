@@ -9,6 +9,9 @@ public class SolicitacaoResponse {
     private String numeroProtocolo;
     private String numeroProcesso;
 
+    private LocalDateTime dataAberturaProcesso;
+    private String usuarioProtocolo;
+
     private Long servidorId;
     private String servidorNome;
 
@@ -26,7 +29,9 @@ public class SolicitacaoResponse {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(
+            Long id
+    ) {
         this.id = id;
     }
 
@@ -34,79 +39,131 @@ public class SolicitacaoResponse {
         return numeroProtocolo;
     }
 
-    public void setNumeroProtocolo(String numeroProtocolo) {
-        this.numeroProtocolo = numeroProtocolo;
+    public void setNumeroProtocolo(
+            String numeroProtocolo
+    ) {
+        this.numeroProtocolo =
+                numeroProtocolo;
     }
 
     public String getNumeroProcesso() {
         return numeroProcesso;
     }
 
-    public void setNumeroProcesso(String numeroProcesso) {
-        this.numeroProcesso = numeroProcesso;
+    public void setNumeroProcesso(
+            String numeroProcesso
+    ) {
+        this.numeroProcesso =
+                numeroProcesso;
+    }
+
+    public LocalDateTime getDataAberturaProcesso() {
+        return dataAberturaProcesso;
+    }
+
+    public void setDataAberturaProcesso(
+            LocalDateTime dataAberturaProcesso
+    ) {
+        this.dataAberturaProcesso =
+                dataAberturaProcesso;
+    }
+
+    public String getUsuarioProtocolo() {
+        return usuarioProtocolo;
+    }
+
+    public void setUsuarioProtocolo(
+            String usuarioProtocolo
+    ) {
+        this.usuarioProtocolo =
+                usuarioProtocolo;
     }
 
     public Long getServidorId() {
         return servidorId;
     }
 
-    public void setServidorId(Long servidorId) {
-        this.servidorId = servidorId;
+    public void setServidorId(
+            Long servidorId
+    ) {
+        this.servidorId =
+                servidorId;
     }
 
     public String getServidorNome() {
         return servidorNome;
     }
 
-    public void setServidorNome(String servidorNome) {
-        this.servidorNome = servidorNome;
+    public void setServidorNome(
+            String servidorNome
+    ) {
+        this.servidorNome =
+                servidorNome;
     }
 
     public Long getNivelRscId() {
         return nivelRscId;
     }
 
-    public void setNivelRscId(Long nivelRscId) {
-        this.nivelRscId = nivelRscId;
+    public void setNivelRscId(
+            Long nivelRscId
+    ) {
+        this.nivelRscId =
+                nivelRscId;
     }
 
     public Long getStatusSolicitacaoId() {
         return statusSolicitacaoId;
     }
 
-    public void setStatusSolicitacaoId(Long statusSolicitacaoId) {
-        this.statusSolicitacaoId = statusSolicitacaoId;
+    public void setStatusSolicitacaoId(
+            Long statusSolicitacaoId
+    ) {
+        this.statusSolicitacaoId =
+                statusSolicitacaoId;
     }
 
     public Long getResultadoSolicitacaoId() {
         return resultadoSolicitacaoId;
     }
 
-    public void setResultadoSolicitacaoId(Long resultadoSolicitacaoId) {
-        this.resultadoSolicitacaoId = resultadoSolicitacaoId;
+    public void setResultadoSolicitacaoId(
+            Long resultadoSolicitacaoId
+    ) {
+        this.resultadoSolicitacaoId =
+                resultadoSolicitacaoId;
     }
 
     public LocalDateTime getDataSolicitacao() {
         return dataSolicitacao;
     }
 
-    public void setDataSolicitacao(LocalDateTime dataSolicitacao) {
-        this.dataSolicitacao = dataSolicitacao;
+    public void setDataSolicitacao(
+            LocalDateTime dataSolicitacao
+    ) {
+        this.dataSolicitacao =
+                dataSolicitacao;
     }
 
     public LocalDateTime getDataProtocolo() {
         return dataProtocolo;
     }
 
-    public void setDataProtocolo(LocalDateTime dataProtocolo) {
-        this.dataProtocolo = dataProtocolo;
+    public void setDataProtocolo(
+            LocalDateTime dataProtocolo
+    ) {
+        this.dataProtocolo =
+                dataProtocolo;
     }
 
     public LocalDateTime getDataEncerramento() {
         return dataEncerramento;
     }
 
-    public void setDataEncerramento(LocalDateTime dataEncerramento) {
-        this.dataEncerramento = dataEncerramento;
+    public void setDataEncerramento(
+            LocalDateTime dataEncerramento
+    ) {
+        this.dataEncerramento =
+                dataEncerramento;
     }
 }

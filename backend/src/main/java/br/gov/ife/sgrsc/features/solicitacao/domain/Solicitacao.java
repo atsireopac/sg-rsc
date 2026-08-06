@@ -24,6 +24,12 @@ public class Solicitacao extends BaseEntity {
     @Column(name = "numero_processo", unique = true, length = 50)
     private String numeroProcesso;
 
+    @Column(name = "data_abertura_processo")
+    private LocalDateTime dataAberturaProcesso;
+
+    @Column(name = "usuario_protocolo", length = 100)
+    private String usuarioProtocolo;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "servidor_id", nullable = false)
     private Servidor servidor;
@@ -53,7 +59,9 @@ public class Solicitacao extends BaseEntity {
         return numeroProtocolo;
     }
 
-    public void setNumeroProtocolo(String numeroProtocolo) {
+    public void setNumeroProtocolo(
+            String numeroProtocolo
+    ) {
         this.numeroProtocolo = numeroProtocolo;
     }
 
@@ -61,15 +69,41 @@ public class Solicitacao extends BaseEntity {
         return numeroProcesso;
     }
 
-    public void setNumeroProcesso(String numeroProcesso) {
+    public void setNumeroProcesso(
+            String numeroProcesso
+    ) {
         this.numeroProcesso = numeroProcesso;
+    }
+
+    public LocalDateTime getDataAberturaProcesso() {
+        return dataAberturaProcesso;
+    }
+
+    public void setDataAberturaProcesso(
+            LocalDateTime dataAberturaProcesso
+    ) {
+        this.dataAberturaProcesso =
+                dataAberturaProcesso;
+    }
+
+    public String getUsuarioProtocolo() {
+        return usuarioProtocolo;
+    }
+
+    public void setUsuarioProtocolo(
+            String usuarioProtocolo
+    ) {
+        this.usuarioProtocolo =
+                usuarioProtocolo;
     }
 
     public Servidor getServidor() {
         return servidor;
     }
 
-    public void setServidor(Servidor servidor) {
+    public void setServidor(
+            Servidor servidor
+    ) {
         this.servidor = servidor;
     }
 
@@ -77,7 +111,9 @@ public class Solicitacao extends BaseEntity {
         return nivelRsc;
     }
 
-    public void setNivelRsc(NivelRsc nivelRsc) {
+    public void setNivelRsc(
+            NivelRsc nivelRsc
+    ) {
         this.nivelRsc = nivelRsc;
     }
 
@@ -85,39 +121,54 @@ public class Solicitacao extends BaseEntity {
         return statusSolicitacao;
     }
 
-    public void setStatusSolicitacao(StatusSolicitacao statusSolicitacao) {
-        this.statusSolicitacao = statusSolicitacao;
+    public void setStatusSolicitacao(
+            StatusSolicitacao statusSolicitacao
+    ) {
+        this.statusSolicitacao =
+                statusSolicitacao;
     }
 
     public ResultadoSolicitacao getResultadoSolicitacao() {
         return resultadoSolicitacao;
     }
 
-    public void setResultadoSolicitacao(ResultadoSolicitacao resultadoSolicitacao) {
-        this.resultadoSolicitacao = resultadoSolicitacao;
+    public void setResultadoSolicitacao(
+            ResultadoSolicitacao resultadoSolicitacao
+    ) {
+        this.resultadoSolicitacao =
+                resultadoSolicitacao;
     }
 
     public LocalDateTime getDataSolicitacao() {
         return dataSolicitacao;
     }
 
-    public void setDataSolicitacao(LocalDateTime dataSolicitacao) {
-        this.dataSolicitacao = dataSolicitacao;
+    public void setDataSolicitacao(
+            LocalDateTime dataSolicitacao
+    ) {
+        this.dataSolicitacao =
+                dataSolicitacao;
     }
 
     public LocalDateTime getDataProtocolo() {
         return dataProtocolo;
     }
 
-    public void setDataProtocolo(LocalDateTime dataProtocolo) {
-        this.dataProtocolo = dataProtocolo;
+    public void setDataProtocolo(
+            LocalDateTime dataProtocolo
+    ) {
+        this.dataProtocolo =
+                dataProtocolo;
     }
 
     public LocalDateTime getDataEncerramento() {
         return dataEncerramento;
     }
 
-    public void setDataEncerramento(LocalDateTime dataEncerramento) {
-        this.dataEncerramento = dataEncerramento;
+    public void setDataEncerramento(
+            LocalDateTime dataEncerramento
+    ) {
+        this.dataEncerramento =
+                dataEncerramento;
     }
 }

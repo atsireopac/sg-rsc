@@ -1,5 +1,7 @@
 package br.gov.ife.sgrsc.features.solicitacao.controller;
 
+import br.gov.ife.sgrsc.features.solicitacao.dto.ProcessoSeiRequest;
+import br.gov.ife.sgrsc.features.solicitacao.dto.ProcessoSeiResponse;
 import br.gov.ife.sgrsc.features.solicitacao.dto.SolicitacaoRequest;
 import br.gov.ife.sgrsc.features.solicitacao.dto.SolicitacaoResponse;
 import br.gov.ife.sgrsc.features.solicitacao.mapper.SolicitacaoMapper;
@@ -26,7 +28,8 @@ public class SolicitacaoController {
     public SolicitacaoController(
             SolicitacaoService solicitacaoService
     ) {
-        this.solicitacaoService = solicitacaoService;
+        this.solicitacaoService =
+                solicitacaoService;
     }
 
     @GetMapping
@@ -59,7 +62,10 @@ public class SolicitacaoController {
             @RequestBody SolicitacaoRequest request
     ) {
         return SolicitacaoMapper.toResponse(
-                solicitacaoService.atualizar(id, request)
+                solicitacaoService.atualizar(
+                        id,
+                        request
+                )
         );
     }
 
@@ -68,6 +74,17 @@ public class SolicitacaoController {
             @PathVariable Long id
     ) {
         return solicitacaoService.protocolar(id);
+    }
+
+    @PutMapping("/{id}/processo-sei")
+    public ProcessoSeiResponse vincularProcessoSei(
+            @PathVariable Long id,
+            @RequestBody ProcessoSeiRequest request
+    ) {
+        return solicitacaoService.vincularProcesso(
+                id,
+                request
+        );
     }
 
     @DeleteMapping("/{id}")

@@ -10,6 +10,8 @@ import br.gov.ife.sgrsc.features.resultadosolicitacao.repository.ResultadoSolici
 import br.gov.ife.sgrsc.features.servidor.domain.Servidor;
 import br.gov.ife.sgrsc.features.servidor.repository.ServidorRepository;
 import br.gov.ife.sgrsc.features.solicitacao.domain.Solicitacao;
+import br.gov.ife.sgrsc.features.solicitacao.dto.ProcessoSeiRequest;
+import br.gov.ife.sgrsc.features.solicitacao.dto.ProcessoSeiResponse;
 import br.gov.ife.sgrsc.features.solicitacao.dto.SolicitacaoRequest;
 import br.gov.ife.sgrsc.features.solicitacao.dto.SolicitacaoResponse;
 import br.gov.ife.sgrsc.features.solicitacao.mapper.SolicitacaoMapper;
@@ -28,6 +30,18 @@ import java.util.stream.Collectors;
 
 @Service
 public class SolicitacaoService {
+
+    private static final String STATUS_PROTOCOLADA =
+            "PROTOCOLADA";
+
+    private static final String USUARIO_SISTEMA =
+            "system";
+
+    private static final String PROCESSO_SEI_VINCULADO =
+            "PROCESSO_SEI_VINCULADO";
+
+    private static final String REGEX_NUMERO_PROCESSO_SEI =
+            "^\\d{5}\\.\\d{6}/\\d{4}-\\d{2}$";
 
     private final SolicitacaoRepository solicitacaoRepository;
     private final ServidorRepository servidorRepository;
@@ -89,7 +103,6 @@ public class SolicitacaoService {
 
         Solicitacao solicitacao = new Solicitacao();
 
-        solicitacao.setNumeroProcesso(request.getNumeroProcesso());
         solicitacao.setServidor(servidor);
         solicitacao.setNivelRsc(nivelRsc);
         solicitacao.setStatusSolicitacao(status);
@@ -110,7 +123,6 @@ public class SolicitacaoService {
         Servidor servidor = buscarServidor(request.getServidorId());
         NivelRsc nivelRsc = buscarNivelRsc(request.getNivelRscId());
 
-        solicitacao.setNumeroProcesso(request.getNumeroProcesso());
         solicitacao.setServidor(servidor);
         solicitacao.setNivelRsc(nivelRsc);
 
@@ -158,6 +170,165 @@ public class SolicitacaoService {
         );
 
         return SolicitacaoMapper.toResponse(solicitacaoProtocolada);
+    }
+
+    @Transactional
+    public ProcessoSeiResponse vincularProcesso(
+            Long solicitacaoId,
+            ProcessoSeiRequest request
+    ) {
+        if (request == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Os dados do processo SEI são obrigatórios."
+            );
+        }
+
+        Solicitacao solicitacao =
+                buscarPorId(solicitacaoId);
+
+        validarSolicitacaoProtocolada(
+                solicitacao
+        );
+
+        validarAusenciaDeProcessoVinculado(
+                solicitacao
+        );
+
+        String numeroProcesso =
+                normalizarNumeroProcesso(
+                        request.getNumeroProcesso()
+                );
+
+        validarNumeroProcessoDuplicado(
+                solicitacaoId,
+                numeroProcesso
+        );
+
+        LocalDateTime agora =
+                LocalDateTime.now();
+
+        solicitacao.setNumeroProcesso(
+                numeroProcesso
+        );
+
+        solicitacao.setDataAberturaProcesso(
+                agora
+        );
+
+        solicitacao.setUsuarioProtocolo(
+                USUARIO_SISTEMA
+        );
+
+        Solicitacao solicitacaoAtualizada =
+                solicitacaoRepository.saveAndFlush(
+                        solicitacao
+                );
+
+        historicoService.registrar(
+                solicitacaoAtualizada,
+                PROCESSO_SEI_VINCULADO,
+                "Processo SEI "
+                        + numeroProcesso
+                        + " vinculado à solicitação."
+        );
+
+        return SolicitacaoMapper
+                .toProcessoSeiResponse(
+                        solicitacaoAtualizada
+                );
+    }
+
+    private void validarSolicitacaoProtocolada(
+            Solicitacao solicitacao
+    ) {
+        StatusSolicitacao status =
+                solicitacao.getStatusSolicitacao();
+
+        if (status == null
+                || !STATUS_PROTOCOLADA.equals(
+                        status.getCodigo()
+                )) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Somente solicitações protocoladas podem ser vinculadas a um processo SEI."
+            );
+        }
+
+        if (solicitacao.getNumeroProtocolo() == null
+                || solicitacao.getNumeroProtocolo().isBlank()
+                || solicitacao.getDataProtocolo() == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "A solicitação não possui uma protocolização válida."
+            );
+        }
+    }
+
+    private void validarAusenciaDeProcessoVinculado(
+            Solicitacao solicitacao
+    ) {
+        if (solicitacao.getNumeroProcesso() != null
+                && !solicitacao.getNumeroProcesso().isBlank()) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "A solicitação já está vinculada ao processo SEI "
+                            + solicitacao.getNumeroProcesso()
+                            + "."
+            );
+        }
+    }
+
+    private String normalizarNumeroProcesso(
+            String numeroProcesso
+    ) {
+        if (numeroProcesso == null
+                || numeroProcesso.isBlank()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "O número do processo SEI é obrigatório."
+            );
+        }
+
+        String numeroNormalizado =
+                numeroProcesso.trim();
+
+        if (!numeroNormalizado.matches(
+                REGEX_NUMERO_PROCESSO_SEI
+        )) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "O número do processo SEI deve seguir o formato 00000.000000/0000-00."
+            );
+        }
+
+        return numeroNormalizado;
+    }
+
+    private void validarNumeroProcessoDuplicado(
+            Long solicitacaoId,
+            String numeroProcesso
+    ) {
+        boolean processoJaVinculado =
+                solicitacaoRepository
+                        .findByDeletedAtIsNull()
+                        .stream()
+                        .anyMatch(solicitacao ->
+                                !solicitacao.getId()
+                                        .equals(solicitacaoId)
+                                        && numeroProcesso.equals(
+                                                solicitacao.getNumeroProcesso()
+                                        )
+                        );
+
+        if (processoJaVinculado) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "O processo SEI "
+                            + numeroProcesso
+                            + " já está vinculado a outra solicitação."
+            );
+        }
     }
 
     private void validarSolicitacaoEmRascunho(
