@@ -8,6 +8,7 @@ import br.gov.ife.sgrsc.features.avaliacao.domain.StatusPontuacao;
 import br.gov.ife.sgrsc.features.avaliacao.dto.PontuacaoHomologacaoRequest;
 import br.gov.ife.sgrsc.features.avaliacao.dto.PontuacaoRequest;
 import br.gov.ife.sgrsc.features.avaliacao.dto.PontuacaoResponse;
+import br.gov.ife.sgrsc.features.avaliacao.engine.PontuacaoDeclaradaCalculator;
 import br.gov.ife.sgrsc.features.avaliacao.mapper.PontuacaoMapper;
 import br.gov.ife.sgrsc.features.avaliacao.repository.AvaliacaoRepository;
 import br.gov.ife.sgrsc.features.avaliacao.repository.PontuacaoRepository;
@@ -30,33 +31,40 @@ public class PontuacaoService {
     private final AvaliacaoRepository avaliacaoRepository;
     private final AtividadeDeclaradaRepository atividadeRepository;
     private final CriterioRepository criterioRepository;
+    private final PontuacaoDeclaradaCalculator pontuacaoDeclaradaCalculator;
 
     public PontuacaoService(
             PontuacaoRepository pontuacaoRepository,
             AvaliacaoRepository avaliacaoRepository,
             AtividadeDeclaradaRepository atividadeRepository,
-            CriterioRepository criterioRepository
+            CriterioRepository criterioRepository,
+            PontuacaoDeclaradaCalculator pontuacaoDeclaradaCalculator
     ) {
         this.pontuacaoRepository = pontuacaoRepository;
         this.avaliacaoRepository = avaliacaoRepository;
         this.atividadeRepository = atividadeRepository;
         this.criterioRepository = criterioRepository;
+        this.pontuacaoDeclaradaCalculator =
+                pontuacaoDeclaradaCalculator;
     }
 
     public PontuacaoResponse calcular(
             PontuacaoRequest request
     ) {
-        Avaliacao avaliacao = buscarAvaliacao(
-                request.avaliacaoId()
-        );
+        Avaliacao avaliacao =
+                buscarAvaliacao(
+                        request.avaliacaoId()
+                );
 
-        AtividadeDeclarada atividade = buscarAtividade(
-                request.atividadeDeclaradaId()
-        );
+        AtividadeDeclarada atividade =
+                buscarAtividade(
+                        request.atividadeDeclaradaId()
+                );
 
-        Criterio criterio = buscarCriterio(
-                request.criterioId()
-        );
+        Criterio criterio =
+                buscarCriterio(
+                        request.criterioId()
+                );
 
         validarRelacionamentos(
                 avaliacao,
@@ -71,38 +79,59 @@ public class PontuacaoService {
 
         BigDecimal quantidadeDeclarada =
                 request.quantidadeDeclarada()
-                        .setScale(2, RoundingMode.HALF_UP);
+                        .setScale(
+                                2,
+                                RoundingMode.HALF_UP
+                        );
 
         BigDecimal pontosUnitarios =
                 criterio.getPontos()
-                        .setScale(2, RoundingMode.HALF_UP);
+                        .setScale(
+                                2,
+                                RoundingMode.HALF_UP
+                        );
 
         BigDecimal pontosDeclarados =
-                calcularPontos(
+                pontuacaoDeclaradaCalculator.calcular(
                         quantidadeDeclarada,
                         pontosUnitarios
                 );
 
-        Pontuacao pontuacao = new Pontuacao();
+        Pontuacao pontuacao =
+                new Pontuacao();
 
-        pontuacao.setAvaliacao(avaliacao);
-        pontuacao.setAtividadeDeclarada(atividade);
-        pontuacao.setCriterio(criterio);
+        pontuacao.setAvaliacao(
+                avaliacao
+        );
+
+        pontuacao.setAtividadeDeclarada(
+                atividade
+        );
+
+        pontuacao.setCriterio(
+                criterio
+        );
+
         pontuacao.setQuantidadeDeclarada(
                 quantidadeDeclarada
         );
+
         pontuacao.setPontosUnitarios(
                 pontosUnitarios
         );
+
         pontuacao.setPontosDeclarados(
                 pontosDeclarados
         );
+
         pontuacao.setStatus(
                 StatusPontuacao.CALCULADA
         );
 
         Pontuacao pontuacaoSalva =
-                pontuacaoRepository.save(pontuacao);
+                pontuacaoRepository.save(
+                        pontuacao
+                );
 
         return PontuacaoMapper.toResponse(
                 pontuacaoSalva
@@ -110,9 +139,13 @@ public class PontuacaoService {
     }
 
     @Transactional(readOnly = true)
-    public PontuacaoResponse buscarPorId(Long id) {
+    public PontuacaoResponse buscarPorId(
+            Long id
+    ) {
         return PontuacaoMapper.toResponse(
-                buscarEntidadePorId(id)
+                buscarEntidadePorId(
+                        id
+                )
         );
     }
 
@@ -120,14 +153,18 @@ public class PontuacaoService {
     public List<PontuacaoResponse> listarPorAvaliacao(
             Long avaliacaoId
     ) {
-        buscarAvaliacao(avaliacaoId);
+        buscarAvaliacao(
+                avaliacaoId
+        );
 
         return pontuacaoRepository
                 .findAllByAvaliacaoIdAndDeletedAtIsNullOrderByIdAsc(
                         avaliacaoId
                 )
                 .stream()
-                .map(PontuacaoMapper::toResponse)
+                .map(
+                        PontuacaoMapper::toResponse
+                )
                 .toList();
     }
 
@@ -136,7 +173,9 @@ public class PontuacaoService {
             PontuacaoHomologacaoRequest request
     ) {
         Pontuacao pontuacao =
-                buscarEntidadePorId(id);
+                buscarEntidadePorId(
+                        id
+                );
 
         validarHomologacao(
                 pontuacao,
@@ -145,12 +184,18 @@ public class PontuacaoService {
 
         pontuacao.setQuantidadeHomologada(
                 request.quantidadeHomologada()
-                        .setScale(2, RoundingMode.HALF_UP)
+                        .setScale(
+                                2,
+                                RoundingMode.HALF_UP
+                        )
         );
 
         pontuacao.setPontosHomologados(
                 request.pontosHomologados()
-                        .setScale(2, RoundingMode.HALF_UP)
+                        .setScale(
+                                2,
+                                RoundingMode.HALF_UP
+                        )
         );
 
         pontuacao.setStatus(
@@ -158,27 +203,39 @@ public class PontuacaoService {
         );
 
         pontuacao.setJustificativa(
-                normalizarTexto(request.justificativa())
+                normalizarTexto(
+                        request.justificativa()
+                )
         );
 
         Pontuacao pontuacaoAtualizada =
-                pontuacaoRepository.save(pontuacao);
+                pontuacaoRepository.save(
+                        pontuacao
+                );
 
         return PontuacaoMapper.toResponse(
                 pontuacaoAtualizada
         );
     }
 
-    public void excluir(Long id) {
+    public void excluir(
+            Long id
+    ) {
         Pontuacao pontuacao =
-                buscarEntidadePorId(id);
+                buscarEntidadePorId(
+                        id
+                );
 
         pontuacao.marcarComoExcluido();
 
-        pontuacaoRepository.save(pontuacao);
+        pontuacaoRepository.save(
+                pontuacao
+        );
     }
 
-    private Pontuacao buscarEntidadePorId(Long id) {
+    private Pontuacao buscarEntidadePorId(
+            Long id
+    ) {
         if (id == null) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
@@ -187,7 +244,9 @@ public class PontuacaoService {
         }
 
         return pontuacaoRepository
-                .findByIdAndDeletedAtIsNull(id)
+                .findByIdAndDeletedAtIsNull(
+                        id
+                )
                 .orElseThrow(() ->
                         new ResponseStatusException(
                                 HttpStatus.NOT_FOUND,
@@ -196,7 +255,9 @@ public class PontuacaoService {
                 );
     }
 
-    private Avaliacao buscarAvaliacao(Long id) {
+    private Avaliacao buscarAvaliacao(
+            Long id
+    ) {
         if (id == null) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
@@ -205,7 +266,9 @@ public class PontuacaoService {
         }
 
         return avaliacaoRepository
-                .findByIdAndDeletedAtIsNull(id)
+                .findByIdAndDeletedAtIsNull(
+                        id
+                )
                 .orElseThrow(() ->
                         new ResponseStatusException(
                                 HttpStatus.NOT_FOUND,
@@ -214,7 +277,9 @@ public class PontuacaoService {
                 );
     }
 
-    private AtividadeDeclarada buscarAtividade(Long id) {
+    private AtividadeDeclarada buscarAtividade(
+            Long id
+    ) {
         if (id == null) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
@@ -223,7 +288,9 @@ public class PontuacaoService {
         }
 
         return atividadeRepository
-                .findByIdAndDeletedAtIsNull(id)
+                .findByIdAndDeletedAtIsNull(
+                        id
+                )
                 .orElseThrow(() ->
                         new ResponseStatusException(
                                 HttpStatus.NOT_FOUND,
@@ -232,7 +299,9 @@ public class PontuacaoService {
                 );
     }
 
-    private Criterio buscarCriterio(Long id) {
+    private Criterio buscarCriterio(
+            Long id
+    ) {
         if (id == null) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
@@ -241,7 +310,9 @@ public class PontuacaoService {
         }
 
         return criterioRepository
-                .findByIdAndDeletedAtIsNull(id)
+                .findByIdAndDeletedAtIsNull(
+                        id
+                )
                 .orElseThrow(() ->
                         new ResponseStatusException(
                                 HttpStatus.NOT_FOUND,
@@ -257,8 +328,11 @@ public class PontuacaoService {
     ) {
         if (avaliacao.getSolicitacao() == null
                 || atividade.getSolicitacao() == null
-                || !avaliacao.getSolicitacao().getId().equals(
-                        atividade.getSolicitacao().getId()
+                || !avaliacao.getSolicitacao()
+                .getId()
+                .equals(
+                        atividade.getSolicitacao()
+                                .getId()
                 )) {
 
             throw new ResponseStatusException(
@@ -270,7 +344,9 @@ public class PontuacaoService {
         if (atividade.getCriterioPretendido() != null
                 && !atividade.getCriterioPretendido()
                 .getId()
-                .equals(criterio.getId())) {
+                .equals(
+                        criterio.getId()
+                )) {
 
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
@@ -278,7 +354,9 @@ public class PontuacaoService {
             );
         }
 
-        if (!Boolean.TRUE.equals(criterio.getAtivo())) {
+        if (!Boolean.TRUE.equals(
+                criterio.getAtivo()
+        )) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
                     "O critério informado está inativo."
@@ -305,21 +383,14 @@ public class PontuacaoService {
         }
     }
 
-    private BigDecimal calcularPontos(
-            BigDecimal quantidade,
-            BigDecimal pontosUnitarios
-    ) {
-        return quantidade
-                .multiply(pontosUnitarios)
-                .setScale(2, RoundingMode.HALF_UP);
-    }
-
     private void validarHomologacao(
             Pontuacao pontuacao,
             PontuacaoHomologacaoRequest request
     ) {
         if (request.quantidadeHomologada()
-                .compareTo(pontuacao.getQuantidadeDeclarada()) > 0) {
+                .compareTo(
+                        pontuacao.getQuantidadeDeclarada()
+                ) > 0) {
 
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
@@ -328,7 +399,9 @@ public class PontuacaoService {
         }
 
         if (request.pontosHomologados()
-                .compareTo(pontuacao.getPontosDeclarados()) > 0) {
+                .compareTo(
+                        pontuacao.getPontosDeclarados()
+                ) > 0) {
 
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
@@ -336,8 +409,10 @@ public class PontuacaoService {
             );
         }
 
-        if (request.status() == StatusPontuacao.PENDENTE
-                || request.status() == StatusPontuacao.CALCULADA) {
+        if (request.status()
+                == StatusPontuacao.PENDENTE
+                || request.status()
+                == StatusPontuacao.CALCULADA) {
 
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
@@ -346,8 +421,12 @@ public class PontuacaoService {
         }
 
         if (request.pontosHomologados()
-                .compareTo(pontuacao.getPontosDeclarados()) < 0
-                && normalizarTexto(request.justificativa()) == null) {
+                .compareTo(
+                        pontuacao.getPontosDeclarados()
+                ) < 0
+                && normalizarTexto(
+                        request.justificativa()
+                ) == null) {
 
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
@@ -356,8 +435,11 @@ public class PontuacaoService {
         }
     }
 
-    private String normalizarTexto(String texto) {
-        if (texto == null || texto.isBlank()) {
+    private String normalizarTexto(
+            String texto
+    ) {
+        if (texto == null
+                || texto.isBlank()) {
             return null;
         }
 

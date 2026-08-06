@@ -65,7 +65,11 @@ public class SecurityConfig {
                                 "/api/decisoes",
                                 "/api/decisoes/**",
                                 "/api/recursos",
-                                "/api/recursos/**"
+                                "/api/recursos/**",
+                                "/api/documentos-oficiais",
+                                "/api/documentos-oficiais/**",
+                                "/api/atividades-declaradas",
+                                "/api/atividades-declaradas/**"
                         ).permitAll()
 
                         .anyRequest().authenticated()
