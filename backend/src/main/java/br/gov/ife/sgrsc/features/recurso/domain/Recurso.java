@@ -83,4 +83,8 @@ public class Recurso extends BaseEntity {
     public void setObservacaoJulgamento(String observacaoJulgamento) {
         this.observacaoJulgamento = observacaoJulgamento;
     }
+
+    public boolean isJulgado() {
+        return dataJulgamento != null;
+    }
 }

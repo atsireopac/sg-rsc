@@ -41,6 +41,12 @@ public class HistoricoService {
     public static final String AVALIACAO_CONCLUIDA =
             "AVALIACAO_CONCLUIDA";
 
+        public static final String RECURSO_INTERPOSTO =
+        "RECURSO_INTERPOSTO";
+
+        public static final String RECURSO_JULGADO =
+        "RECURSO_JULGADO";
+
     private static final String USUARIO_SISTEMA =
             "system";
 
