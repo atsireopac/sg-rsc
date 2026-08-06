@@ -7,12 +7,12 @@
 ![MinIO](https://img.shields.io/badge/MinIO-Object_Storage-C72E49)
 ![Keycloak](https://img.shields.io/badge/Keycloak-26.7.0-4D4D4D)
 ![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED)
-![Status](https://img.shields.io/badge/Status-Sprint_16-Concluída-brightgreen)
+![Status](https://img.shields.io/badge/Status-Sprint_17-Concluída-brightgreen)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
 Sistema de Gestão do Reconhecimento de Saberes e Competências (RSC-PCCTAE)
 
-Sistema web desenvolvido com **Java 25**, **Spring Boot 3.5** e **Angular 17** para informatizar integralmente o processo de Reconhecimento de Saberes e Competências (RSC-PCCTAE), contemplando desde a abertura da solicitação até o julgamento dos recursos administrativos. A solução utiliza arquitetura **Feature-First**, autenticação via **Keycloak**, banco de dados **PostgreSQL**, armazenamento de documentos no **MinIO**, motores especializados para cálculo da pontuação, análise de complexidade, emissão de parecer técnico, decisão administrativa, recursos administrativos e auditoria funcional completa do fluxo administrativo por meio do histórico automático das movimentações do processo.
+Sistema web desenvolvido com **Java 25**, **Spring Boot 3.5** e **Angular 17** para informatizar integralmente o processo de Reconhecimento de Saberes e Competências (RSC-PCCTAE), contemplando desde a abertura da solicitação até o julgamento dos recursos administrativos. A solução utiliza arquitetura **Feature-First**, autenticação via **Keycloak**, banco de dados **PostgreSQL**, armazenamento de documentos no **MinIO**, motores especializados para cálculo da pontuação, análise de complexidade, emissão de parecer técnico, decisão administrativa, recursos administrativos, integração administrativa com o **Sistema Eletrônico de Informações (SEI)** para vinculação do processo institucional e auditoria funcional completa do fluxo administrativo por meio do histórico automático das movimentações do processo.
 
 ---
 
@@ -93,6 +93,11 @@ Atualmente o sistema já implementa:
 * Atualização automática do resultado da solicitação após julgamento.
 * Encerramento definitivo do processo administrativo.
 * Auditoria automática do fluxo recursal.
+* Vinculação da Solicitação ao Processo SEI.
+* Registro do número do Processo SEI.
+* Registro automático da data de abertura do processo.
+* Registro do usuário responsável pela protocolização.
+* Auditoria automática da vinculação do Processo SEI.
 
 Toda a lógica permanece armazenada no banco de dados, permitindo futuras alterações legislativas sem necessidade de recompilar a aplicação.
 
@@ -298,6 +303,12 @@ Estrutura da resposta paginada:
 * Integração com documentos.
 * Histórico da protocolização.
 * Exclusão lógica.
+* Vinculação da solicitação ao Processo SEI.
+* Registro do número do Processo SEI.
+* Registro da data de abertura do processo.
+* Registro do usuário responsável pela protocolização.
+* Consulta das informações do Processo SEI.
+* Auditoria automática da vinculação do processo.
 
 ## Memorial
 
@@ -487,6 +498,7 @@ Estrutura da resposta paginada:
 * ✅ Auditoria Funcional das Decisões Administrativas
 * 🚧 Complementações
 * ✅ Recursos Administrativos
+* ✅ Integração com Processo SEI
 * 🚧 Dashboard Gerencial
 * 🚧 Integração com o Frontend Angular
 
@@ -777,6 +789,33 @@ Estrutura da resposta paginada:
 - Encerramento definitivo do processo.
 - Auditoria completa do fluxo recursal.
 
+## ✅ Sprint 17 — Integração com Processo SEI
+
+### Concluído
+
+* Integração administrativa da Solicitação com o Processo SEI.
+* Migração Flyway V20.
+* Migração Flyway V21.
+* Inclusão dos campos de Processo SEI na Solicitação.
+* DTO ProcessoSeiRequest.
+* DTO ProcessoSeiResponse.
+* Endpoint para vinculação do Processo SEI.
+* Endpoint para consulta do Processo SEI.
+* Registro automático do usuário responsável pela protocolização.
+* Registro automático da data de abertura do processo.
+* Auditoria funcional da vinculação do Processo SEI.
+* Novos tipos de histórico.
+* Testes unitários (JUnit 5 + Mockito).
+* Validação funcional completa via curl.
+
+### Entregas da Sprint
+
+- Vinculação do Processo SEI à Solicitação.
+- Consulta dos dados do Processo SEI.
+- Registro do responsável pela protocolização.
+- Registro da data de abertura do processo.
+- Auditoria completa da integração com o SEI.
+
 ### Próximas etapas
 
 - Geração de PDF do Parecer.
@@ -887,6 +926,11 @@ Os recursos da Base Legal possuem operações de criação, consulta, atualizaç
 | PUT    | `/api/solicitacoes/{id}`            | Atualiza uma solicitação  |
 | DELETE | `/api/solicitacoes/{id}`            | Realiza a exclusão lógica |
 | POST   | `/api/solicitacoes/{id}/protocolar` | Protocoliza a solicitação |
+
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| PUT | `/api/solicitacoes/{id}/processo-sei` | Vincula um Processo SEI à solicitação |
+| GET | `/api/solicitacoes/{id}/processo-sei` | Consulta os dados do Processo SEI |
 
 ## Memorial
 
@@ -1081,6 +1125,10 @@ SECRETARIO
 * Julgamento de Recursos.
 * Encerramento definitivo do processo administrativo.
 * Auditoria completa do fluxo recursal.
+* Integração administrativa com o Processo SEI.
+* Vinculação da Solicitação ao Processo SEI.
+* Registro da protocolização administrativa.
+* Auditoria automática da vinculação do Processo SEI.
 
 
 ## Em Desenvolvimento
@@ -1116,6 +1164,7 @@ SECRETARIO
 | **v0.16.0** | Implementação completa do módulo Decisão Administrativa, incluindo integração obrigatória com Parecer Técnico, emissão da decisão, controle automático de versões, assinatura lógica, bloqueio de alterações após assinatura, encerramento automático da Avaliação e da Solicitação, atualização automática do Resultado da Solicitação, migração Flyway V17, testes unitários (JUnit 5 + Mockito) e validação funcional completa via curl. |
 | **v0.17.0** | Implementação da auditoria funcional da Decisão Administrativa, incluindo novos tipos de histórico, registro automático da criação, atualização e assinatura da decisão, encerramento automático da avaliação e da solicitação, trilha completa de auditoria do fluxo administrativo, migração Flyway V18, testes unitários e validação funcional completa via curl. |
 | **v0.18.0** | Implementação completa do módulo Recursos Administrativos, incluindo interposição e julgamento de recursos, atualização automática do Resultado da Solicitação, encerramento definitivo do processo administrativo, migração Flyway V19, auditoria funcional completa do fluxo recursal, testes unitários (JUnit 5 + Mockito) e validação funcional completa via curl. |
+| **v0.19.0** | Implementação da integração administrativa com o Processo SEI, incluindo vinculação da solicitação ao processo institucional, registro do número do processo, data de abertura e usuário responsável pela protocolização, criação dos endpoints REST para vinculação e consulta, auditoria funcional do Processo SEI, migrações Flyway V20 e V21, testes unitários (JUnit 5 + Mockito) e validação funcional completa via curl. |
 
 ---
 

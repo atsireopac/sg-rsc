@@ -23,6 +23,7 @@
 | **1.15** | **06/08/2026** | **Erik Barbosa** | **Implementação do módulo Decisão Administrativa, incluindo emissão da decisão com controle de versões, integração obrigatória com Parecer Técnico, assinatura eletrônica lógica, bloqueio de alterações após assinatura, encerramento automático da Avaliação e da Solicitação, atualização automática do Resultado da Solicitação, novos endpoints REST, migração Flyway V17, validações das regras de negócio, testes unitários (JUnit 5/Mockito) e validação funcional completa via curl.** |
 | **1.16** | **06/08/2026** | **Erik Barbosa** | **Implementação da auditoria funcional da Decisão Administrativa, incluindo novos tipos de histórico, registro automático da criação, atualização e assinatura da decisão, encerramento da avaliação e da solicitação, rastreabilidade completa do fluxo decisório, migração Flyway V18, ampliação dos testes unitários e validação funcional completa via curl.** |
 | **1.17** | **06/08/2026** | **Erik Barbosa** | **Implementação do módulo Recursos Administrativos, incluindo interposição de recursos, julgamento pela comissão, atualização automática do resultado da solicitação, encerramento definitivo do processo administrativo, registro completo da auditoria funcional, migração Flyway V19, testes unitários (JUnit 5/Mockito) e validação funcional completa via curl.** |
+| **1.18** | **06/08/2026** | **Erik Barbosa** | **Implementação da integração administrativa da Solicitação com o Processo SEI, incluindo vinculação manual do número do processo, registro da data de abertura e do usuário responsável pela protocolização, criação dos DTOs específicos para o Processo SEI, novos endpoints REST para vinculação e consulta, auditoria funcional com o evento PROCESSO_SEI_VINCULADO, migrações Flyway V20 e V21, validações das regras de negócio, ampliação do modelo de domínio e testes unitários (JUnit 5/Mockito) com validação funcional completa via curl.**
 
 
 
@@ -93,6 +94,8 @@ Disponibilizar uma solução moderna, segura e transparente para gestão do Reco
 # Resumo Executivo
 
 O SG-RSC é uma plataforma web destinada à gestão do processo de Reconhecimento de Saberes e Competências (RSC-PCCTAE). O sistema automatiza todas as etapas do fluxo administrativo, desde a abertura da solicitação até a decisão administrativa definitiva, contemplando validação documental, cálculo automático de pontuação, análise pela comissão, emissão de parecer técnico, assinatura eletrônica lógica, decisão administrativa, interposição e julgamento de recursos administrativos, registro automático do histórico das movimentações, encerramento definitivo do processo e rastreabilidade completa das ações administrativas, proporcionando maior eficiência, transparência e conformidade com a legislação vigente.
+
+Além disso, o sistema contempla a integração administrativa com o Sistema Eletrônico de Informações (SEI), permitindo o vínculo da solicitação protocolada ao processo administrativo oficial da instituição, preservando a rastreabilidade do número do processo, da data de abertura e do responsável pela protocolização.
 
 A solução foi concebida para atender às Instituições Federais de Ensino, podendo ser adaptada às particularidades de cada instituição.
 
@@ -273,6 +276,7 @@ A implantação do SG-RSC proporcionará:
 - conformidade com o Decreto nº 13.048/2026.
 - automatização completa do fluxo decisório da Comissão, eliminando controles manuais após a emissão do parecer técnico.
 - rastreabilidade completa das decisões administrativas, permitindo identificar quando cada decisão foi criada, alterada, assinada e responsável pelo encerramento do processo.
+- integração do fluxo administrativo do RSC ao processo eletrônico institucional (SEI), eliminando controles paralelos e aumentando a rastreabilidade do processo.
 
 ---
 
@@ -296,6 +300,7 @@ A primeira versão do sistema contemplará:
 - interposição de recursos administrativos;
 - julgamento de recursos pela comissão;
 - encerramento definitivo do processo administrativo após julgamento do recurso;
+- vinculação da solicitação protocolada ao processo administrativo do SEI;
 
 As funcionalidades serão evoluídas de forma incremental ao longo do projeto.
 
@@ -965,12 +970,58 @@ Servidor.
 - Histórico atualizado.
 - Solicitação disponível para análise.
 
+### Observação
+
+Após a protocolização da solicitação, a unidade administrativa poderá vincular o número do Processo SEI correspondente, registrando automaticamente a data de abertura do processo, o usuário responsável pela protocolização e o evento de auditoria da vinculação.
+
 ### Regras de Negócio
 
 - RN101 – Memorial obrigatório.
 - RN102 – Documentação obrigatória.
 - RN005 – Auditoria das ações.
 ---
+
+## UC005A – Vincular Processo SEI
+
+### Objetivo
+
+Permitir que a unidade administrativa vincule uma solicitação protocolada ao processo administrativo correspondente no Sistema Eletrônico de Informações (SEI).
+
+### Ator
+
+DGP.
+
+### Pré-condições
+
+- A solicitação deve existir.
+- A solicitação deve estar protocolada.
+- A solicitação ainda não pode possuir processo SEI vinculado.
+
+### Fluxo Principal
+
+1. O usuário informa o número do Processo SEI.
+2. O sistema valida as regras de negócio.
+3. O sistema registra o número do processo.
+4. O sistema registra automaticamente a data de abertura do processo.
+5. O sistema registra o usuário responsável pela vinculação.
+6. O sistema registra automaticamente o evento PROCESSO_SEI_VINCULADO no histórico da solicitação.
+
+### Fluxos Alternativos
+
+- Solicitação inexistente.
+- Solicitação ainda não protocolada.
+- Solicitação já vinculada a um processo SEI.
+
+### Pós-condições
+
+- Processo SEI associado à solicitação.
+- Dados de protocolização armazenados.
+- Histórico atualizado.
+
+### Regras de Negócio
+
+- RN005 – Auditoria.
+- RN107 – Controle do fluxo administrativo.
 
 ## UC006 – Consultar Processo
 
@@ -1474,6 +1525,7 @@ Ao longo do desenvolvimento do SG-RSC, esta matriz será continuamente atualizad
 | UC003A | Gerenciar Atividades Declaradas | RN102, RN105 | Atividades Declaradas | Atividade Declarada | `/api/atividades` | Atividades Declaradas | TS003A | **Implementado** |
 | UC004 | Gerar Memorial | RN101 | Memorial | Memorial | `/api/memoriais` | Memorial | TS004 | Implementado |
 | UC005 | Protocolar Solicitação | RN101, RN102, RN103, RN104 | Solicitações | Solicitação | POST /solicitacoes/protocolar | Protocolar Solicitação | TS005 | Implementado |
+| UC005A | Vincular Processo SEI | RN005, RN107 | Solicitações | Solicitação | PUT /api/solicitacoes/{id}/processo-sei | Vinculação Processo SEI | TS005A | Implementado |
 | UC006 | Consultar Processo | RN005 | Solicitações | Solicitação | GET /solicitacoes/{id} | Consulta da Solicitação | TS006 | Planejado |
 | UC007 | Solicitar Complementação | RN107 | Comissão | Complementação | POST /complementacoes | Solicitar Complementação | TS007 | Planejado |
 | UC008 | Responder Complementação | RN107 | Comissão | Complementação | POST /complementacoes/responder | Responder Complementação | TS008 | Planejado |
@@ -1633,6 +1685,10 @@ Atributos:
 - nívelRSCPretendido
 - pontuaçãoCalculada
 - pontuaçãoHomologada
+- numeroProtocolo
+- numeroProcesso
+- dataAberturaProcesso
+- usuarioProtocolo
 
 Relacionamentos:
 
@@ -1642,6 +1698,10 @@ Relacionamentos:
 - possui vários Pareceres;
 - pode possuir Complementações;
 - pode possuir Recursos.
+
+- uma solicitação somente poderá ser vinculada a um Processo SEI após sua protocolização;
+- cada solicitação poderá possuir apenas um Processo SEI vinculado;
+- a vinculação do Processo SEI registra automaticamente a data de abertura do processo, o usuário responsável e um evento de auditoria funcional.
 
 ---
 
