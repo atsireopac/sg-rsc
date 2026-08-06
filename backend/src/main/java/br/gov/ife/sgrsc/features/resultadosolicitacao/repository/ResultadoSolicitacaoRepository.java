@@ -6,10 +6,19 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 import java.util.Optional;
 
-public interface ResultadoSolicitacaoRepository extends JpaRepository<ResultadoSolicitacao, Long> {
+public interface ResultadoSolicitacaoRepository
+        extends JpaRepository<ResultadoSolicitacao, Long> {
 
-    List<ResultadoSolicitacao> findByDeletedAtIsNull();
+    List<ResultadoSolicitacao>
+    findByDeletedAtIsNull();
 
-    Optional<ResultadoSolicitacao> findByIdAndDeletedAtIsNull(Long id);
+    Optional<ResultadoSolicitacao>
+    findByIdAndDeletedAtIsNull(
+            Long id
+    );
 
+    Optional<ResultadoSolicitacao>
+    findByCodigoAndAtivoTrueAndDeletedAtIsNull(
+            String codigo
+    );
 }
