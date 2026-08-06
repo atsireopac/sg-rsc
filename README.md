@@ -7,7 +7,7 @@
 ![MinIO](https://img.shields.io/badge/MinIO-Object_Storage-C72E49)
 ![Keycloak](https://img.shields.io/badge/Keycloak-26.7.0-4D4D4D)
 ![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED)
-![Status](https://img.shields.io/badge/Status-Sprint_17-Concluída-brightgreen)
+![Status](https://img.shields.io/badge/Status-Sprint_18-Concluída-brightgreen)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
 Sistema de Gestão do Reconhecimento de Saberes e Competências (RSC-PCCTAE)
@@ -98,6 +98,12 @@ Atualmente o sistema já implementa:
 * Registro automático da data de abertura do processo.
 * Registro do usuário responsável pela protocolização.
 * Auditoria automática da vinculação do Processo SEI.
+* Geração automática do Formulário Oficial de Requerimento em PDF.
+* Geração automática do Memorial Descritivo em PDF.
+* Padronização dos nomes de arquivos conforme o padrão institucional do SEI.
+* Infraestrutura compartilhada para geração de documentos PDF.
+* Motor de cálculo da pontuação declarada desacoplado do serviço de pontuação.
+* Testes unitários do mecanismo de geração de PDFs.
 
 Toda a lógica permanece armazenada no banco de dados, permitindo futuras alterações legislativas sem necessidade de recompilar a aplicação.
 
@@ -114,6 +120,7 @@ Toda a lógica permanece armazenada no banco de dados, permitindo futuras altera
 * Flyway
 * Maven
 * OpenAPI (Swagger)
+* OpenPDF
 
 ## Frontend
 
@@ -349,6 +356,9 @@ Estrutura da resposta paginada:
 * Justificativa da Comissão.
 * Validação de duplicidade.
 * Endpoints REST completos.
+* PontuacaoDeclaradaCalculator.
+* Desacoplamento da regra de cálculo da camada de serviço.
+* Testes unitários do mecanismo de cálculo.
 
 ## Parecer Técnico
 
@@ -377,6 +387,11 @@ Estrutura da resposta paginada:
 * Associação N:N entre Atividades Declaradas e Documentos.
 * Reutilização dos documentos em diferentes atividades.
 * Cálculo e armazenamento de hash dos arquivos.
+* Geração do Formulário Oficial de Requerimento em PDF.
+* Geração do Memorial Descritivo em PDF.
+* Padronização automática dos nomes dos documentos.
+* Download dos documentos oficiais em PDF.
+* Infraestrutura compartilhada para geração de PDFs.
 
 ## Status da Avaliação
 
@@ -496,7 +511,7 @@ Estrutura da resposta paginada:
 * ✅ Parecer Técnico
 * ✅ Decisão Administrativa
 * ✅ Auditoria Funcional das Decisões Administrativas
-* 🚧 Complementações
+* ✅ Documentos Oficiais em PDF
 * ✅ Recursos Administrativos
 * ✅ Integração com Processo SEI
 * 🚧 Dashboard Gerencial
@@ -816,10 +831,38 @@ Estrutura da resposta paginada:
 - Registro da data de abertura do processo.
 - Auditoria completa da integração com o SEI.
 
+## ✅ Sprint 18 — Documentos Oficiais em PDF
+
+### Concluído
+
+* Implementação do FormularioPdfService.
+* Implementação do MemorialPdfService.
+* Implementação do DocumentoOficialController.
+* Implementação do NomeDocumentoSeiService.
+* Criação da infraestrutura compartilhada para geração de PDFs.
+* Criação da classe PdfDocument.
+* Criação do utilitário PdfFilenameUtils.
+* Criação da exceção PdfGenerationException.
+* Implementação do PontuacaoDeclaradaCalculator.
+* Refatoração do PontuacaoService.
+* Testes unitários do MemorialPdfService.
+* Testes unitários do PontuacaoDeclaradaCalculator.
+* Validação funcional da geração dos PDFs.
+
+### Entregas da Sprint
+
+- Formulário Oficial de Requerimento em PDF.
+- Memorial Descritivo em PDF.
+- Nomenclatura padronizada para integração com o SEI.
+- Infraestrutura reutilizável para futuros documentos oficiais.
+- Desacoplamento da lógica de cálculo da pontuação.
+
 ### Próximas etapas
 
-- Geração de PDF do Parecer.
-- Geração de PDF da Decisão.
+- Geração do Parecer Técnico em PDF.
+- Geração da Decisão Administrativa em PDF.
+- Geração da Folha de Assinaturas.
+- Geração do Relatório Consolidado da Avaliação.
 - Assinatura digital ICP-Brasil.
 - Dashboard Gerencial.
 - Integração completa com Angular.
@@ -1053,6 +1096,13 @@ SECRETARIO
 | GET | `/api/decisoes/{decisaoId}` | Consulta uma decisão administrativa. |
 | GET | `/api/decisoes/avaliacao/{avaliacaoId}` | Lista as decisões da avaliação. |
 
+## Documentos Oficiais
+
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| GET | `/api/documentos-oficiais/solicitacoes/{id}/formulario` | Gera o Formulário Oficial de Requerimento em PDF. |
+| GET | `/api/documentos-oficiais/solicitacoes/{id}/memorial` | Gera o Memorial Descritivo em PDF. |
+
 ---
 
 # Status Atual
@@ -1129,6 +1179,12 @@ SECRETARIO
 * Vinculação da Solicitação ao Processo SEI.
 * Registro da protocolização administrativa.
 * Auditoria automática da vinculação do Processo SEI.
+* Geração do Formulário Oficial em PDF.
+* Geração do Memorial em PDF.
+* Infraestrutura compartilhada para geração de documentos PDF.
+* Padronização dos nomes de arquivos para integração com o SEI.
+* PontuacaoDeclaradaCalculator.
+* Testes unitários dos serviços de geração de PDF.
 
 
 ## Em Desenvolvimento
@@ -1165,6 +1221,7 @@ SECRETARIO
 | **v0.17.0** | Implementação da auditoria funcional da Decisão Administrativa, incluindo novos tipos de histórico, registro automático da criação, atualização e assinatura da decisão, encerramento automático da avaliação e da solicitação, trilha completa de auditoria do fluxo administrativo, migração Flyway V18, testes unitários e validação funcional completa via curl. |
 | **v0.18.0** | Implementação completa do módulo Recursos Administrativos, incluindo interposição e julgamento de recursos, atualização automática do Resultado da Solicitação, encerramento definitivo do processo administrativo, migração Flyway V19, auditoria funcional completa do fluxo recursal, testes unitários (JUnit 5 + Mockito) e validação funcional completa via curl. |
 | **v0.19.0** | Implementação da integração administrativa com o Processo SEI, incluindo vinculação da solicitação ao processo institucional, registro do número do processo, data de abertura e usuário responsável pela protocolização, criação dos endpoints REST para vinculação e consulta, auditoria funcional do Processo SEI, migrações Flyway V20 e V21, testes unitários (JUnit 5 + Mockito) e validação funcional completa via curl. |
+| **v0.20.0** | Implementação da infraestrutura de Documentos Oficiais em PDF, incluindo geração do Formulário Oficial de Requerimento e Memorial Descritivo, criação do DocumentoOficialController, padronização dos nomes dos arquivos conforme integração com o SEI, infraestrutura compartilhada para geração de PDFs, refatoração do cálculo da pontuação por meio do PontuacaoDeclaradaCalculator e inclusão de testes unitários para os novos componentes. |
 
 ---
 

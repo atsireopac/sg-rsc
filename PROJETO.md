@@ -24,6 +24,7 @@
 | **1.16** | **06/08/2026** | **Erik Barbosa** | **Implementação da auditoria funcional da Decisão Administrativa, incluindo novos tipos de histórico, registro automático da criação, atualização e assinatura da decisão, encerramento da avaliação e da solicitação, rastreabilidade completa do fluxo decisório, migração Flyway V18, ampliação dos testes unitários e validação funcional completa via curl.** |
 | **1.17** | **06/08/2026** | **Erik Barbosa** | **Implementação do módulo Recursos Administrativos, incluindo interposição de recursos, julgamento pela comissão, atualização automática do resultado da solicitação, encerramento definitivo do processo administrativo, registro completo da auditoria funcional, migração Flyway V19, testes unitários (JUnit 5/Mockito) e validação funcional completa via curl.** |
 | **1.18** | **06/08/2026** | **Erik Barbosa** | **Implementação da integração administrativa da Solicitação com o Processo SEI, incluindo vinculação manual do número do processo, registro da data de abertura e do usuário responsável pela protocolização, criação dos DTOs específicos para o Processo SEI, novos endpoints REST para vinculação e consulta, auditoria funcional com o evento PROCESSO_SEI_VINCULADO, migrações Flyway V20 e V21, validações das regras de negócio, ampliação do modelo de domínio e testes unitários (JUnit 5/Mockito) com validação funcional completa via curl.**
+| **1.19** | **06/08/2026** | **Erik Barbosa** | **Refatoração do Motor de Pontuação com extração do `PontuacaoDeclaradaCalculator`, implementação da infraestrutura de geração de documentos oficiais em PDF (Memorial e Formulário de Solicitação), criação do `DocumentoOficialController`, padronização da abstração `PdfDocument`, utilitários para nomenclatura de arquivos, tratamento de exceções de geração de PDF, testes unitários do motor de pontuação e do serviço de geração do Memorial, além da validação funcional dos documentos gerados via API REST.** |
 
 
 
@@ -93,9 +94,11 @@ Disponibilizar uma solução moderna, segura e transparente para gestão do Reco
 
 # Resumo Executivo
 
-O SG-RSC é uma plataforma web destinada à gestão do processo de Reconhecimento de Saberes e Competências (RSC-PCCTAE). O sistema automatiza todas as etapas do fluxo administrativo, desde a abertura da solicitação até a decisão administrativa definitiva, contemplando validação documental, cálculo automático de pontuação, análise pela comissão, emissão de parecer técnico, assinatura eletrônica lógica, decisão administrativa, interposição e julgamento de recursos administrativos, registro automático do histórico das movimentações, encerramento definitivo do processo e rastreabilidade completa das ações administrativas, proporcionando maior eficiência, transparência e conformidade com a legislação vigente.
+O SG-RSC é uma plataforma web destinada à gestão do processo de Reconhecimento de Saberes e Competências (RSC-PCCTAE). O sistema automatiza todas as etapas do fluxo administrativo, desde a abertura da solicitação até a decisão administrativa definitiva, contemplando validação documental, cálculo automático de pontuação, análise pela comissão, emissão de parecer técnico, assinatura eletrônica lógica, decisão administrativa, interposição e julgamento de recursos administrativos, registro automático do histórico das movimentações, encerramento definitivo do processo, rastreabilidade completa das ações administrativas e geração de documentos oficiais em formato PDF.
 
-Além disso, o sistema contempla a integração administrativa com o Sistema Eletrônico de Informações (SEI), permitindo o vínculo da solicitação protocolada ao processo administrativo oficial da instituição, preservando a rastreabilidade do número do processo, da data de abertura e do responsável pela protocolização.
+Além da automação do fluxo administrativo, o sistema permite a geração padronizada de documentos oficiais, como o Memorial Descritivo e o Formulário de Solicitação de RSC, prontos para impressão, assinatura e inserção em processos administrativos eletrônicos (SEI), garantindo uniformidade documental e reduzindo atividades manuais da equipe responsável.
+
+A solução também contempla a integração administrativa com o Sistema Eletrônico de Informações (SEI), permitindo o vínculo da solicitação protocolada ao processo administrativo oficial da instituição, preservando a rastreabilidade do número do processo, da data de abertura e do responsável pela protocolização.
 
 A solução foi concebida para atender às Instituições Federais de Ensino, podendo ser adaptada às particularidades de cada instituição.
 
@@ -126,6 +129,7 @@ A solução será composta por:
 - Banco de dados PostgreSQL 16;
 - MinIO como serviço de armazenamento de documentos;
 - Serviço de geração de relatórios.
+- Serviço de geração de documentos oficiais em PDF (Memorial e Formulário de Solicitação).
 
 Essa separação permite que cada componente evolua de forma independente, favorecendo a escalabilidade, a manutenibilidade e a reutilização da solução.
 
@@ -152,6 +156,9 @@ Este projeto adotará:
 - OpenAPI (Swagger);
 - JUnit 5;
 - Mockito.
+- OpenPDF para geração de documentos oficiais;
+- Camada compartilhada para abstração de documentos PDF (`PdfDocument`);
+- Serviço centralizado de nomenclatura de documentos oficiais.
 
 # Objetivo de Qualidade
 
@@ -277,6 +284,9 @@ A implantação do SG-RSC proporcionará:
 - automatização completa do fluxo decisório da Comissão, eliminando controles manuais após a emissão do parecer técnico.
 - rastreabilidade completa das decisões administrativas, permitindo identificar quando cada decisão foi criada, alterada, assinada e responsável pelo encerramento do processo.
 - integração do fluxo administrativo do RSC ao processo eletrônico institucional (SEI), eliminando controles paralelos e aumentando a rastreabilidade do processo.
+- geração automática de documentos oficiais padronizados, reduzindo o tempo gasto com preenchimento manual;
+- padronização visual dos documentos emitidos pela Comissão e pela DGP;
+- reutilização da infraestrutura de geração de PDF para novos documentos oficiais do sistema.
 
 ---
 
@@ -301,6 +311,8 @@ A primeira versão do sistema contemplará:
 - julgamento de recursos pela comissão;
 - encerramento definitivo do processo administrativo após julgamento do recurso;
 - vinculação da solicitação protocolada ao processo administrativo do SEI;
+- geração automática do Memorial em PDF;
+- geração automática do Formulário de Solicitação em PDF;
 
 As funcionalidades serão evoluídas de forma incremental ao longo do projeto.
 
@@ -907,25 +919,42 @@ Servidor.
 - RN102 – Documentação.
 - RN105 – Reutilização de atividades.
 
-## UC004 – Gerar Memorial
+## UC004 – Gerar Documentos Oficiais
 
-Objetivo
+### Objetivo
 
-Auxiliar o servidor na elaboração do memorial.
+Permitir a geração automática dos principais documentos oficiais do processo administrativo do RSC em formato PDF.
 
-Fluxo
+### Ator
 
-Selecionar experiências.
+Servidor, Comissão e DGP.
 
-Selecionar critérios.
+### Pré-condições
 
-Sistema gera estrutura.
+- Solicitação existente.
+- Dados obrigatórios preenchidos.
 
-Servidor complementa.
+### Fluxo Principal
 
-Salvar.
+1. O usuário seleciona o documento desejado.
+2. O sistema consolida os dados da solicitação.
+3. O sistema gera automaticamente o PDF.
+4. O documento é disponibilizado para download.
 
-Exportar PDF.
+### Documentos disponíveis
+
+- Memorial Descritivo.
+- Formulário de Solicitação de RSC.
+
+### Pós-condições
+
+- Documento oficial gerado.
+- Documento pronto para impressão ou anexação ao SEI.
+
+### Regras de Negócio
+
+- RN101 – Memorial obrigatório.
+- RN102 – Documentação obrigatória.
 
 ---
 
@@ -1523,7 +1552,7 @@ Ao longo do desenvolvimento do SG-RSC, esta matriz será continuamente atualizad
 | UC002 | Criar Solicitação | RN001, RN002, RN100 | Solicitações | Solicitação | POST /solicitacoes | Nova Solicitação | TS002 | Planejado |
 | UC003 | Anexar Documentos | RN102 | Documentos | Documento | POST /documentos | Upload de Documentos | TS003 | Implementado |
 | UC003A | Gerenciar Atividades Declaradas | RN102, RN105 | Atividades Declaradas | Atividade Declarada | `/api/atividades` | Atividades Declaradas | TS003A | **Implementado** |
-| UC004 | Gerar Memorial | RN101 | Memorial | Memorial | `/api/memoriais` | Memorial | TS004 | Implementado |
+| UC004 | Gerar Documentos Oficiais | RN101, RN102 | Documentos Oficiais | Memorial / Formulário | GET /api/documentos-oficiais/** | Visualização de PDF | TS004 | Implementado |
 | UC005 | Protocolar Solicitação | RN101, RN102, RN103, RN104 | Solicitações | Solicitação | POST /solicitacoes/protocolar | Protocolar Solicitação | TS005 | Implementado |
 | UC005A | Vincular Processo SEI | RN005, RN107 | Solicitações | Solicitação | PUT /api/solicitacoes/{id}/processo-sei | Vinculação Processo SEI | TS005A | Implementado |
 | UC006 | Consultar Processo | RN005 | Solicitações | Solicitação | GET /solicitacoes/{id} | Consulta da Solicitação | TS006 | Planejado |
@@ -3298,6 +3327,41 @@ MinioFileStorageService
 ↓
 
 Documento disponível para consulta e download
+
+## Infraestrutura de Geração de Documentos Oficiais
+
+O SG-RSC possui uma infraestrutura reutilizável para geração de documentos oficiais em formato PDF.
+
+Essa infraestrutura foi construída para permitir que novos documentos sejam adicionados ao sistema com baixo acoplamento e alta reutilização de código.
+
+Os principais componentes são:
+
+- `DocumentoOficialController`, responsável por disponibilizar os documentos via API REST;
+- `FormularioPdfService`, responsável pela geração do Formulário de Solicitação;
+- `MemorialPdfService`, responsável pela geração do Memorial Descritivo;
+- `NomeDocumentoSeiService`, responsável pela padronização dos nomes dos arquivos;
+- `PdfDocument`, abstração compartilhada para transporte do documento gerado;
+- `PdfFilenameUtils`, utilitário para normalização dos nomes de arquivos;
+- `PdfGenerationException`, exceção específica para falhas durante a geração de documentos.
+
+Essa arquitetura permite que futuros documentos oficiais, como Parecer Técnico, Decisão Administrativa, Certidão, Relatórios Gerenciais e Despachos da Comissão, reutilizem a mesma infraestrutura, mantendo consistência arquitetural e reduzindo a duplicação de código.
+
+Controller
+      │
+      ▼
+DocumentoOficialController
+      │
+      ├───────────────┐
+      ▼               ▼
+FormularioPdfService  MemorialPdfService
+      │               │
+      └───────┬───────┘
+              ▼
+      NomeDocumentoSeiService
+              ▼
+        PdfDocument
+              ▼
+        HTTP Response
 
 # 7.6 API REST – Módulo de Documentos
 
