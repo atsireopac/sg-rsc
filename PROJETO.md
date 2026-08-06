@@ -20,6 +20,7 @@
 | **1.12** | **02/08/2026** | **Erik Barbosa** | **Implementação da primeira versão do Motor de Pontuação do RSC, incluindo migração Flyway V16, cálculo automático da pontuação parametrizado pela Base Legal, homologação integral e parcial pela Comissão, validações de regras de negócio, novos endpoints REST de cálculo e homologação, expansão do modelo de domínio da entidade Pontuação e testes funcionais completos do fluxo de avaliação via curl.** |
 | **1.13** | **03/08/2026** | **Erik Barbosa** | Implementação do **Motor de Complexidade e Elegibilidade do RSC**, incluindo consolidação automática das pontuações homologadas por Grupo de Critérios, cálculo dos totais da avaliação, validação das regras de complexidade parametrizadas por nível de RSC, criação da **ComplexidadeEngine**, implementação do **ComplexidadeService** e **ComplexidadeController**, novos endpoints REST para consulta da elegibilidade, testes unitários (JUnit 5) e validação funcional completa via `curl`. |
 | **1.14** | **05/08/2026** | **Erik Barbosa** | **Implementação do módulo Parecer Técnico, incluindo Motor de Parecer, geração automática de fundamentação baseada no Motor de Complexidade, emissão de pareceres, controle de versões, edição antes da assinatura, assinatura eletrônica lógica, bloqueio de alterações após assinatura, consultas individuais e por avaliação, testes unitários e validação funcional completa dos endpoints REST.** |
+| **1.15** | **06/08/2026** | **Erik Barbosa** | **Implementação do módulo Decisão Administrativa, incluindo emissão da decisão com controle de versões, integração obrigatória com Parecer Técnico, assinatura eletrônica lógica, bloqueio de alterações após assinatura, encerramento automático da Avaliação e da Solicitação, atualização automática do Resultado da Solicitação, novos endpoints REST, migração Flyway V17, validações das regras de negócio, testes unitários (JUnit 5/Mockito) e validação funcional completa via curl.** |
 
 
 
@@ -89,7 +90,7 @@ Disponibilizar uma solução moderna, segura e transparente para gestão do Reco
 
 # Resumo Executivo
 
-O SG-RSC é uma plataforma web destinada à gestão do processo de Reconhecimento de Saberes e Competências (RSC-PCCTAE). O sistema automatiza as etapas de solicitação, análise, validação documental, cálculo de pontuação e emissão de pareceres, proporcionando maior eficiência administrativa, transparência, segurança e conformidade com a legislação vigente.
+O SG-RSC é uma plataforma web destinada à gestão do processo de Reconhecimento de Saberes e Competências (RSC-PCCTAE). O sistema automatiza todas as etapas do fluxo administrativo, desde a abertura da solicitação até a emissão da decisão administrativa final, contemplando validação documental, cálculo automático de pontuação, análise pela comissão, emissão de parecer técnico, assinatura eletrônica lógica, decisão administrativa e encerramento automático do processo, proporcionando maior eficiência, transparência, rastreabilidade e conformidade com a legislação vigente.
 
 A solução foi concebida para atender às Instituições Federais de Ensino, podendo ser adaptada às particularidades de cada instituição.
 
@@ -268,6 +269,7 @@ A implantação do SG-RSC proporcionará:
 - apoio à tomada de decisão;
 - geração automática de indicadores;
 - conformidade com o Decreto nº 13.048/2026.
+- automatização completa do fluxo decisório da Comissão, eliminando controles manuais após a emissão do parecer técnico.
 
 ---
 
@@ -285,6 +287,8 @@ A primeira versão do sistema contemplará:
 - histórico das movimentações;
 - geração de protocolo;
 - relatórios básicos.
+- emissão da decisão administrativa;
+- encerramento automático das avaliações e solicitações.
 
 As funcionalidades serão evoluídas de forma incremental ao longo do projeto.
 
@@ -382,6 +386,7 @@ Exemplos:
 - edição
 - envio
 - parecer
+- decisão administrativa
 - recurso
 - deferimento
 - indeferimento
@@ -1073,6 +1078,54 @@ Comissão de RSC.
 - RN103 – Utilização do resultado oficial da avaliação.
 - RN107 – Controle do fluxo de análise.
 
+## UC010A – Emitir Decisão Administrativa
+
+### Objetivo
+
+Permitir que a Comissão registre a decisão administrativa definitiva da Avaliação, utilizando obrigatoriamente um Parecer Técnico assinado como fundamento da decisão.
+
+### Ator
+
+Comissão de RSC.
+
+### Pré-condições
+
+- Deve existir uma Avaliação em andamento.
+- Deve existir um Parecer Técnico assinado.
+- Não pode existir outra decisão administrativa pendente de assinatura para a mesma avaliação.
+
+### Fluxo Principal
+
+1. A Comissão seleciona um Parecer Técnico assinado.
+2. O sistema cria uma nova versão da Decisão Administrativa.
+3. A Comissão poderá revisar a fundamentação.
+4. A Comissão assina a decisão.
+5. O sistema registra automaticamente:
+   - encerramento da Avaliação;
+   - encerramento da Solicitação;
+   - Resultado Oficial da Solicitação;
+   - data de encerramento;
+   - histórico da decisão.
+
+### Fluxos Alternativos
+
+- Parecer inexistente.
+- Parecer não assinado.
+- Avaliação encerrada.
+- Decisão já assinada.
+
+### Pós-condições
+
+- Decisão registrada.
+- Avaliação concluída.
+- Solicitação encerrada.
+- Resultado oficial registrado.
+
+### Regras de Negócio
+
+- RN103 – Resultado oficial da avaliação.
+- RN107 – Controle do fluxo administrativo.
+
 ---
 
 ## UC011 – Interpor Recurso
@@ -1354,6 +1407,7 @@ Ao longo do desenvolvimento do SG-RSC, esta matriz será continuamente atualizad
 | UC008 | Responder Complementação | RN107 | Comissão | Complementação | POST /complementacoes/responder | Responder Complementação | TS008 | Planejado |
 | UC009 | Calcular Pontuação | RN103, RN104, RN105 | Pontuação | Pontuação | **POST /api/pontuacoes/calcular** | Cálculo da Pontuação | TS009 | **Implementado** |
 | UC010 | Emitir Parecer Técnico | RN103, RN107 | Parecer Técnico | Parecer | POST /api/pareceres/avaliacao/{id}/emitir | Parecer Técnico | TS010 | Implementado |
+| UC010A | Emitir Decisão Administrativa | RN103, RN107 | Decisão Administrativa | DecisaoAdministrativa | POST /api/decisoes/avaliacao/{id} | Painel da Comissão | TS010A | Implementado |
 | UC011 | Interpor Recurso | RN005 | Recursos | Recurso | POST /recursos | Recurso Administrativo | TS011 | Planejado |
 | UC012 | Julgar Recurso | RN005 | Recursos | Recurso | POST /recursos/julgar | Julgamento do Recurso | TS012 | Planejado |
 | UC013 | Gerenciar Critérios | RN104 | Administração | Critério | POST /criterios | Cadastro de Critérios | TS013 | Planejado |
@@ -1435,6 +1489,7 @@ O sistema será composto, inicialmente, pelas seguintes entidades:
 - Documento
 - Pontuação
 - Parecer
+- decisão administrativa
 - Comissão
 - Complementação
 - Recurso
@@ -1689,7 +1744,40 @@ Cada avaliação poderá possuir diferentes versões de pareceres ao longo do pr
 
 ---
 
-# 4.14 Entidade Comissão
+# 4.14 Entidade Decisão Administrativa
+
+Representa a decisão administrativa definitiva emitida pela Comissão de RSC ao término da avaliação de uma solicitação.
+
+Cada decisão está obrigatoriamente vinculada a um Parecer Técnico assinado e determina o resultado oficial da solicitação.
+
+### Atributos
+
+- id
+- fundamentacao
+- dataDecisao
+- versao
+- assinada
+- createdAt
+- updatedAt
+
+### Relacionamentos
+
+- pertence a uma Avaliação;
+- referencia um Parecer Técnico;
+- referencia um Resultado da Solicitação;
+- poderá possuir múltiplas versões.
+
+### Regras
+
+- somente decisões não assinadas poderão ser alteradas;
+- a assinatura torna a decisão imutável;
+- somente pareceres assinados poderão originar decisões;
+- somente uma decisão pendente poderá existir por avaliação;
+- a assinatura encerra automaticamente a Avaliação;
+- a assinatura encerra automaticamente a Solicitação;
+- a assinatura atualiza automaticamente o Resultado Oficial da Solicitação.
+
+# 4.15 Entidade Comissão
 
 Representa a comissão responsável pela análise das solicitações de RSC.
 
@@ -1710,7 +1798,7 @@ Representa a comissão responsável pela análise das solicitações de RSC.
 
 ---
 
-# 4.15 Entidade Membro da Comissão
+# 4.16 Entidade Membro da Comissão
 
 Representa cada servidor designado para compor uma Comissão de RSC.
 
@@ -1736,7 +1824,7 @@ Representa cada servidor designado para compor uma Comissão de RSC.
 
 ---
 
-# 4.16 Entidade Avaliação
+# 4.17 Entidade Avaliação
 
 Representa o processo de análise de uma Solicitação realizado por uma Comissão de RSC.
 
@@ -1767,7 +1855,7 @@ Cada solicitação protocolada poderá originar uma Avaliação, responsável po
 
 ---
 
-# 4.17 Entidade Complementação
+# 4.18 Entidade Complementação
 
 Representa pedidos de documentos adicionais.
 
@@ -1785,7 +1873,7 @@ Relacionamentos:
 
 ---
 
-# 4.18 Entidade Recurso
+# 4.19 Entidade Recurso
 
 Representa recurso administrativo apresentado pelo servidor.
 
@@ -1802,7 +1890,7 @@ Relacionamentos:
 
 ---
 
-# 4.19 Entidade Auditoria
+# 4.20 Entidade Auditoria
 
 Registra todas as ações realizadas no sistema.
 
@@ -1821,7 +1909,7 @@ Relacionamentos:
 
 ---
 
-# 4.20 Entidade Notificação
+# 4.21 Entidade Notificação
 
 Representa mensagens enviadas pelo sistema.
 
@@ -1839,7 +1927,7 @@ Relacionamentos:
 
 ---
 
-# 4.21 Relacionamentos
+# 4.22 Relacionamentos
 
 Servidor
 
@@ -1861,6 +1949,11 @@ Solicitação
 
 ├── Parecer
 
+├── Avaliação
+│      ├── Pontuação
+│      ├── Parecer
+│      └── Decisão Administrativa
+
 └── Recurso
 
 Durante todo o fluxo serão registrados:
@@ -1871,13 +1964,13 @@ Durante todo o fluxo serão registrados:
 
 ---
 
-# 4.22 Evolução do Modelo
+# 4.23 Evolução do Modelo
 
 O Modelo de Domínio poderá evoluir conforme novas necessidades forem identificadas durante o desenvolvimento do projeto ou em decorrência de alterações na legislação.
 
 Novas entidades poderão ser incorporadas sem comprometer a arquitetura geral da aplicação.
 
-## 4.23 Entidade Grupo de Critérios
+## 4.24 Entidade Grupo de Critérios
 
 Representa os grupos oficiais definidos pelo Decreto nº 13.048/2026 utilizados para organização dos critérios do RSC.
 
@@ -1899,7 +1992,7 @@ Representa os grupos oficiais definidos pelo Decreto nº 13.048/2026 utilizados 
 
 ---
 
-## 4.24 Entidade Regra de Complexidade do Nível
+## 4.25 Entidade Regra de Complexidade do Nível
 
 Representa as regras mínimas exigidas para obtenção de cada nível do RSC.
 
@@ -1917,7 +2010,7 @@ Representa as regras mínimas exigidas para obtenção de cada nível do RSC.
 
 ---
 
-## 4.25 Entidade Regra de Complexidade do Grupo
+## 4.26 Entidade Regra de Complexidade do Grupo
 
 Representa a associação entre um Grupo de Critérios e uma Regra de Complexidade.
 
@@ -1998,6 +2091,7 @@ O banco será composto inicialmente pelas seguintes tabelas:
 - historico_solicitacao
 - pontuacao
 - parecer
+- decisão ddministrativa
 - comissao
 - membro_comissao
 - complemento
@@ -2084,6 +2178,18 @@ Nível RSC
 Regra de Complexidade
 
 N ---- N Grupo de Critério
+
+Avaliação
+
+1 ---- N Parecer
+
+Avaliação
+
+1 ---- N Decisão Administrativa
+
+Resultado da Solicitação
+
+1 ---- N Decisão Administrativa
 
 ---
 

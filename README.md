@@ -7,12 +7,12 @@
 ![MinIO](https://img.shields.io/badge/MinIO-Object_Storage-C72E49)
 ![Keycloak](https://img.shields.io/badge/Keycloak-26.7.0-4D4D4D)
 ![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED)
-![Status](https://img.shields.io/badge/Status-Sprint_13-Concluída-brightgreen)
+![Status](https://img.shields.io/badge/Status-Sprint_14-Concluída-brightgreen)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
 Sistema de Gestão do Reconhecimento de Saberes e Competências (RSC-PCCTAE)
 
-> Sistema web desenvolvido com **Java 25**, **Spring Boot 3.5** e **Angular 17** para informatizar o processo de Reconhecimento de Saberes e Competências (RSC-PCCTAE), utilizando arquitetura **Feature-First**, autenticação via **Keycloak**, banco de dados **PostgreSQL** e armazenamento de documentos no **MinIO**.
+Sistema web desenvolvido com **Java 25**, **Spring Boot 3.5** e **Angular 17** para informatizar integralmente o processo de Reconhecimento de Saberes e Competências (RSC-PCCTAE), contemplando desde a abertura da solicitação até a emissão da decisão administrativa final. A solução utiliza arquitetura **Feature-First**, autenticação via **Keycloak**, banco de dados **PostgreSQL**, armazenamento de documentos no **MinIO** e motores especializados para cálculo da pontuação, análise de complexidade, emissão de parecer técnico e decisão administrativa.
 
 ---
 
@@ -75,6 +75,13 @@ Atualmente o sistema já implementa:
 * Controle de versões dos pareceres.
 * Assinatura lógica dos pareceres.
 * Bloqueio de edição após assinatura.
+* Emissão de decisões administrativas.
+* Controle de versões das decisões administrativas.
+* Assinatura lógica das decisões.
+* Bloqueio de edição após assinatura da decisão.
+* Atualização automática do Resultado da Solicitação.
+* Encerramento automático da Avaliação.
+* Encerramento automático da Solicitação.
 
 Toda a lógica permanece armazenada no banco de dados, permitindo futuras alterações legislativas sem necessidade de recompilar a aplicação.
 
@@ -157,6 +164,7 @@ backend/
     │   ├── atividade
     │   ├── avaliacao
     │   ├── comissao
+    │   ├── decisao
     │   ├── documento
     │   ├── health
     │   ├── historico
@@ -401,6 +409,26 @@ Estrutura da resposta paginada:
 * Endpoint `/api/health`.
 * Verificação da disponibilidade do backend.
 
+## Decisão Administrativa
+
+* Emissão de decisões administrativas.
+* Integração obrigatória com Parecer Técnico assinado.
+* Controle automático de versões.
+* Consulta individual.
+* Listagem por Avaliação.
+* Atualização antes da assinatura.
+* Assinatura lógica.
+* Bloqueio de alterações após assinatura.
+* Encerramento automático da Avaliação.
+* Encerramento automático da Solicitação.
+* Atualização automática do Resultado da Solicitação.
+* Validação para impedir múltiplas decisões pendentes.
+* DTOs específicos.
+* Mapper Pattern.
+* Endpoints REST completos.
+* Testes unitários (JUnit 5 + Mockito).
+* Testes funcionais via curl.
+
 ---
 
 # Módulos Implementados
@@ -422,6 +450,7 @@ Estrutura da resposta paginada:
 * ✅ Motor de Pontuação
 * ✅ Motor de Complexidade
 * ✅ Parecer Técnico
+* ✅ Decisão Administrativa
 * 🚧 Complementações
 * 🚧 Recursos
 * 🚧 Dashboard Gerencial
@@ -519,7 +548,7 @@ Estrutura da resposta paginada:
 * Criação do `PageResponse`.
 * Aplicação inicial no módulo Status da Avaliação.
 
-## 🚧 Sprint 10 — Fluxo da Comissão Avaliadora
+## ✅ Sprint 10 — Fluxo da Comissão Avaliadora
 
 ### Concluído
 
@@ -622,10 +651,46 @@ Estrutura da resposta paginada:
 - Assinatura.
 - Controle de imutabilidade após assinatura.
 
+## ✅ Sprint 14 — Decisão Administrativa
+
+### Concluído
+
+* Implementação da entidade Decisão Administrativa.
+* Migração Flyway V17.
+* Integração obrigatória com Parecer Técnico.
+* Controle automático de versões.
+* Atualização de decisões não assinadas.
+* Assinatura lógica.
+* Bloqueio de alterações após assinatura.
+* Atualização automática do Resultado da Solicitação.
+* Encerramento automático da Avaliação.
+* Encerramento automático da Solicitação.
+* Validação para impedir múltiplas decisões pendentes.
+* DTOs Request e Response.
+* Mapper Pattern.
+* Repository.
+* Service Layer.
+* Controller REST.
+* Endpoints REST completos.
+* Testes unitários utilizando JUnit 5 e Mockito.
+* Validação funcional completa via curl.
+
+### Entregas da Sprint
+
+- Emissão de decisão administrativa.
+- Atualização da decisão.
+- Assinatura da decisão.
+- Consulta individual.
+- Listagem por avaliação.
+- Versionamento automático.
+- Encerramento automático do fluxo administrativo.
+
 ### Próximas etapas
 
-- Homologação da Avaliação.
-- Decisão Final.
+- Histórico e Auditoria da Decisão Administrativa.
+- Recursos Administrativos.
+- Geração de PDF da Decisão.
+- Assinatura digital ICP-Brasil.
 - Recursos Administrativos.
 - Geração de PDF do Parecer.
 - Assinatura digital ICP-Brasil.
@@ -844,6 +909,16 @@ SECRETARIO
 | GET | `/api/pareceres/{parecerId}` | Consulta um parecer. |
 | GET | `/api/pareceres/avaliacao/{avaliacaoId}` | Lista os pareceres da avaliação. |
 
+## Decisão Administrativa
+
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| POST | `/api/decisoes/avaliacao/{avaliacaoId}` | Emite uma decisão administrativa. |
+| PUT | `/api/decisoes/{decisaoId}` | Atualiza uma decisão não assinada. |
+| POST | `/api/decisoes/{decisaoId}/assinar` | Assina uma decisão administrativa. |
+| GET | `/api/decisoes/{decisaoId}` | Consulta uma decisão administrativa. |
+| GET | `/api/decisoes/avaliacao/{avaliacaoId}` | Lista as decisões da avaliação. |
+
 ---
 
 # Status Atual
@@ -898,17 +973,22 @@ SECRETARIO
 * Bloqueio de edição após assinatura.
 * Endpoints REST completos do módulo Parecer.
 * Testes unitários do ParecerTecnicoEngine.
+* Módulo Decisão Administrativa.
+* Integração entre Parecer Técnico e Decisão Administrativa.
+* Encerramento automático da Avaliação.
+* Encerramento automático da Solicitação.
+* Atualização automática do Resultado da Solicitação.
+* Testes unitários do módulo Decisão Administrativa.
 
 
 ## Em Desenvolvimento
 
 ## Em Desenvolvimento
 
-* Avaliação das evidências documentais.
-* Homologação da avaliação.
-* Homologação da avaliação.
-* Complementações.
-* Recursos administrativos.
+* Histórico e Auditoria da Decisão Administrativa.
+* Recursos Administrativos.
+* Geração de PDF do Parecer e da Decisão.
+* Assinatura digital ICP-Brasil.
 * Dashboard Gerencial.
 * Integração completa com o Frontend Angular.
 
@@ -933,6 +1013,7 @@ SECRETARIO
 | **v0.13.0** | Motor de Pontuação completo, migração Flyway V16, cálculo automático da pontuação, homologação integral e parcial, integração com a Base Legal oficial e testes funcionais completos. |
 | **v0.14.0** | Implementação do Motor de Complexidade e Elegibilidade, incluindo consolidação automática das pontuações homologadas por Grupo de Critérios, consolidação dos totais da avaliação, validação das regras parametrizadas por nível de RSC, cálculo automático da elegibilidade, criação da ComplexidadeEngine, ComplexidadeService e ComplexidadeController, novos endpoints REST e testes unitários utilizando JUnit 5. |
 | **v0.15.0** | Implementação completa do módulo Parecer Técnico, incluindo Motor de Parecer, geração automática de fundamentação baseada no Motor de Complexidade, emissão de pareceres, controle de versões, edição antes da assinatura, assinatura lógica, bloqueio de alterações após assinatura, novos endpoints REST, testes unitários e validação funcional completa via curl. |
+| **v0.16.0** | Implementação completa do módulo Decisão Administrativa, incluindo integração obrigatória com Parecer Técnico, emissão da decisão, controle automático de versões, assinatura lógica, bloqueio de alterações após assinatura, encerramento automático da Avaliação e da Solicitação, atualização automática do Resultado da Solicitação, migração Flyway V17, testes unitários (JUnit 5 + Mockito) e validação funcional completa via curl. |
 
 ---
 
