@@ -22,6 +22,7 @@
 | **1.14** | **05/08/2026** | **Erik Barbosa** | **Implementação do módulo Parecer Técnico, incluindo Motor de Parecer, geração automática de fundamentação baseada no Motor de Complexidade, emissão de pareceres, controle de versões, edição antes da assinatura, assinatura eletrônica lógica, bloqueio de alterações após assinatura, consultas individuais e por avaliação, testes unitários e validação funcional completa dos endpoints REST.** |
 | **1.15** | **06/08/2026** | **Erik Barbosa** | **Implementação do módulo Decisão Administrativa, incluindo emissão da decisão com controle de versões, integração obrigatória com Parecer Técnico, assinatura eletrônica lógica, bloqueio de alterações após assinatura, encerramento automático da Avaliação e da Solicitação, atualização automática do Resultado da Solicitação, novos endpoints REST, migração Flyway V17, validações das regras de negócio, testes unitários (JUnit 5/Mockito) e validação funcional completa via curl.** |
 | **1.16** | **06/08/2026** | **Erik Barbosa** | **Implementação da auditoria funcional da Decisão Administrativa, incluindo novos tipos de histórico, registro automático da criação, atualização e assinatura da decisão, encerramento da avaliação e da solicitação, rastreabilidade completa do fluxo decisório, migração Flyway V18, ampliação dos testes unitários e validação funcional completa via curl.** |
+| **1.17** | **06/08/2026** | **Erik Barbosa** | **Implementação do módulo Recursos Administrativos, incluindo interposição de recursos, julgamento pela comissão, atualização automática do resultado da solicitação, encerramento definitivo do processo administrativo, registro completo da auditoria funcional, migração Flyway V19, testes unitários (JUnit 5/Mockito) e validação funcional completa via curl.** |
 
 
 
@@ -91,7 +92,7 @@ Disponibilizar uma solução moderna, segura e transparente para gestão do Reco
 
 # Resumo Executivo
 
-O SG-RSC é uma plataforma web destinada à gestão do processo de Reconhecimento de Saberes e Competências (RSC-PCCTAE). O sistema automatiza todas as etapas do fluxo administrativo, desde a abertura da solicitação até a emissão da decisão administrativa final, contemplando validação documental, cálculo automático de pontuação, análise pela comissão, emissão de parecer técnico, assinatura eletrônica lógica, decisão administrativa, registro automático do histórico das decisões, encerramento automático do processo e rastreabilidade completa das movimentações administrativas, proporcionando maior eficiência, transparência e conformidade com a legislação vigente.
+O SG-RSC é uma plataforma web destinada à gestão do processo de Reconhecimento de Saberes e Competências (RSC-PCCTAE). O sistema automatiza todas as etapas do fluxo administrativo, desde a abertura da solicitação até a decisão administrativa definitiva, contemplando validação documental, cálculo automático de pontuação, análise pela comissão, emissão de parecer técnico, assinatura eletrônica lógica, decisão administrativa, interposição e julgamento de recursos administrativos, registro automático do histórico das movimentações, encerramento definitivo do processo e rastreabilidade completa das ações administrativas, proporcionando maior eficiência, transparência e conformidade com a legislação vigente.
 
 A solução foi concebida para atender às Instituições Federais de Ensino, podendo ser adaptada às particularidades de cada instituição.
 
@@ -292,6 +293,9 @@ A primeira versão do sistema contemplará:
 - emissão da decisão administrativa;
 - encerramento automático das avaliações e solicitações.
 - auditoria funcional das decisões administrativas;
+- interposição de recursos administrativos;
+- julgamento de recursos pela comissão;
+- encerramento definitivo do processo administrativo após julgamento do recurso;
 
 As funcionalidades serão evoluídas de forma incremental ao longo do projeto.
 
@@ -399,6 +403,9 @@ Exemplos:
 - indeferimento;
 - encerramento da avaliação;
 - encerramento da solicitação.
+- interposição de recurso administrativo;
+- julgamento de recurso administrativo;
+- decisão final do processo.
 
 ---
 
@@ -1139,37 +1146,91 @@ A emissão da Decisão Administrativa passa a integrar integralmente a trilha de
 
 ---
 
-## UC011 – Interpor Recurso
+## UC011 – Interpor Recurso Administrativo
 
-Ator
+### Objetivo
+
+Permitir que o servidor apresente recurso administrativo contra uma decisão de indeferimento da solicitação de RSC.
+
+### Ator
 
 Servidor.
 
-Fluxo
+### Pré-condições
 
-Abrir recurso.
+- A solicitação deve existir.
+- A solicitação deve possuir resultado INDEFERIDO.
+- Não pode existir recurso pendente de julgamento.
 
-Escrever fundamentação.
+### Fluxo Principal
 
-Anexar documentos.
+1. O servidor acessa a solicitação indeferida.
+2. O sistema valida as regras de negócio.
+3. O servidor informa a fundamentação do recurso.
+4. O sistema registra o recurso.
+5. O status da solicitação é alterado para **RECURSO**.
+6. O sistema registra automaticamente o evento **RECURSO_INTERPOSTO** no histórico.
 
-Protocolar.
+### Fluxos Alternativos
+
+- Solicitação inexistente.
+- Solicitação deferida.
+- Solicitação já em recurso.
+- Existência de recurso pendente.
+
+### Pós-condições
+
+- Recurso registrado.
+- Solicitação em fase recursal.
+- Histórico atualizado.
+
+### Regras de Negócio
+
+- RN005 – Auditoria.
 
 ---
 
-## UC012 – Julgar Recurso
+## UC012 – Julgar Recurso Administrativo
 
-Ator
+### Objetivo
 
-Comissão.
+Permitir que a Comissão julgue o recurso administrativo apresentado pelo servidor.
 
-Fluxo
+### Ator
 
-Analisar recurso.
+Comissão de RSC.
 
-Registrar decisão.
+### Pré-condições
 
-Encerrar processo.
+- Deve existir recurso pendente de julgamento.
+
+### Fluxo Principal
+
+1. A Comissão consulta o recurso.
+2. Analisa a fundamentação apresentada.
+3. Define o resultado do julgamento.
+4. Registra observações.
+5. O sistema registra o julgamento.
+6. O sistema atualiza automaticamente o resultado da solicitação.
+7. O sistema altera o status da solicitação para **DECISAO_FINAL**.
+8. O sistema registra automaticamente:
+   - RECURSO_JULGADO;
+   - SOLICITACAO_DEFERIDA ou SOLICITACAO_INDEFERIDA.
+
+### Fluxos Alternativos
+
+- Recurso inexistente.
+- Recurso já julgado.
+
+### Pós-condições
+
+- Processo encerrado definitivamente.
+- Resultado atualizado.
+- Histórico completo.
+
+### Regras de Negócio
+
+- RN005 – Auditoria.
 
 ---
 
@@ -1419,8 +1480,8 @@ Ao longo do desenvolvimento do SG-RSC, esta matriz será continuamente atualizad
 | UC009 | Calcular Pontuação | RN103, RN104, RN105 | Pontuação | Pontuação | **POST /api/pontuacoes/calcular** | Cálculo da Pontuação | TS009 | **Implementado** |
 | UC010 | Emitir Parecer Técnico | RN103, RN107 | Parecer Técnico | Parecer | POST /api/pareceres/avaliacao/{id}/emitir | Parecer Técnico | TS010 | Implementado |
 | UC010A | Emitir Decisão Administrativa | RN103, RN107 | Decisão Administrativa | DecisaoAdministrativa | POST /api/decisoes/avaliacao/{id} | Painel da Comissão | TS010A | Implementado |
-| UC011 | Interpor Recurso | RN005 | Recursos | Recurso | POST /recursos | Recurso Administrativo | TS011 | Planejado |
-| UC012 | Julgar Recurso | RN005 | Recursos | Recurso | POST /recursos/julgar | Julgamento do Recurso | TS012 | Planejado |
+| UC011 | Interpor Recurso Administrativo | RN005 | Recursos Administrativos | Recurso | POST /api/recursos/solicitacao/{id}/interpor | Recurso Administrativo | TS011 | Implementado |
+| UC012 | Julgar Recurso Administrativo | RN005 | Recursos Administrativos | Recurso | POST /api/recursos/{id}/julgar | Julgamento do Recurso | TS012 | Implementado |
 | UC013 | Gerenciar Critérios | RN104 | Administração | Critério | POST /criterios | Cadastro de Critérios | TS013 | Planejado |
 | UC014 | Emitir Relatórios | RN005 | Relatórios | Relatório | GET /relatorios | Relatórios Gerenciais | TS014 | Planejado |
 | UC015 | Consultar Auditoria | RN005 | Auditoria | Auditoria | GET /auditoria | Auditoria | TS015 | Planejado |
@@ -1889,19 +1950,30 @@ Relacionamentos:
 
 # 4.19 Entidade Recurso
 
-Representa recurso administrativo apresentado pelo servidor.
+Representa o recurso administrativo interposto pelo servidor contra uma decisão administrativa de indeferimento.
 
-Atributos:
+### Atributos
 
 - id
-- fundamentação
-- dataInterposição
-- decisão
+- texto
+- dataInterposicao
+- resultadoSolicitacao
+- dataJulgamento
+- observacaoJulgamento
 
-Relacionamentos:
+### Relacionamentos
 
-- pertence a uma Solicitação.
+- pertence a uma Solicitação;
+- referencia um Resultado da Solicitação após o julgamento.
 
+### Regras
+
+- somente solicitações indeferidas poderão receber recurso;
+- somente um recurso pendente poderá existir por solicitação;
+- o julgamento atualiza automaticamente o resultado da solicitação;
+- o julgamento encerra definitivamente o processo administrativo;
+- toda interposição gera automaticamente um evento de histórico;
+- todo julgamento gera automaticamente os eventos RECURSO_JULGADO e SOLICITACAO_DEFERIDA ou SOLICITACAO_INDEFERIDA.
 ---
 
 # 4.20 Entidade Auditoria

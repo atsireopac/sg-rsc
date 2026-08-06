@@ -7,12 +7,12 @@
 ![MinIO](https://img.shields.io/badge/MinIO-Object_Storage-C72E49)
 ![Keycloak](https://img.shields.io/badge/Keycloak-26.7.0-4D4D4D)
 ![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED)
-![Status](https://img.shields.io/badge/Status-Sprint_15-Concluída-brightgreen)
+![Status](https://img.shields.io/badge/Status-Sprint_16-Concluída-brightgreen)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
 Sistema de Gestão do Reconhecimento de Saberes e Competências (RSC-PCCTAE)
 
-Sistema web desenvolvido com **Java 25**, **Spring Boot 3.5** e **Angular 17** para informatizar integralmente o processo de Reconhecimento de Saberes e Competências (RSC-PCCTAE), contemplando desde a abertura da solicitação até a emissão da decisão administrativa final. A solução utiliza arquitetura **Feature-First**, autenticação via **Keycloak**, banco de dados **PostgreSQL**, armazenamento de documentos no **MinIO**, motores especializados para cálculo da pontuação, análise de complexidade, emissão de parecer técnico, decisão administrativa e auditoria funcional completa do fluxo administrativo por meio do histórico automático das movimentações do processo.
+Sistema web desenvolvido com **Java 25**, **Spring Boot 3.5** e **Angular 17** para informatizar integralmente o processo de Reconhecimento de Saberes e Competências (RSC-PCCTAE), contemplando desde a abertura da solicitação até o julgamento dos recursos administrativos. A solução utiliza arquitetura **Feature-First**, autenticação via **Keycloak**, banco de dados **PostgreSQL**, armazenamento de documentos no **MinIO**, motores especializados para cálculo da pontuação, análise de complexidade, emissão de parecer técnico, decisão administrativa, recursos administrativos e auditoria funcional completa do fluxo administrativo por meio do histórico automático das movimentações do processo.
 
 ---
 
@@ -88,6 +88,11 @@ Atualmente o sistema já implementa:
 * Registro automático do encerramento da avaliação.
 * Registro automático do encerramento da solicitação.
 * Trilha completa de auditoria do fluxo decisório.
+* Interposição de Recursos Administrativos.
+* Julgamento de Recursos Administrativos.
+* Atualização automática do resultado da solicitação após julgamento.
+* Encerramento definitivo do processo administrativo.
+* Auditoria automática do fluxo recursal.
 
 Toda a lógica permanece armazenada no banco de dados, permitindo futuras alterações legislativas sem necessidade de recompilar a aplicação.
 
@@ -441,6 +446,22 @@ Estrutura da resposta paginada:
 * Registro automático da conclusão da avaliação.
 * Auditoria funcional completa do fluxo decisório.
 
+## Recursos Administrativos
+
+* Interposição de recursos administrativos.
+* Julgamento dos recursos pela Comissão.
+* Associação obrigatória à Solicitação.
+* Atualização automática do Resultado da Solicitação.
+* Encerramento definitivo do processo administrativo.
+* Registro automático da interposição do recurso.
+* Registro automático do julgamento do recurso.
+* Registro automático da decisão final.
+* DTOs específicos.
+* Mapper Pattern.
+* Endpoints REST completos.
+* Testes unitários (JUnit 5 + Mockito).
+* Testes funcionais via curl.
+
 ---
 
 # Módulos Implementados
@@ -465,7 +486,7 @@ Estrutura da resposta paginada:
 * ✅ Decisão Administrativa
 * ✅ Auditoria Funcional das Decisões Administrativas
 * 🚧 Complementações
-* 🚧 Recursos
+* ✅ Recursos Administrativos
 * 🚧 Dashboard Gerencial
 * 🚧 Integração com o Frontend Angular
 
@@ -724,9 +745,40 @@ Estrutura da resposta paginada:
 - Histórico da conclusão da avaliação.
 - Trilha completa de auditoria do processo administrativo.
 
+## ✅ Sprint 16 — Recursos Administrativos
+
+### Concluído
+
+* Implementação da entidade Recurso.
+* Migração Flyway V19.
+* CRUD do recurso administrativo.
+* Interposição de recursos.
+* Julgamento de recursos.
+* Atualização automática do Resultado da Solicitação.
+* Encerramento definitivo do processo administrativo.
+* Integração com o Histórico da Solicitação.
+* Registro automático da interposição do recurso.
+* Registro automático do julgamento do recurso.
+* Registro automático da decisão final.
+* DTOs Request e Response.
+* Mapper Pattern.
+* Repository.
+* Service Layer.
+* Controller REST.
+* Endpoints REST completos.
+* Testes unitários utilizando JUnit 5 e Mockito.
+* Validação funcional completa via curl.
+
+### Entregas da Sprint
+
+- Interposição de recurso administrativo.
+- Julgamento do recurso.
+- Atualização automática do resultado.
+- Encerramento definitivo do processo.
+- Auditoria completa do fluxo recursal.
+
 ### Próximas etapas
 
-- Recursos Administrativos.
 - Geração de PDF do Parecer.
 - Geração de PDF da Decisão.
 - Assinatura digital ICP-Brasil.
@@ -1024,13 +1076,17 @@ SECRETARIO
 * Registro automático da assinatura da decisão.
 * Registro automático do encerramento da avaliação.
 * Registro automático do encerramento da solicitação.
+* Módulo Recursos Administrativos.
+* Interposição de Recursos.
+* Julgamento de Recursos.
+* Encerramento definitivo do processo administrativo.
+* Auditoria completa do fluxo recursal.
 
 
 ## Em Desenvolvimento
 
 ## Em Desenvolvimento
 
-* Recursos Administrativos.
 * Geração de PDF do Parecer e da Decisão.
 * Assinatura digital ICP-Brasil.
 * Dashboard Gerencial.
@@ -1059,6 +1115,7 @@ SECRETARIO
 | **v0.15.0** | Implementação completa do módulo Parecer Técnico, incluindo Motor de Parecer, geração automática de fundamentação baseada no Motor de Complexidade, emissão de pareceres, controle de versões, edição antes da assinatura, assinatura lógica, bloqueio de alterações após assinatura, novos endpoints REST, testes unitários e validação funcional completa via curl. |
 | **v0.16.0** | Implementação completa do módulo Decisão Administrativa, incluindo integração obrigatória com Parecer Técnico, emissão da decisão, controle automático de versões, assinatura lógica, bloqueio de alterações após assinatura, encerramento automático da Avaliação e da Solicitação, atualização automática do Resultado da Solicitação, migração Flyway V17, testes unitários (JUnit 5 + Mockito) e validação funcional completa via curl. |
 | **v0.17.0** | Implementação da auditoria funcional da Decisão Administrativa, incluindo novos tipos de histórico, registro automático da criação, atualização e assinatura da decisão, encerramento automático da avaliação e da solicitação, trilha completa de auditoria do fluxo administrativo, migração Flyway V18, testes unitários e validação funcional completa via curl. |
+| **v0.18.0** | Implementação completa do módulo Recursos Administrativos, incluindo interposição e julgamento de recursos, atualização automática do Resultado da Solicitação, encerramento definitivo do processo administrativo, migração Flyway V19, auditoria funcional completa do fluxo recursal, testes unitários (JUnit 5 + Mockito) e validação funcional completa via curl. |
 
 ---
 
