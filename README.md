@@ -7,12 +7,12 @@
 ![MinIO](https://img.shields.io/badge/MinIO-Object_Storage-C72E49)
 ![Keycloak](https://img.shields.io/badge/Keycloak-26.7.0-4D4D4D)
 ![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED)
-![Status](https://img.shields.io/badge/Status-Sprint_14-Concluída-brightgreen)
+![Status](https://img.shields.io/badge/Status-Sprint_15-Concluída-brightgreen)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
 Sistema de Gestão do Reconhecimento de Saberes e Competências (RSC-PCCTAE)
 
-Sistema web desenvolvido com **Java 25**, **Spring Boot 3.5** e **Angular 17** para informatizar integralmente o processo de Reconhecimento de Saberes e Competências (RSC-PCCTAE), contemplando desde a abertura da solicitação até a emissão da decisão administrativa final. A solução utiliza arquitetura **Feature-First**, autenticação via **Keycloak**, banco de dados **PostgreSQL**, armazenamento de documentos no **MinIO** e motores especializados para cálculo da pontuação, análise de complexidade, emissão de parecer técnico e decisão administrativa.
+Sistema web desenvolvido com **Java 25**, **Spring Boot 3.5** e **Angular 17** para informatizar integralmente o processo de Reconhecimento de Saberes e Competências (RSC-PCCTAE), contemplando desde a abertura da solicitação até a emissão da decisão administrativa final. A solução utiliza arquitetura **Feature-First**, autenticação via **Keycloak**, banco de dados **PostgreSQL**, armazenamento de documentos no **MinIO**, motores especializados para cálculo da pontuação, análise de complexidade, emissão de parecer técnico, decisão administrativa e auditoria funcional completa do fluxo administrativo por meio do histórico automático das movimentações do processo.
 
 ---
 
@@ -82,6 +82,12 @@ Atualmente o sistema já implementa:
 * Atualização automática do Resultado da Solicitação.
 * Encerramento automático da Avaliação.
 * Encerramento automático da Solicitação.
+* Registro automático do histórico da criação da decisão administrativa.
+* Registro automático das alterações da decisão administrativa.
+* Registro automático da assinatura da decisão administrativa.
+* Registro automático do encerramento da avaliação.
+* Registro automático do encerramento da solicitação.
+* Trilha completa de auditoria do fluxo decisório.
 
 Toda a lógica permanece armazenada no banco de dados, permitindo futuras alterações legislativas sem necessidade de recompilar a aplicação.
 
@@ -428,6 +434,12 @@ Estrutura da resposta paginada:
 * Endpoints REST completos.
 * Testes unitários (JUnit 5 + Mockito).
 * Testes funcionais via curl.
+* Registro automático do histórico da criação da decisão.
+* Registro automático da atualização da decisão.
+* Registro automático da assinatura.
+* Registro automático do deferimento e indeferimento.
+* Registro automático da conclusão da avaliação.
+* Auditoria funcional completa do fluxo decisório.
 
 ---
 
@@ -451,6 +463,7 @@ Estrutura da resposta paginada:
 * ✅ Motor de Complexidade
 * ✅ Parecer Técnico
 * ✅ Decisão Administrativa
+* ✅ Auditoria Funcional das Decisões Administrativas
 * 🚧 Complementações
 * 🚧 Recursos
 * 🚧 Dashboard Gerencial
@@ -685,15 +698,40 @@ Estrutura da resposta paginada:
 - Versionamento automático.
 - Encerramento automático do fluxo administrativo.
 
+## ✅ Sprint 15 — Auditoria da Decisão Administrativa
+
+### Concluído
+
+* Migração Flyway V18.
+* Ampliação dos Tipos de Histórico.
+* Registro automático da criação da decisão administrativa.
+* Registro automático da atualização da decisão administrativa.
+* Registro automático da assinatura da decisão administrativa.
+* Registro automático do encerramento da avaliação.
+* Registro automático do encerramento da solicitação.
+* Registro automático do deferimento e indeferimento.
+* Auditoria funcional completa do fluxo administrativo.
+* Testes unitários.
+* Validação funcional completa via curl.
+
+### Entregas da Sprint
+
+- Histórico da criação da decisão.
+- Histórico da atualização da decisão.
+- Histórico da assinatura da decisão.
+- Histórico do deferimento.
+- Histórico do indeferimento.
+- Histórico da conclusão da avaliação.
+- Trilha completa de auditoria do processo administrativo.
+
 ### Próximas etapas
 
-- Histórico e Auditoria da Decisão Administrativa.
-- Recursos Administrativos.
-- Geração de PDF da Decisão.
-- Assinatura digital ICP-Brasil.
 - Recursos Administrativos.
 - Geração de PDF do Parecer.
+- Geração de PDF da Decisão.
 - Assinatura digital ICP-Brasil.
+- Dashboard Gerencial.
+- Integração completa com Angular.
 ---
 
 # Como Executar
@@ -979,13 +1017,19 @@ SECRETARIO
 * Encerramento automático da Solicitação.
 * Atualização automática do Resultado da Solicitação.
 * Testes unitários do módulo Decisão Administrativa.
+* Auditoria funcional da Decisão Administrativa.
+* Histórico completo do fluxo decisório.
+* Registro automático da criação da decisão.
+* Registro automático da atualização da decisão.
+* Registro automático da assinatura da decisão.
+* Registro automático do encerramento da avaliação.
+* Registro automático do encerramento da solicitação.
 
 
 ## Em Desenvolvimento
 
 ## Em Desenvolvimento
 
-* Histórico e Auditoria da Decisão Administrativa.
 * Recursos Administrativos.
 * Geração de PDF do Parecer e da Decisão.
 * Assinatura digital ICP-Brasil.
@@ -1014,6 +1058,7 @@ SECRETARIO
 | **v0.14.0** | Implementação do Motor de Complexidade e Elegibilidade, incluindo consolidação automática das pontuações homologadas por Grupo de Critérios, consolidação dos totais da avaliação, validação das regras parametrizadas por nível de RSC, cálculo automático da elegibilidade, criação da ComplexidadeEngine, ComplexidadeService e ComplexidadeController, novos endpoints REST e testes unitários utilizando JUnit 5. |
 | **v0.15.0** | Implementação completa do módulo Parecer Técnico, incluindo Motor de Parecer, geração automática de fundamentação baseada no Motor de Complexidade, emissão de pareceres, controle de versões, edição antes da assinatura, assinatura lógica, bloqueio de alterações após assinatura, novos endpoints REST, testes unitários e validação funcional completa via curl. |
 | **v0.16.0** | Implementação completa do módulo Decisão Administrativa, incluindo integração obrigatória com Parecer Técnico, emissão da decisão, controle automático de versões, assinatura lógica, bloqueio de alterações após assinatura, encerramento automático da Avaliação e da Solicitação, atualização automática do Resultado da Solicitação, migração Flyway V17, testes unitários (JUnit 5 + Mockito) e validação funcional completa via curl. |
+| **v0.17.0** | Implementação da auditoria funcional da Decisão Administrativa, incluindo novos tipos de histórico, registro automático da criação, atualização e assinatura da decisão, encerramento automático da avaliação e da solicitação, trilha completa de auditoria do fluxo administrativo, migração Flyway V18, testes unitários e validação funcional completa via curl. |
 
 ---
 

@@ -21,6 +21,7 @@
 | **1.13** | **03/08/2026** | **Erik Barbosa** | Implementação do **Motor de Complexidade e Elegibilidade do RSC**, incluindo consolidação automática das pontuações homologadas por Grupo de Critérios, cálculo dos totais da avaliação, validação das regras de complexidade parametrizadas por nível de RSC, criação da **ComplexidadeEngine**, implementação do **ComplexidadeService** e **ComplexidadeController**, novos endpoints REST para consulta da elegibilidade, testes unitários (JUnit 5) e validação funcional completa via `curl`. |
 | **1.14** | **05/08/2026** | **Erik Barbosa** | **Implementação do módulo Parecer Técnico, incluindo Motor de Parecer, geração automática de fundamentação baseada no Motor de Complexidade, emissão de pareceres, controle de versões, edição antes da assinatura, assinatura eletrônica lógica, bloqueio de alterações após assinatura, consultas individuais e por avaliação, testes unitários e validação funcional completa dos endpoints REST.** |
 | **1.15** | **06/08/2026** | **Erik Barbosa** | **Implementação do módulo Decisão Administrativa, incluindo emissão da decisão com controle de versões, integração obrigatória com Parecer Técnico, assinatura eletrônica lógica, bloqueio de alterações após assinatura, encerramento automático da Avaliação e da Solicitação, atualização automática do Resultado da Solicitação, novos endpoints REST, migração Flyway V17, validações das regras de negócio, testes unitários (JUnit 5/Mockito) e validação funcional completa via curl.** |
+| **1.16** | **06/08/2026** | **Erik Barbosa** | **Implementação da auditoria funcional da Decisão Administrativa, incluindo novos tipos de histórico, registro automático da criação, atualização e assinatura da decisão, encerramento da avaliação e da solicitação, rastreabilidade completa do fluxo decisório, migração Flyway V18, ampliação dos testes unitários e validação funcional completa via curl.** |
 
 
 
@@ -90,7 +91,7 @@ Disponibilizar uma solução moderna, segura e transparente para gestão do Reco
 
 # Resumo Executivo
 
-O SG-RSC é uma plataforma web destinada à gestão do processo de Reconhecimento de Saberes e Competências (RSC-PCCTAE). O sistema automatiza todas as etapas do fluxo administrativo, desde a abertura da solicitação até a emissão da decisão administrativa final, contemplando validação documental, cálculo automático de pontuação, análise pela comissão, emissão de parecer técnico, assinatura eletrônica lógica, decisão administrativa e encerramento automático do processo, proporcionando maior eficiência, transparência, rastreabilidade e conformidade com a legislação vigente.
+O SG-RSC é uma plataforma web destinada à gestão do processo de Reconhecimento de Saberes e Competências (RSC-PCCTAE). O sistema automatiza todas as etapas do fluxo administrativo, desde a abertura da solicitação até a emissão da decisão administrativa final, contemplando validação documental, cálculo automático de pontuação, análise pela comissão, emissão de parecer técnico, assinatura eletrônica lógica, decisão administrativa, registro automático do histórico das decisões, encerramento automático do processo e rastreabilidade completa das movimentações administrativas, proporcionando maior eficiência, transparência e conformidade com a legislação vigente.
 
 A solução foi concebida para atender às Instituições Federais de Ensino, podendo ser adaptada às particularidades de cada instituição.
 
@@ -270,6 +271,7 @@ A implantação do SG-RSC proporcionará:
 - geração automática de indicadores;
 - conformidade com o Decreto nº 13.048/2026.
 - automatização completa do fluxo decisório da Comissão, eliminando controles manuais após a emissão do parecer técnico.
+- rastreabilidade completa das decisões administrativas, permitindo identificar quando cada decisão foi criada, alterada, assinada e responsável pelo encerramento do processo.
 
 ---
 
@@ -289,6 +291,7 @@ A primeira versão do sistema contemplará:
 - relatórios básicos.
 - emissão da decisão administrativa;
 - encerramento automático das avaliações e solicitações.
+- auditoria funcional das decisões administrativas;
 
 As funcionalidades serão evoluídas de forma incremental ao longo do projeto.
 
@@ -382,14 +385,20 @@ Cada solicitação receberá um identificador único gerado automaticamente.
 
 Exemplos:
 
-- criação
-- edição
-- envio
-- parecer
-- decisão administrativa
-- recurso
-- deferimento
-- indeferimento
+- criação de solicitação;
+- protocolização;
+- início da avaliação;
+- homologação de pontuação;
+- emissão de parecer técnico;
+- atualização de parecer;
+- assinatura do parecer;
+- emissão da decisão administrativa;
+- atualização da decisão administrativa;
+- assinatura da decisão administrativa;
+- deferimento;
+- indeferimento;
+- encerramento da avaliação;
+- encerramento da solicitação.
 
 ---
 
@@ -1100,12 +1109,12 @@ Comissão de RSC.
 2. O sistema cria uma nova versão da Decisão Administrativa.
 3. A Comissão poderá revisar a fundamentação.
 4. A Comissão assina a decisão.
-5. O sistema registra automaticamente:
-   - encerramento da Avaliação;
-   - encerramento da Solicitação;
-   - Resultado Oficial da Solicitação;
-   - data de encerramento;
-   - histórico da decisão.
+5. O sistema registra automaticamente os eventos de histórico:
+    - Decisão Administrativa Criada;
+    - Decisão Administrativa Atualizada;
+    - Decisão Administrativa Assinada;
+    - Solicitação Deferida ou Indeferida;
+    - Avaliação Concluída.
 
 ### Fluxos Alternativos
 
@@ -1125,6 +1134,8 @@ Comissão de RSC.
 
 - RN103 – Resultado oficial da avaliação.
 - RN107 – Controle do fluxo administrativo.
+
+A emissão da Decisão Administrativa passa a integrar integralmente a trilha de auditoria do sistema, registrando automaticamente todas as fases do processo decisório. Os eventos registrados permitem reconstruir cronologicamente o histórico da avaliação, garantindo transparência, rastreabilidade e suporte a futuras auditorias administrativas.
 
 ---
 
@@ -1776,6 +1787,9 @@ Cada decisão está obrigatoriamente vinculada a um Parecer Técnico assinado e 
 - a assinatura encerra automaticamente a Avaliação;
 - a assinatura encerra automaticamente a Solicitação;
 - a assinatura atualiza automaticamente o Resultado Oficial da Solicitação.
+- toda criação da decisão gera automaticamente um registro no Histórico da Solicitação;
+- toda alteração da fundamentação ou do resultado gera novo evento de histórico contendo os valores anteriores e atuais;
+- a assinatura gera automaticamente os eventos de encerramento do processo administrativo.
 
 # 4.15 Entidade Comissão
 
@@ -1906,6 +1920,28 @@ Atributos:
 Relacionamentos:
 
 - registra ações de qualquer entidade.
+
+O sistema deverá registrar automaticamente todos os eventos relevantes do fluxo administrativo, incluindo:
+
+- criação da solicitação;
+- protocolização;
+- início da avaliação;
+- emissão do parecer técnico;
+- atualização do parecer;
+- assinatura do parecer;
+- criação da decisão administrativa;
+- atualização da decisão administrativa;
+- assinatura da decisão administrativa;
+- deferimento ou indeferimento da solicitação;
+- conclusão da avaliação.
+
+Cada evento deverá registrar:
+
+- usuário responsável;
+- data e hora;
+- tipo do evento;
+- descrição da operação;
+- valores anteriores e atuais, quando aplicável.
 
 ---
 
@@ -4047,115 +4083,3 @@ As validações do Bean Validation passaram a ser tratadas centralizadamente, re
 ---
 
 Fim do Capítulo 8.
-
-# Capítulo 9 – Status da Implementação
-
-## Visão Geral
-
-Este capítulo registra a evolução incremental do desenvolvimento do SG-RSC, permitindo acompanhar as funcionalidades implementadas ao longo das sprints do projeto.
-
-## Sprint 1
-
-- Estrutura inicial do backend.
-- Configuração do Spring Boot.
-- Configuração do PostgreSQL.
-- Estrutura Feature-First.
-
-## Sprint 2
-
-- Configuração do Spring Security.
-- Integração com Keycloak.
-- Endpoint Health.
-
-## Sprint 3
-
-- Implementação do módulo de documentos.
-- Integração com MinIO.
-- Upload de arquivos.
-- Download de arquivos.
-- Exclusão lógica de documentos.
-
-## Sprint 4
-
-- Implementação do módulo Base Legal.
-- CRUD de Legislação.
-- CRUD de Requisito.
-- CRUD de Critério.
-- DTOs Request/Response.
-- Mapper Pattern.
-- Soft Delete.
-- Testes completos dos endpoints REST.
-
-## Sprint 5
-
-- Implementação do módulo de Solicitações.
-- CRUD de Solicitações.
-- Geração automática de protocolo.
-- Validação de documentos obrigatórios.
-- Integração com o módulo de Documentos.
-- Registro automático do histórico de protocolização.
-- Migração Flyway para tipos de histórico.
-- DTOs Request/Response.
-- Mapper Pattern.
-- Testes completos do fluxo de protocolização.
-
-## Sprint 6
-
-- Implementação do módulo Memorial.
-- CRUD completo do Memorial.
-- Associação do Memorial à Solicitação.
-- Controle de versão do Memorial.
-- Validação de edição apenas para solicitações em rascunho.
-- Exclusão lógica.
-- DTOs específicos para criação e atualização.
-- Consulta de memorial por identificador.
-- Consulta de memorial por solicitação.
-- Testes funcionais dos endpoints REST.
-
-## Sprint 7
-
-- Implementação do módulo de Atividades Declaradas.
-- CRUD completo de Atividades Declaradas.
-- Associação opcional entre Atividade Declarada e Critério Pretendido.
-- Associação N:N entre Atividades Declaradas e Documentos.
-- Criação da tabela de vínculo `atividade_documento`.
-- Migração Flyway V9 para criação das tabelas do módulo.
-- Migração Flyway V10 para carga inicial da Base Legal (Legislação, Requisitos e Critérios).
-- Ajustes na configuração de segurança para os novos endpoints REST.
-- DTOs Request/Response específicos.
-- Mapper Pattern.
-- Exclusão lógica (Soft Delete).
-- Testes funcionais completos dos endpoints REST.
-- Validação do fluxo completo de:
-  - criação da atividade;
-  - consulta por identificador;
-  - consulta por solicitação;
-  - atualização da atividade;
-  - exclusão lógica;
-  - upload de documento;
-  - associação entre atividade e documento;
-  - remoção do vínculo preservando o documento armazenado.
-
-  ## Sprint 8
-
-- Implementação do módulo Status da Avaliação.
-- CRUD completo de Status da Avaliação.
-- Criação da entidade StatusAvaliacao.
-- Migração Flyway V11 para criação da tabela e carga inicial dos status padrão.
-- Associação entre Avaliação e Status da Avaliação.
-- Implementação de Repository, DTOs Request/Response/Summary, Mapper, Service e Controller REST.
-- Ajustes na configuração do Spring Security para disponibilização dos endpoints.
-- Testes funcionais completos utilizando curl (GET, POST, PUT e DELETE).
-- Validação da integração entre PostgreSQL, Flyway, JPA, Spring Security e API REST.
-
-## Sprint 9
-
-- Implementação do tratamento global de exceções da API REST.
-- Criação do `GlobalExceptionHandler`.
-- Criação das exceções `BusinessException` e `ResourceNotFoundException`.
-- Padronização das respostas de erro da API.
-- Padronização das mensagens de validação dos DTOs.
-- Implementação de paginação utilizando Spring Data `Pageable`.
-- Implementação de filtros por termo e situação.
-- Criação da classe `PageResponse` para respostas paginadas.
-- Aplicação da paginação e filtros no módulo **Status da Avaliação**, estabelecendo o padrão para os demais módulos do sistema.
