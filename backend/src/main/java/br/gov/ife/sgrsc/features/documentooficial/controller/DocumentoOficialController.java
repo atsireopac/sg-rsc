@@ -2,7 +2,9 @@ package br.gov.ife.sgrsc.features.documentooficial.controller;
 
 import br.gov.ife.sgrsc.features.documentooficial.service.FormularioPdfService;
 import br.gov.ife.sgrsc.features.documentooficial.service.MemorialPdfService;
+import br.gov.ife.sgrsc.features.documentooficial.service.ProcessoZipService;
 import br.gov.ife.sgrsc.shared.pdf.PdfDocument;
+import br.gov.ife.sgrsc.shared.zip.ZipDocument;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -20,16 +22,21 @@ public class DocumentoOficialController {
 
     private final MemorialPdfService memorialPdfService;
     private final FormularioPdfService formularioPdfService;
+    private final ProcessoZipService processoZipService;
 
     public DocumentoOficialController(
             MemorialPdfService memorialPdfService,
-            FormularioPdfService formularioPdfService
+            FormularioPdfService formularioPdfService,
+            ProcessoZipService processoZipService
     ) {
         this.memorialPdfService =
                 memorialPdfService;
 
         this.formularioPdfService =
                 formularioPdfService;
+
+        this.processoZipService =
+                processoZipService;
     }
 
     @GetMapping(
@@ -68,6 +75,24 @@ public class DocumentoOficialController {
         );
     }
 
+    @GetMapping(
+            value = "/solicitacoes/{solicitacaoId}/pacote",
+            produces = "application/zip"
+    )
+    public ResponseEntity<byte[]> gerarPacote(
+            @PathVariable Long solicitacaoId
+    ) {
+        ZipDocument zip =
+                processoZipService
+                        .gerarPorSolicitacao(
+                                solicitacaoId
+                        );
+
+        return montarRespostaZip(
+                zip
+        );
+    }
+
     private ResponseEntity<byte[]> montarRespostaPdf(
             PdfDocument pdf
     ) {
@@ -87,6 +112,39 @@ public class DocumentoOficialController {
                 .contentType(
                         MediaType.parseMediaType(
                                 pdf.mimeType()
+                        )
+                )
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        contentDisposition.toString()
+                )
+                .contentLength(
+                        conteudo.length
+                )
+                .body(
+                        conteudo
+                );
+    }
+
+    private ResponseEntity<byte[]> montarRespostaZip(
+            ZipDocument zip
+    ) {
+        byte[] conteudo =
+                zip.conteudo();
+
+        ContentDisposition contentDisposition =
+                ContentDisposition
+                        .attachment()
+                        .filename(
+                                zip.nomeArquivo(),
+                                StandardCharsets.UTF_8
+                        )
+                        .build();
+
+        return ResponseEntity.ok()
+                .contentType(
+                        MediaType.parseMediaType(
+                                zip.mimeType()
                         )
                 )
                 .header(

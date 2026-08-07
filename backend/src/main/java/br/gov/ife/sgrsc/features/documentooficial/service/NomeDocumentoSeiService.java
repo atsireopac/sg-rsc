@@ -124,15 +124,16 @@ public class NomeDocumentoSeiService {
             AtividadeDeclarada atividade,
             Criterio criterio
     ) {
+        if (atividade != null
+                && atividade.getTitulo() != null
+                && !atividade.getTitulo().isBlank()) {
+            return atividade.getTitulo().trim();
+        }
+
         if (criterio != null
                 && criterio.getDescricao() != null
                 && !criterio.getDescricao().isBlank()) {
             return criterio.getDescricao().trim();
-        }
-
-        if (atividade.getTitulo() != null
-                && !atividade.getTitulo().isBlank()) {
-            return atividade.getTitulo().trim();
         }
 
         return DESCRICAO_NAO_INFORMADA;
