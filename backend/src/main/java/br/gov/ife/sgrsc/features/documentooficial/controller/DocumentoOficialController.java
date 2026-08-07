@@ -2,6 +2,7 @@ package br.gov.ife.sgrsc.features.documentooficial.controller;
 
 import br.gov.ife.sgrsc.features.documentooficial.service.FormularioPdfService;
 import br.gov.ife.sgrsc.features.documentooficial.service.MemorialPdfService;
+import br.gov.ife.sgrsc.features.documentooficial.service.ParecerPdfService;
 import br.gov.ife.sgrsc.features.documentooficial.service.ProcessoZipService;
 import br.gov.ife.sgrsc.shared.pdf.PdfDocument;
 import br.gov.ife.sgrsc.shared.zip.ZipDocument;
@@ -23,11 +24,13 @@ public class DocumentoOficialController {
     private final MemorialPdfService memorialPdfService;
     private final FormularioPdfService formularioPdfService;
     private final ProcessoZipService processoZipService;
+    private final ParecerPdfService parecerPdfService;
 
     public DocumentoOficialController(
             MemorialPdfService memorialPdfService,
             FormularioPdfService formularioPdfService,
-            ProcessoZipService processoZipService
+            ProcessoZipService processoZipService,
+            ParecerPdfService parecerPdfService
     ) {
         this.memorialPdfService =
                 memorialPdfService;
@@ -37,6 +40,9 @@ public class DocumentoOficialController {
 
         this.processoZipService =
                 processoZipService;
+
+        this.parecerPdfService =
+                parecerPdfService;
     }
 
     @GetMapping(
@@ -90,6 +96,24 @@ public class DocumentoOficialController {
 
         return montarRespostaZip(
                 zip
+        );
+    }
+
+    @GetMapping(
+            value = "/pareceres/{parecerId}",
+            produces = MediaType.APPLICATION_PDF_VALUE
+    )
+    public ResponseEntity<byte[]> gerarParecer(
+            @PathVariable Long parecerId
+    ) {
+        PdfDocument pdf =
+                parecerPdfService
+                        .gerarPorParecer(
+                                parecerId
+                        );
+
+        return montarRespostaPdf(
+                pdf
         );
     }
 
