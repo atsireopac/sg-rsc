@@ -25,6 +25,7 @@
 | **1.17** | **06/08/2026** | **Erik Barbosa** | **Implementação do módulo Recursos Administrativos, incluindo interposição de recursos, julgamento pela comissão, atualização automática do resultado da solicitação, encerramento definitivo do processo administrativo, registro completo da auditoria funcional, migração Flyway V19, testes unitários (JUnit 5/Mockito) e validação funcional completa via curl.** |
 | **1.18** | **06/08/2026** | **Erik Barbosa** | **Implementação da integração administrativa da Solicitação com o Processo SEI, incluindo vinculação manual do número do processo, registro da data de abertura e do usuário responsável pela protocolização, criação dos DTOs específicos para o Processo SEI, novos endpoints REST para vinculação e consulta, auditoria funcional com o evento PROCESSO_SEI_VINCULADO, migrações Flyway V20 e V21, validações das regras de negócio, ampliação do modelo de domínio e testes unitários (JUnit 5/Mockito) com validação funcional completa via curl.**
 | **1.19** | **06/08/2026** | **Erik Barbosa** | **Refatoração do Motor de Pontuação com extração do `PontuacaoDeclaradaCalculator`, implementação da infraestrutura de geração de documentos oficiais em PDF (Memorial e Formulário de Solicitação), criação do `DocumentoOficialController`, padronização da abstração `PdfDocument`, utilitários para nomenclatura de arquivos, tratamento de exceções de geração de PDF, testes unitários do motor de pontuação e do serviço de geração do Memorial, além da validação funcional dos documentos gerados via API REST.** |
+| **1.20** | **07/08/2026** | **Erik Barbosa** | **Implementação do Gerador do Pacote do Processo Administrativo, incluindo geração automática do arquivo ZIP contendo o Formulário Oficial de Requerimento em PDF, Memorial Descritivo em PDF, documentos comprobatórios organizados conforme os critérios do RSC, geração automática do arquivo `manifest.json`, padronização da nomenclatura dos documentos para protocolo administrativo, criação do `ProcessoZipService`, infraestrutura compartilhada para geração de arquivos ZIP, novos endpoints REST para download do pacote completo, testes unitários (JUnit 5/Mockito) e validação funcional completa via curl.**
 
 
 
@@ -96,7 +97,7 @@ Disponibilizar uma solução moderna, segura e transparente para gestão do Reco
 
 O SG-RSC é uma plataforma web destinada à gestão do processo de Reconhecimento de Saberes e Competências (RSC-PCCTAE). O sistema automatiza todas as etapas do fluxo administrativo, desde a abertura da solicitação até a decisão administrativa definitiva, contemplando validação documental, cálculo automático de pontuação, análise pela comissão, emissão de parecer técnico, assinatura eletrônica lógica, decisão administrativa, interposição e julgamento de recursos administrativos, registro automático do histórico das movimentações, encerramento definitivo do processo, rastreabilidade completa das ações administrativas e geração de documentos oficiais em formato PDF.
 
-Além da automação do fluxo administrativo, o sistema permite a geração padronizada de documentos oficiais, como o Memorial Descritivo e o Formulário de Solicitação de RSC, prontos para impressão, assinatura e inserção em processos administrativos eletrônicos (SEI), garantindo uniformidade documental e reduzindo atividades manuais da equipe responsável.
+Além da automação do fluxo administrativo, o sistema permite a geração padronizada de documentos oficiais, como o Memorial Descritivo e o Formulário de Solicitação de RSC, prontos para impressão, assinatura e inserção em processos administrativos eletrônicos (SEI), Além da automação do fluxo administrativo, o sistema permite a geração padronizada de documentos oficiais, como o Memorial Descritivo e o Formulário de Solicitação de RSC, bem como a geração automática de um Pacote do Processo Administrativo em formato ZIP. Esse pacote reúne todos os documentos necessários para instrução do processo administrativo, incluindo os documentos oficiais em PDF, os documentos comprobatórios enviados pelo servidor e um arquivo `manifest.json` contendo os metadados da solicitação. Essa abordagem padroniza a organização documental e facilita a abertura manual do processo eletrônico pela unidade responsável.
 
 A solução também contempla a integração administrativa com o Sistema Eletrônico de Informações (SEI), permitindo o vínculo da solicitação protocolada ao processo administrativo oficial da instituição, preservando a rastreabilidade do número do processo, da data de abertura e do responsável pela protocolização.
 
@@ -130,6 +131,7 @@ A solução será composta por:
 - MinIO como serviço de armazenamento de documentos;
 - Serviço de geração de relatórios.
 - Serviço de geração de documentos oficiais em PDF (Memorial e Formulário de Solicitação).
+- Serviço de geração de Pacotes Administrativos (ZIP).
 
 Essa separação permite que cada componente evolua de forma independente, favorecendo a escalabilidade, a manutenibilidade e a reutilização da solução.
 
@@ -159,6 +161,9 @@ Este projeto adotará:
 - OpenPDF para geração de documentos oficiais;
 - Camada compartilhada para abstração de documentos PDF (`PdfDocument`);
 - Serviço centralizado de nomenclatura de documentos oficiais.
+- Infraestrutura compartilhada para geração de pacotes ZIP do processo;
+- Geração automática de arquivo `manifest.json` contendo os metadados do processo;
+- Padronização da nomenclatura dos documentos administrativos para protocolo institucional.
 
 # Objetivo de Qualidade
 
@@ -287,6 +292,9 @@ A implantação do SG-RSC proporcionará:
 - geração automática de documentos oficiais padronizados, reduzindo o tempo gasto com preenchimento manual;
 - padronização visual dos documentos emitidos pela Comissão e pela DGP;
 - reutilização da infraestrutura de geração de PDF para novos documentos oficiais do sistema.
+- geração automática do pacote completo do processo administrativo, reduzindo o trabalho manual da unidade responsável pela abertura do processo;
+- organização padronizada dos documentos comprobatórios conforme os critérios do RSC;
+- disponibilização de metadados do processo em arquivo `manifest.json`, facilitando conferência e auditoria.
 
 ---
 
@@ -313,6 +321,7 @@ A primeira versão do sistema contemplará:
 - vinculação da solicitação protocolada ao processo administrativo do SEI;
 - geração automática do Memorial em PDF;
 - geração automática do Formulário de Solicitação em PDF;
+- geração automática do pacote ZIP do processo administrativo;
 
 As funcionalidades serão evoluídas de forma incremental ao longo do projeto.
 
@@ -943,8 +952,13 @@ Servidor, Comissão e DGP.
 
 ### Documentos disponíveis
 
-- Memorial Descritivo.
-- Formulário de Solicitação de RSC.
+- Memorial Descritivo (PDF);
+- Formulário Oficial de Requerimento (PDF);
+- Pacote do Processo Administrativo (ZIP), contendo:
+  - Formulário Oficial de Requerimento;
+  - Memorial Descritivo;
+  - Documentos comprobatórios organizados por critério;
+  - Arquivo `manifest.json` com os metadados da solicitação.
 
 ### Pós-condições
 
@@ -1552,7 +1566,7 @@ Ao longo do desenvolvimento do SG-RSC, esta matriz será continuamente atualizad
 | UC002 | Criar Solicitação | RN001, RN002, RN100 | Solicitações | Solicitação | POST /solicitacoes | Nova Solicitação | TS002 | Planejado |
 | UC003 | Anexar Documentos | RN102 | Documentos | Documento | POST /documentos | Upload de Documentos | TS003 | Implementado |
 | UC003A | Gerenciar Atividades Declaradas | RN102, RN105 | Atividades Declaradas | Atividade Declarada | `/api/atividades` | Atividades Declaradas | TS003A | **Implementado** |
-| UC004 | Gerar Documentos Oficiais | RN101, RN102 | Documentos Oficiais | Memorial / Formulário | GET /api/documentos-oficiais/** | Visualização de PDF | TS004 | Implementado |
+| UC004 | Gerar Documentos Oficiais | RN101, RN102 | Documentos Oficiais | Memorial / Formulário / Pacote ZIP | GET /api/documentos-oficiais/** | Visualização e Download | TS004 | Implementado |
 | UC005 | Protocolar Solicitação | RN101, RN102, RN103, RN104 | Solicitações | Solicitação | POST /solicitacoes/protocolar | Protocolar Solicitação | TS005 | Implementado |
 | UC005A | Vincular Processo SEI | RN005, RN107 | Solicitações | Solicitação | PUT /api/solicitacoes/{id}/processo-sei | Vinculação Processo SEI | TS005A | Implementado |
 | UC006 | Consultar Processo | RN005 | Solicitações | Solicitação | GET /solicitacoes/{id} | Consulta da Solicitação | TS006 | Planejado |
@@ -3362,6 +3376,23 @@ FormularioPdfService  MemorialPdfService
         PdfDocument
               ▼
         HTTP Response
+
+## Geração do Pacote do Processo Administrativo
+
+O SG-RSC disponibiliza um serviço responsável por consolidar automaticamente todos os documentos necessários para instrução do processo administrativo em um único arquivo ZIP.
+
+O pacote gerado contém:
+
+- Formulário Oficial de Requerimento em PDF;
+- Memorial Descritivo em PDF;
+- documentos comprobatórios enviados pelo servidor;
+- arquivo `manifest.json` contendo os principais metadados da solicitação.
+
+Os documentos comprobatórios recebem nomenclatura padronizada baseada no Grupo e no Critério do Decreto nº 13.048/2026, facilitando a conferência documental pela unidade responsável.
+
+A geração do pacote é realizada pelo `ProcessoZipService`, que reutiliza os serviços de geração de PDF já existentes e centraliza toda a lógica de organização e compactação dos arquivos.
+
+Nesta primeira versão do projeto, o pacote ZIP foi concebido para apoiar um fluxo administrativo manual: a unidade responsável realiza o download do arquivo, abre o processo no SEI, anexa os documentos manualmente e, após a criação do processo, registra o número do processo no SG-RSC. Essa estratégia mantém baixo acoplamento com sistemas externos e permite futura evolução para uma integração automática com o SEI, caso haja disponibilidade de APIs e autorização institucional.
 
 # 7.6 API REST – Módulo de Documentos
 

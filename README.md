@@ -12,7 +12,9 @@
 
 Sistema de Gestão do Reconhecimento de Saberes e Competências (RSC-PCCTAE)
 
-Sistema web desenvolvido com **Java 25**, **Spring Boot 3.5** e **Angular 17** para informatizar integralmente o processo de Reconhecimento de Saberes e Competências (RSC-PCCTAE), contemplando desde a abertura da solicitação até o julgamento dos recursos administrativos. A solução utiliza arquitetura **Feature-First**, autenticação via **Keycloak**, banco de dados **PostgreSQL**, armazenamento de documentos no **MinIO**, motores especializados para cálculo da pontuação, análise de complexidade, emissão de parecer técnico, decisão administrativa, recursos administrativos, integração administrativa com o **Sistema Eletrônico de Informações (SEI)** para vinculação do processo institucional e auditoria funcional completa do fluxo administrativo por meio do histórico automático das movimentações do processo.
+Sistema web desenvolvido com **Java 25**, **Spring Boot 3.5** e **Angular 17** para informatizar integralmente o processo de Reconhecimento de Saberes e Competências (RSC-PCCTAE), contemplando desde a abertura da solicitação até o julgamento dos recursos administrativos.
+
+A solução utiliza arquitetura **Feature-First**, autenticação via **Keycloak**, banco de dados **PostgreSQL**, armazenamento de documentos no **MinIO**, motores especializados para cálculo da pontuação, análise de complexidade, emissão de parecer técnico, decisão administrativa, recursos administrativos, integração administrativa com o **Sistema Eletrônico de Informações (SEI)** e geração automática do **Pacote do Processo Administrativo**, reunindo documentos oficiais, documentos comprobatórios e metadados em um único arquivo ZIP pronto para instrução do processo administrativo.
 
 ---
 
@@ -104,6 +106,10 @@ Atualmente o sistema já implementa:
 * Infraestrutura compartilhada para geração de documentos PDF.
 * Motor de cálculo da pontuação declarada desacoplado do serviço de pontuação.
 * Testes unitários do mecanismo de geração de PDFs.
+* Geração automática do Pacote do Processo Administrativo em formato ZIP.
+* Organização automática dos documentos comprobatórios por Grupo e Critério do RSC.
+* Geração automática do arquivo `manifest.json` contendo os metadados da solicitação.
+* Infraestrutura compartilhada para geração de pacotes administrativos.
 
 Toda a lógica permanece armazenada no banco de dados, permitindo futuras alterações legislativas sem necessidade de recompilar a aplicação.
 
@@ -214,6 +220,12 @@ backend/
 ```
 
 ---
+
+## Componentes responsáveis pela geração documental
+
+Além da geração individual dos documentos oficiais em PDF, o backend possui uma infraestrutura dedicada à montagem do Pacote do Processo Administrativo.
+
+Essa infraestrutura reutiliza os serviços de geração de PDF, organiza automaticamente os documentos comprobatórios enviados pelo servidor e produz um arquivo ZIP contendo toda a documentação necessária para abertura do processo administrativo.
 
 # Funcionalidades Implementadas
 
@@ -392,6 +404,12 @@ Estrutura da resposta paginada:
 * Padronização automática dos nomes dos documentos.
 * Download dos documentos oficiais em PDF.
 * Infraestrutura compartilhada para geração de PDFs.
+* Geração automática do Pacote do Processo Administrativo em formato ZIP.
+* Inclusão automática do Formulário Oficial de Requerimento.
+* Inclusão automática do Memorial Descritivo.
+* Organização dos documentos comprobatórios por Grupo e Critério.
+* Geração automática do arquivo `manifest.json`.
+* Download do pacote completo do processo.
 
 ## Status da Avaliação
 
@@ -514,6 +532,7 @@ Estrutura da resposta paginada:
 * ✅ Documentos Oficiais em PDF
 * ✅ Recursos Administrativos
 * ✅ Integração com Processo SEI
+* ✅ Pacote do Processo Administrativo (ZIP)
 * 🚧 Dashboard Gerencial
 * 🚧 Integração com o Frontend Angular
 
@@ -857,13 +876,37 @@ Estrutura da resposta paginada:
 - Infraestrutura reutilizável para futuros documentos oficiais.
 - Desacoplamento da lógica de cálculo da pontuação.
 
+## ✅ Sprint 19 — Pacote do Processo Administrativo
+
+### Concluído
+
+* Implementação do ProcessoZipService.
+* Geração automática do Pacote do Processo Administrativo.
+* Geração do arquivo ZIP contendo toda a documentação da solicitação.
+* Inclusão automática do Formulário Oficial de Requerimento.
+* Inclusão automática do Memorial Descritivo.
+* Organização automática dos documentos comprobatórios.
+* Padronização da nomenclatura dos arquivos.
+* Geração do arquivo `manifest.json`.
+* Infraestrutura compartilhada para geração de pacotes administrativos.
+* Testes unitários.
+* Validação funcional via curl.
+
+### Entregas da Sprint
+
+- Pacote completo do Processo Administrativo.
+- Estrutura padronizada dos documentos.
+- Manifesto JSON contendo os metadados do processo.
+- Organização automática dos documentos comprobatórios.
+- Preparação para futura integração automática com o SEI.
+
 ### Próximas etapas
 
 - Geração do Parecer Técnico em PDF.
 - Geração da Decisão Administrativa em PDF.
 - Geração da Folha de Assinaturas.
-- Geração do Relatório Consolidado da Avaliação.
 - Assinatura digital ICP-Brasil.
+- Integração automática com o SEI.
 - Dashboard Gerencial.
 - Integração completa com Angular.
 ---
@@ -1102,6 +1145,7 @@ SECRETARIO
 |--------|----------|-----------|
 | GET | `/api/documentos-oficiais/solicitacoes/{id}/formulario` | Gera o Formulário Oficial de Requerimento em PDF. |
 | GET | `/api/documentos-oficiais/solicitacoes/{id}/memorial` | Gera o Memorial Descritivo em PDF. |
+| GET | `/api/documentos-oficiais/solicitacoes/{id}/pacote` | Gera o Pacote do Processo Administrativo em formato ZIP. |
 
 ---
 
@@ -1185,6 +1229,10 @@ SECRETARIO
 * Padronização dos nomes de arquivos para integração com o SEI.
 * PontuacaoDeclaradaCalculator.
 * Testes unitários dos serviços de geração de PDF.
+* Geração do Pacote do Processo Administrativo.
+* Organização automática dos documentos para instrução do processo.
+* Geração automática do arquivo manifest.json.
+* Download do processo completo em arquivo ZIP.
 
 
 ## Em Desenvolvimento
@@ -1222,6 +1270,7 @@ SECRETARIO
 | **v0.18.0** | Implementação completa do módulo Recursos Administrativos, incluindo interposição e julgamento de recursos, atualização automática do Resultado da Solicitação, encerramento definitivo do processo administrativo, migração Flyway V19, auditoria funcional completa do fluxo recursal, testes unitários (JUnit 5 + Mockito) e validação funcional completa via curl. |
 | **v0.19.0** | Implementação da integração administrativa com o Processo SEI, incluindo vinculação da solicitação ao processo institucional, registro do número do processo, data de abertura e usuário responsável pela protocolização, criação dos endpoints REST para vinculação e consulta, auditoria funcional do Processo SEI, migrações Flyway V20 e V21, testes unitários (JUnit 5 + Mockito) e validação funcional completa via curl. |
 | **v0.20.0** | Implementação da infraestrutura de Documentos Oficiais em PDF, incluindo geração do Formulário Oficial de Requerimento e Memorial Descritivo, criação do DocumentoOficialController, padronização dos nomes dos arquivos conforme integração com o SEI, infraestrutura compartilhada para geração de PDFs, refatoração do cálculo da pontuação por meio do PontuacaoDeclaradaCalculator e inclusão de testes unitários para os novos componentes. |
+| **v0.21.0** | Implementação do Gerador do Pacote do Processo Administrativo, incluindo geração automática do arquivo ZIP contendo Formulário Oficial de Requerimento, Memorial Descritivo, documentos comprobatórios organizados por Grupo e Critério, geração do arquivo `manifest.json`, padronização da nomenclatura dos arquivos, criação do ProcessoZipService, infraestrutura compartilhada para geração de pacotes administrativos, novos endpoints REST, testes unitários e validação funcional completa. |
 
 ---
 
