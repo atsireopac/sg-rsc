@@ -27,6 +27,7 @@
 | **1.19** | **06/08/2026** | **Erik Barbosa** | **Refatoração do Motor de Pontuação com extração do `PontuacaoDeclaradaCalculator`, implementação da infraestrutura de geração de documentos oficiais em PDF (Memorial e Formulário de Solicitação), criação do `DocumentoOficialController`, padronização da abstração `PdfDocument`, utilitários para nomenclatura de arquivos, tratamento de exceções de geração de PDF, testes unitários do motor de pontuação e do serviço de geração do Memorial, além da validação funcional dos documentos gerados via API REST.** |
 | **1.20** | **07/08/2026** | **Erik Barbosa** | **Implementação do Gerador do Pacote do Processo Administrativo, incluindo geração automática do arquivo ZIP contendo o Formulário Oficial de Requerimento em PDF, Memorial Descritivo em PDF, documentos comprobatórios organizados conforme os critérios do RSC, geração automática do arquivo `manifest.json`, padronização da nomenclatura dos documentos para protocolo administrativo, criação do `ProcessoZipService`, infraestrutura compartilhada para geração de arquivos ZIP, novos endpoints REST para download do pacote completo, testes unitários (JUnit 5/Mockito) e validação funcional completa via curl.**
 | **1.21** | **07/08/2026** | **Erik Barbosa** | **Implementação do Parecer Técnico em PDF, incluindo criação do `ParecerPdfService`, reutilização da infraestrutura compartilhada de geração de documentos oficiais, novo endpoint REST para download do parecer, padronização visual do documento, integração com o módulo de Parecer Técnico, testes unitários (JUnit 5/Mockito) e validação funcional completa via curl.** |
+| **1.22** | **07/08/2026** | **Erik Barbosa** | **Conclusão da Gestão do Parecer Técnico, incluindo emissão de pareceres versionados, geração automática de fundamentação pelo Motor de Parecer, edição antes da assinatura, assinatura eletrônica lógica com registro de data e usuário, bloqueio de alterações após assinatura, auditoria funcional completa (emissão, atualização e assinatura), novos endpoints REST para gerenciamento dos pareceres, migração Flyway V22, evolução do modelo de domínio e validação funcional completa via curl.** |
 
 
 
@@ -96,7 +97,7 @@ Disponibilizar uma solução moderna, segura e transparente para gestão do Reco
 
 # Resumo Executivo
 
-O SG-RSC é uma plataforma web destinada à gestão do processo de Reconhecimento de Saberes e Competências (RSC-PCCTAE). O sistema automatiza todas as etapas do fluxo administrativo, desde a abertura da solicitação até a decisão administrativa definitiva, contemplando validação documental, cálculo automático de pontuação, análise pela comissão, emissão de parecer técnico, assinatura eletrônica lógica, decisão administrativa, interposição e julgamento de recursos administrativos, registro automático do histórico das movimentações, encerramento definitivo do processo, rastreabilidade completa das ações administrativas e geração de documentos oficiais em formato PDF.
+O SG-RSC é uma plataforma web destinada à gestão do processo de Reconhecimento de Saberes e Competências (RSC-PCCTAE). O sistema automatiza todas as etapas do fluxo administrativo, desde a abertura da solicitação até a decisão administrativa definitiva, contemplando validação documental, cálculo automático de pontuação, análise pela comissão, emissão e versionamento de pareceres técnicos, assinatura eletrônica lógica com rastreabilidade completa, decisão administrativa, interposição e julgamento de recursos administrativos, registro automático do histórico das movimentações, encerramento definitivo do processo, rastreabilidade integral das ações administrativas e geração de documentos oficiais em formato PDF.
 
 Além da automação do fluxo administrativo, o sistema permite a geração padronizada de documentos oficiais, como o Memorial Descritivo, o Formulário de Solicitação de RSC e o Parecer Técnico em formato PDF, bem como a geração automática de um Pacote do Processo Administrativo em formato ZIP. Esse pacote reúne todos os documentos necessários para instrução do processo administrativo, incluindo os documentos oficiais em PDF, os documentos comprobatórios enviados pelo servidor e um arquivo `manifest.json` contendo os metadados da solicitação. Essa abordagem padroniza a organização documental e facilita a abertura manual do processo eletrônico pela unidade responsável.
 
@@ -301,6 +302,10 @@ A implantação do SG-RSC proporcionará:
 - geração automática do Parecer Técnico em formato PDF, eliminando elaboração manual do documento pela comissão;
 - padronização dos pareceres emitidos, garantindo uniformidade visual e rastreabilidade documental;
 - reutilização da infraestrutura de geração de documentos oficiais para futuras certidões, despachos e decisões administrativas.
+- controle de versões dos pareceres técnicos, preservando todo o histórico das manifestações da Comissão;
+- assinatura eletrônica lógica dos pareceres com registro da data e do usuário responsável;
+- bloqueio automático de alterações após a assinatura do parecer, garantindo integridade documental;
+- auditoria completa das etapas de emissão, atualização e assinatura dos pareceres técnicos.
 
 ---
 
@@ -329,6 +334,10 @@ A primeira versão do sistema contemplará:
 - geração automática do Formulário de Solicitação em PDF;
 - geração automática do Parecer Técnico em PDF;
 - geração automática do pacote ZIP do processo administrativo;
+- gestão completa do ciclo de vida dos pareceres técnicos;
+- assinatura eletrônica lógica dos pareceres;
+- controle de versões dos pareceres técnicos;
+- auditoria funcional das operações sobre pareceres.
 
 As funcionalidades serão evoluídas de forma incremental ao longo do projeto.
 
@@ -434,6 +443,9 @@ Exemplos:
 - assinatura da decisão administrativa;
 - deferimento;
 - indeferimento;
+- emissão de parecer técnico;
+- atualização de parecer técnico;
+- assinatura de parecer técnico;
 - encerramento da avaliação;
 - encerramento da solicitação.
 - interposição de recurso administrativo;
@@ -1188,8 +1200,11 @@ Comissão de RSC.
 ### Pós-condições
 
 - Parecer registrado.
+- Nova versão criada quando aplicável.
 - Histórico preservado.
+- Auditoria funcional registrada.
 - Parecer bloqueado após assinatura.
+- Data e usuário da assinatura registrados.
 
 ### Regras de Negócio
 
@@ -1894,36 +1909,37 @@ Essa entidade foi criada para parametrizar os estados do processo de avaliação
 - representa o estado atual de cada avaliação;
 - permite parametrização dos fluxos de análise da Comissão.
 
-# 4.13 Entidade Parecer
 
-Representa o parecer técnico emitido pela Comissão durante a análise de uma Avaliação.
+### 4.13 Entidade Parecer
 
-Cada avaliação poderá possuir diferentes versões de pareceres ao longo do processo, preservando o histórico das alterações.
+Representa a manifestação técnica produzida pela Comissão de RSC durante o processo de avaliação.
 
-### Atributos
+#### Atributos
 
 - id
+- avaliação
+- tipoParecer
 - texto
 - conclusão
-- versão
 - dataEmissao
+- versão
 - assinado
-- createdAt
-- updatedAt
+- dataAssinatura
+- usuarioAssinatura
 
-### Relacionamentos
+#### Relacionamentos
 
 - pertence a uma Avaliação;
-- pertence a um Tipo de Parecer;
-- utiliza o resultado produzido pelo Motor de Complexidade;
-- poderá possuir múltiplas versões.
+- possui um Tipo de Parecer;
+- pode fundamentar uma Decisão Administrativa.
 
-### Regras
+#### Regras
 
-- somente pareceres não assinados poderão ser alterados;
-- a assinatura torna o parecer imutável;
-- cada nova emissão incrementa automaticamente a versão;
-- toda emissão registra data de emissão.
+- um parecer somente poderá ser alterado enquanto não estiver assinado;
+- cada nova emissão gera uma nova versão do parecer;
+- a assinatura registra automaticamente a data e o usuário responsável;
+- pareceres assinados tornam-se imutáveis;
+- todas as operações são registradas na trilha de auditoria funcional.
 
 ---
 
