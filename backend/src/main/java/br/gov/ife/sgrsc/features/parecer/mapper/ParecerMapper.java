@@ -7,28 +7,46 @@ import org.springframework.stereotype.Component;
 @Component
 public class ParecerMapper {
 
-    public ParecerResponse toResponse(Parecer parecer) {
+    public ParecerResponse toResponse(
+            Parecer parecer
+    ) {
         if (parecer == null) {
             return null;
         }
 
-        Long solicitacaoId = parecer.getAvaliacao() != null
-                && parecer.getAvaliacao().getSolicitacao() != null
-                ? parecer.getAvaliacao().getSolicitacao().getId()
-                : null;
+        Long solicitacaoId =
+                parecer.getAvaliacao() != null
+                        && parecer
+                        .getAvaliacao()
+                        .getSolicitacao() != null
+                        ? parecer
+                        .getAvaliacao()
+                        .getSolicitacao()
+                        .getId()
+                        : null;
 
         return new ParecerResponse(
                 parecer.getId(),
-                parecer.getAvaliacao().getId(),
+                parecer.getAvaliacao() != null
+                        ? parecer.getAvaliacao().getId()
+                        : null,
                 solicitacaoId,
-                parecer.getTipoParecer().getId(),
-                parecer.getTipoParecer().getCodigo(),
-                parecer.getTipoParecer().getNome(),
+                parecer.getTipoParecer() != null
+                        ? parecer.getTipoParecer().getId()
+                        : null,
+                parecer.getTipoParecer() != null
+                        ? parecer.getTipoParecer().getCodigo()
+                        : null,
+                parecer.getTipoParecer() != null
+                        ? parecer.getTipoParecer().getNome()
+                        : null,
                 parecer.getTexto(),
                 parecer.getConclusao(),
                 parecer.getDataEmissao(),
                 parecer.getVersao(),
                 parecer.getAssinado(),
+                parecer.getDataAssinatura(),
+                parecer.getUsuarioAssinatura(),
                 parecer.getCreatedAt(),
                 parecer.getUpdatedAt()
         );

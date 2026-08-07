@@ -4,6 +4,7 @@ import br.gov.ife.sgrsc.features.avaliacao.domain.Avaliacao;
 import br.gov.ife.sgrsc.features.avaliacao.dto.ResultadoComplexidadeResponse;
 import br.gov.ife.sgrsc.features.avaliacao.repository.AvaliacaoRepository;
 import br.gov.ife.sgrsc.features.avaliacao.service.ComplexidadeService;
+import br.gov.ife.sgrsc.features.historico.service.HistoricoService;
 import br.gov.ife.sgrsc.features.parecer.domain.Parecer;
 import br.gov.ife.sgrsc.features.parecer.domain.TipoParecer;
 import br.gov.ife.sgrsc.features.parecer.dto.AtualizarParecerRequest;
@@ -26,12 +27,19 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class ParecerTecnicoService {
 
+    private static final String USUARIO_SISTEMA =
+            "system";
+
+    private static final int TAMANHO_MAXIMO_USUARIO_ASSINATURA =
+            100;
+
     private final ComplexidadeService complexidadeService;
     private final ParecerTecnicoEngine parecerTecnicoEngine;
     private final AvaliacaoRepository avaliacaoRepository;
     private final ParecerRepository parecerRepository;
     private final TipoParecerRepository tipoParecerRepository;
     private final ParecerMapper parecerMapper;
+    private final HistoricoService historicoService;
 
     public ParecerTecnicoService(
             ComplexidadeService complexidadeService,
@@ -39,14 +47,29 @@ public class ParecerTecnicoService {
             AvaliacaoRepository avaliacaoRepository,
             ParecerRepository parecerRepository,
             TipoParecerRepository tipoParecerRepository,
-            ParecerMapper parecerMapper
+            ParecerMapper parecerMapper,
+            HistoricoService historicoService
     ) {
-        this.complexidadeService = complexidadeService;
-        this.parecerTecnicoEngine = parecerTecnicoEngine;
-        this.avaliacaoRepository = avaliacaoRepository;
-        this.parecerRepository = parecerRepository;
-        this.tipoParecerRepository = tipoParecerRepository;
-        this.parecerMapper = parecerMapper;
+        this.complexidadeService =
+                complexidadeService;
+
+        this.parecerTecnicoEngine =
+                parecerTecnicoEngine;
+
+        this.avaliacaoRepository =
+                avaliacaoRepository;
+
+        this.parecerRepository =
+                parecerRepository;
+
+        this.tipoParecerRepository =
+                tipoParecerRepository;
+
+        this.parecerMapper =
+                parecerMapper;
+
+        this.historicoService =
+                historicoService;
     }
 
     public SugestaoParecerResponse gerarSugestao(
@@ -85,21 +108,42 @@ public class ParecerTecnicoService {
     public List<ParecerResponse> listarPorAvaliacao(
             Long avaliacaoId
     ) {
-        validarAvaliacao(avaliacaoId);
+        validarAvaliacao(
+                avaliacaoId
+        );
 
         return parecerRepository
                 .findAllByAvaliacaoIdAndDeletedAtIsNullOrderByVersaoDesc(
                         avaliacaoId
                 )
                 .stream()
-                .map(parecerMapper::toResponse)
+                .map(
+                        parecerMapper::toResponse
+                )
                 .toList();
+    }
+
+    /*
+     * Mantido para retrocompatibilidade com testes
+     * ou outros componentes que ainda não informem usuário.
+     */
+    @Transactional
+    public ParecerResponse emitir(
+            Long avaliacaoId,
+            EmitirParecerRequest request
+    ) {
+        return emitir(
+                avaliacaoId,
+                request,
+                USUARIO_SISTEMA
+        );
     }
 
     @Transactional
     public ParecerResponse emitir(
             Long avaliacaoId,
-            EmitirParecerRequest request
+            EmitirParecerRequest request,
+            String usuario
     ) {
         if (request == null) {
             throw new ResponseStatusException(
@@ -109,12 +153,15 @@ public class ParecerTecnicoService {
         }
 
         Avaliacao avaliacao =
-                validarAvaliacao(avaliacaoId);
+                validarAvaliacao(
+                        avaliacaoId
+                );
 
         TipoParecer tipoParecer =
                 tipoParecerRepository
                         .findByCodigoAndAtivoTrueAndDeletedAtIsNull(
-                                request.tipoParecerCodigo()
+                                request
+                                        .tipoParecerCodigo()
                                         .trim()
                                         .toUpperCase()
                         )
@@ -126,41 +173,104 @@ public class ParecerTecnicoService {
                         );
 
         SugestaoParecerResponse sugestao =
-                gerarSugestao(avaliacaoId);
+                gerarSugestao(
+                        avaliacaoId
+                );
 
-        Parecer parecer = new Parecer();
+        Parecer parecer =
+                new Parecer();
 
-        parecer.setAvaliacao(avaliacao);
-        parecer.setTipoParecer(tipoParecer);
+        parecer.setAvaliacao(
+                avaliacao
+        );
+
+        parecer.setTipoParecer(
+                tipoParecer
+        );
 
         parecer.setTexto(
-                possuiTexto(request.texto())
+                possuiTexto(
+                        request.texto()
+                )
                         ? request.texto().trim()
                         : sugestao.fundamentacao()
         );
 
         parecer.setConclusao(
-                possuiTexto(request.conclusao())
-                        ? request.conclusao()
-                                .trim()
-                                .toUpperCase()
-                        : sugestao.conclusaoSugerida().name()
+                possuiTexto(
+                        request.conclusao()
+                )
+                        ? request
+                        .conclusao()
+                        .trim()
+                        .toUpperCase()
+                        : sugestao
+                        .conclusaoSugerida()
+                        .name()
         );
 
-        parecer.setDataEmissao(LocalDateTime.now());
-        parecer.setVersao(calcularProximaVersao(avaliacaoId));
-        parecer.setAssinado(false);
+        parecer.setDataEmissao(
+                LocalDateTime.now()
+        );
+
+        parecer.setVersao(
+                calcularProximaVersao(
+                        avaliacaoId
+                )
+        );
+
+        parecer.setAssinado(
+                false
+        );
+
+        parecer.setDataAssinatura(
+                null
+        );
+
+        parecer.setUsuarioAssinatura(
+                null
+        );
 
         Parecer salvo =
-                parecerRepository.save(parecer);
+                parecerRepository.save(
+                        parecer
+                );
 
-        return parecerMapper.toResponse(salvo);
+        historicoService
+                .registrarParecerEmitido(
+                        avaliacao.getSolicitacao(),
+                        salvo.getId(),
+                        salvo.getVersao(),
+                        normalizarUsuario(
+                                usuario
+                        )
+                );
+
+        return parecerMapper.toResponse(
+                salvo
+        );
+    }
+
+    /*
+     * Mantido para retrocompatibilidade.
+     */
+    @Transactional
+    public ParecerResponse atualizar(
+            Long parecerId,
+            AtualizarParecerRequest request
+    ) {
+        return atualizar(
+                parecerId,
+                request,
+                USUARIO_SISTEMA
+        );
     }
 
     @Transactional
     public ParecerResponse atualizar(
             Long parecerId,
-            AtualizarParecerRequest request
+            AtualizarParecerRequest request,
+            String usuario
     ) {
         if (request == null) {
             throw new ResponseStatusException(
@@ -170,9 +280,13 @@ public class ParecerTecnicoService {
         }
 
         Parecer parecer =
-                buscarEntidadeParecer(parecerId);
+                buscarEntidadeParecer(
+                        parecerId
+                );
 
-        if (Boolean.TRUE.equals(parecer.getAssinado())) {
+        if (Boolean.TRUE.equals(
+                parecer.getAssinado()
+        )) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
                     "Parecer já assinado e não pode ser alterado."
@@ -180,41 +294,110 @@ public class ParecerTecnicoService {
         }
 
         parecer.setTexto(
-                request.texto().trim()
+                request
+                        .texto()
+                        .trim()
         );
 
         parecer.setConclusao(
-                request.conclusao()
+                request
+                        .conclusao()
                         .trim()
                         .toUpperCase()
         );
 
         Parecer salvo =
-                parecerRepository.saveAndFlush(parecer);
+                parecerRepository.saveAndFlush(
+                        parecer
+                );
 
-        return parecerMapper.toResponse(salvo);
+        historicoService
+                .registrarParecerAtualizado(
+                        salvo
+                                .getAvaliacao()
+                                .getSolicitacao(),
+                        salvo.getId(),
+                        salvo.getVersao(),
+                        normalizarUsuario(
+                                usuario
+                        )
+                );
+
+        return parecerMapper.toResponse(
+                salvo
+        );
     }
 
+    /*
+     * Mantido para retrocompatibilidade.
+     */
     @Transactional
     public ParecerResponse assinar(
             Long parecerId
     ) {
-        Parecer parecer =
-                buscarEntidadeParecer(parecerId);
+        return assinar(
+                parecerId,
+                USUARIO_SISTEMA
+        );
+    }
 
-        if (Boolean.TRUE.equals(parecer.getAssinado())) {
+    @Transactional
+    public ParecerResponse assinar(
+            Long parecerId,
+            String usuario
+    ) {
+        Parecer parecer =
+                buscarEntidadeParecer(
+                        parecerId
+                );
+
+        if (Boolean.TRUE.equals(
+                parecer.getAssinado()
+        )) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
                     "Parecer já está assinado."
             );
         }
 
-        parecer.setAssinado(true);
+        String usuarioNormalizado =
+                normalizarUsuario(
+                        usuario
+                );
+
+        LocalDateTime agora =
+                LocalDateTime.now();
+
+        parecer.setAssinado(
+                true
+        );
+
+        parecer.setDataAssinatura(
+                agora
+        );
+
+        parecer.setUsuarioAssinatura(
+                usuarioNormalizado
+        );
 
         Parecer salvo =
-                parecerRepository.saveAndFlush(parecer);
+                parecerRepository.saveAndFlush(
+                        parecer
+                );
 
-        return parecerMapper.toResponse(salvo);
+        historicoService
+                .registrarParecerAssinado(
+                        salvo
+                                .getAvaliacao()
+                                .getSolicitacao(),
+                        salvo.getId(),
+                        salvo.getVersao(),
+                        usuarioNormalizado
+                );
+
+        return parecerMapper.toResponse(
+                salvo
+        );
     }
 
     private Parecer buscarEntidadeParecer(
@@ -246,13 +429,23 @@ public class ParecerTecnicoService {
                 .findFirstByAvaliacaoIdAndDeletedAtIsNullOrderByVersaoDesc(
                         avaliacaoId
                 )
-                .map(Parecer::getVersao)
-                .map(versao -> versao + 1)
-                .orElse(1);
+                .map(
+                        Parecer::getVersao
+                )
+                .map(
+                        versao ->
+                                versao + 1
+                )
+                .orElse(
+                        1
+                );
     }
 
-    private boolean possuiTexto(String valor) {
-        return valor != null && !valor.isBlank();
+    private boolean possuiTexto(
+            String valor
+    ) {
+        return valor != null
+                && !valor.isBlank();
     }
 
     private Avaliacao validarAvaliacao(
@@ -275,5 +468,28 @@ public class ParecerTecnicoService {
                                 "Avaliação não encontrada."
                         )
                 );
+    }
+
+    private String normalizarUsuario(
+            String usuario
+    ) {
+        if (usuario == null
+                || usuario.isBlank()) {
+            return USUARIO_SISTEMA;
+        }
+
+        String usuarioNormalizado =
+                usuario.trim();
+
+        if (usuarioNormalizado.length()
+                > TAMANHO_MAXIMO_USUARIO_ASSINATURA) {
+
+            return usuarioNormalizado.substring(
+                    0,
+                    TAMANHO_MAXIMO_USUARIO_ASSINATURA
+            );
+        }
+
+        return usuarioNormalizado;
     }
 }

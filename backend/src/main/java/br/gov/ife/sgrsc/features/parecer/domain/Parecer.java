@@ -38,6 +38,12 @@ public class Parecer extends BaseEntity {
     @Column(name = "assinado", nullable = false)
     private Boolean assinado;
 
+    @Column(name = "data_assinatura")
+    private LocalDateTime dataAssinatura;
+
+    @Column(name = "usuario_assinatura", length = 100)
+    private String usuarioAssinatura;
+
     public Avaliacao getAvaliacao() {
         return avaliacao;
     }
@@ -92,5 +98,21 @@ public class Parecer extends BaseEntity {
 
     public void setAssinado(Boolean assinado) {
         this.assinado = assinado;
+    }
+
+    public LocalDateTime getDataAssinatura() {
+        return dataAssinatura;
+    }
+
+    public void setDataAssinatura(LocalDateTime dataAssinatura) {
+        this.dataAssinatura = dataAssinatura;
+    }
+
+    public String getUsuarioAssinatura() {
+        return usuarioAssinatura;
+    }
+
+    public void setUsuarioAssinatura(String usuarioAssinatura) {
+        this.usuarioAssinatura = usuarioAssinatura;
     }
 }

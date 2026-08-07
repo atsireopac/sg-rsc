@@ -23,6 +23,15 @@ public class HistoricoService {
     public static final String AVALIACAO_INICIADA =
             "AVALIACAO_INICIADA";
 
+    public static final String PARECER_EMITIDO =
+            "PARECER_EMITIDO";
+
+    public static final String PARECER_ATUALIZADO =
+            "PARECER_ATUALIZADO";
+
+    public static final String PARECER_ASSINADO =
+            "PARECER_ASSINADO";
+
     public static final String DECISAO_ADMINISTRATIVA_CRIADA =
             "DECISAO_ADMINISTRATIVA_CRIADA";
 
@@ -41,11 +50,11 @@ public class HistoricoService {
     public static final String AVALIACAO_CONCLUIDA =
             "AVALIACAO_CONCLUIDA";
 
-        public static final String RECURSO_INTERPOSTO =
-        "RECURSO_INTERPOSTO";
+    public static final String RECURSO_INTERPOSTO =
+            "RECURSO_INTERPOSTO";
 
-        public static final String RECURSO_JULGADO =
-        "RECURSO_JULGADO";
+    public static final String RECURSO_JULGADO =
+            "RECURSO_JULGADO";
 
     private static final String USUARIO_SISTEMA =
             "system";
@@ -57,19 +66,57 @@ public class HistoricoService {
             HistoricoRepository historicoRepository,
             TipoHistoricoRepository tipoHistoricoRepository
     ) {
-        this.historicoRepository = historicoRepository;
-        this.tipoHistoricoRepository = tipoHistoricoRepository;
+        this.historicoRepository =
+                historicoRepository;
+
+        this.tipoHistoricoRepository =
+                tipoHistoricoRepository;
     }
 
+    /**
+     * Mantém compatibilidade com os módulos existentes.
+     *
+     * Quando nenhum usuário é informado, o evento continua
+     * sendo registrado pelo usuário técnico "system".
+     */
     @Transactional
     public Historico registrar(
             Solicitacao solicitacao,
             String codigoHistorico,
             String descricao
     ) {
-        validarSolicitacao(solicitacao);
-        validarTexto(codigoHistorico, "O código do histórico é obrigatório.");
-        validarTexto(descricao, "A descrição do histórico é obrigatória.");
+        return registrar(
+                solicitacao,
+                codigoHistorico,
+                descricao,
+                USUARIO_SISTEMA
+        );
+    }
+
+    /**
+     * Registra um evento de histórico identificando
+     * explicitamente o usuário responsável.
+     */
+    @Transactional
+    public Historico registrar(
+            Solicitacao solicitacao,
+            String codigoHistorico,
+            String descricao,
+            String usuario
+    ) {
+        validarSolicitacao(
+                solicitacao
+        );
+
+        validarTexto(
+                codigoHistorico,
+                "O código do histórico é obrigatório."
+        );
+
+        validarTexto(
+                descricao,
+                "A descrição do histórico é obrigatória."
+        );
 
         TipoHistorico tipoHistorico =
                 buscarTipoHistoricoAtivo(
@@ -79,13 +126,31 @@ public class HistoricoService {
         Historico historico =
                 new Historico();
 
-        historico.setSolicitacao(solicitacao);
-        historico.setTipoHistorico(tipoHistorico);
-        historico.setDescricao(descricao.trim());
-        historico.setUsuario(USUARIO_SISTEMA);
-        historico.setDataEvento(LocalDateTime.now());
+        historico.setSolicitacao(
+                solicitacao
+        );
 
-        return historicoRepository.save(historico);
+        historico.setTipoHistorico(
+                tipoHistorico
+        );
+
+        historico.setDescricao(
+                descricao.trim()
+        );
+
+        historico.setUsuario(
+                normalizarUsuario(
+                        usuario
+                )
+        );
+
+        historico.setDataEvento(
+                LocalDateTime.now()
+        );
+
+        return historicoRepository.save(
+                historico
+        );
     }
 
     @Transactional
@@ -117,6 +182,66 @@ public class HistoricoService {
                 "Avaliação iniciada pela comissão "
                         + nomeComissao.trim()
                         + "."
+        );
+    }
+
+    @Transactional
+    public Historico registrarParecerEmitido(
+            Solicitacao solicitacao,
+            Long parecerId,
+            Integer versao,
+            String usuario
+    ) {
+        return registrar(
+                solicitacao,
+                PARECER_EMITIDO,
+                "Parecer técnico "
+                        + formatarIdentificacaoParecer(
+                                parecerId,
+                                versao
+                        )
+                        + " emitido.",
+                usuario
+        );
+    }
+
+    @Transactional
+    public Historico registrarParecerAtualizado(
+            Solicitacao solicitacao,
+            Long parecerId,
+            Integer versao,
+            String usuario
+    ) {
+        return registrar(
+                solicitacao,
+                PARECER_ATUALIZADO,
+                "Parecer técnico "
+                        + formatarIdentificacaoParecer(
+                                parecerId,
+                                versao
+                        )
+                        + " atualizado.",
+                usuario
+        );
+    }
+
+    @Transactional
+    public Historico registrarParecerAssinado(
+            Solicitacao solicitacao,
+            Long parecerId,
+            Integer versao,
+            String usuario
+    ) {
+        return registrar(
+                solicitacao,
+                PARECER_ASSINADO,
+                "Parecer técnico "
+                        + formatarIdentificacaoParecer(
+                                parecerId,
+                                versao
+                        )
+                        + " assinado.",
+                usuario
         );
     }
 
@@ -157,6 +282,7 @@ public class HistoricoService {
     ) {
         if (solicitacao == null
                 || solicitacao.getId() == null) {
+
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "A solicitação do histórico é obrigatória."
@@ -168,11 +294,65 @@ public class HistoricoService {
             String valor,
             String mensagem
     ) {
-        if (valor == null || valor.isBlank()) {
+        if (valor == null
+                || valor.isBlank()) {
+
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     mensagem
             );
         }
+    }
+
+    private String normalizarUsuario(
+            String usuario
+    ) {
+        if (usuario == null
+                || usuario.isBlank()) {
+            return USUARIO_SISTEMA;
+        }
+
+        String usuarioNormalizado =
+                usuario.trim();
+
+        if (usuarioNormalizado.length() > 200) {
+            return usuarioNormalizado.substring(
+                    0,
+                    200
+            );
+        }
+
+        return usuarioNormalizado;
+    }
+
+    private String formatarIdentificacaoParecer(
+            Long parecerId,
+            Integer versao
+    ) {
+        StringBuilder identificacao =
+                new StringBuilder();
+
+        if (parecerId != null) {
+            identificacao
+                    .append("#")
+                    .append(parecerId);
+        }
+
+        if (versao != null) {
+            if (!identificacao.isEmpty()) {
+                identificacao.append(" ");
+            }
+
+            identificacao
+                    .append("(versão ")
+                    .append(versao)
+                    .append(")");
+        }
+
+        if (identificacao.isEmpty()) {
+            return "";
+        }
+
+        return identificacao.toString();
     }
 }

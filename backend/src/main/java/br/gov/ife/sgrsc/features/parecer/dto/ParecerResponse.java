@@ -26,6 +26,10 @@ public record ParecerResponse(
 
         Boolean assinado,
 
+        LocalDateTime dataAssinatura,
+
+        String usuarioAssinatura,
+
         LocalDateTime createdAt,
 
         LocalDateTime updatedAt
