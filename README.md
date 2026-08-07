@@ -7,14 +7,14 @@
 ![MinIO](https://img.shields.io/badge/MinIO-Object_Storage-C72E49)
 ![Keycloak](https://img.shields.io/badge/Keycloak-26.7.0-4D4D4D)
 ![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED)
-![Status](https://img.shields.io/badge/Status-Sprint_18-Concluída-brightgreen)
+![Status](https://img.shields.io/badge/Status-Sprint_20-Concluída-brightgreen)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
 Sistema de Gestão do Reconhecimento de Saberes e Competências (RSC-PCCTAE)
 
 Sistema web desenvolvido com **Java 25**, **Spring Boot 3.5** e **Angular 17** para informatizar integralmente o processo de Reconhecimento de Saberes e Competências (RSC-PCCTAE), contemplando desde a abertura da solicitação até o julgamento dos recursos administrativos.
 
-A solução utiliza arquitetura **Feature-First**, autenticação via **Keycloak**, banco de dados **PostgreSQL**, armazenamento de documentos no **MinIO**, motores especializados para cálculo da pontuação, análise de complexidade, emissão de parecer técnico, decisão administrativa, recursos administrativos, integração administrativa com o **Sistema Eletrônico de Informações (SEI)** e geração automática do **Pacote do Processo Administrativo**, reunindo documentos oficiais, documentos comprobatórios e metadados em um único arquivo ZIP pronto para instrução do processo administrativo.
+A solução utiliza arquitetura **Feature-First**, autenticação via **Keycloak**, banco de dados **PostgreSQL**, armazenamento de documentos no **MinIO**, motores especializados para cálculo da pontuação, análise de complexidade, emissão de parecer técnico, emissão de decisão administrativa, recursos administrativos, integração administrativa com o **Sistema Eletrônico de Informações (SEI)**, geração automática de documentos oficiais em PDF (Formulário, Memorial, Parecer Técnico) e geração do **Pacote do Processo Administrativo**, reunindo documentos oficiais, documentos comprobatórios e metadados em um único arquivo ZIP pronto para instrução do processo administrativo.
 
 ---
 
@@ -102,8 +102,10 @@ Atualmente o sistema já implementa:
 * Auditoria automática da vinculação do Processo SEI.
 * Geração automática do Formulário Oficial de Requerimento em PDF.
 * Geração automática do Memorial Descritivo em PDF.
+* Geração automática do Parecer Técnico em PDF.
 * Padronização dos nomes de arquivos conforme o padrão institucional do SEI.
 * Infraestrutura compartilhada para geração de documentos PDF.
+* Infraestrutura reutilizável para geração de documentos oficiais.
 * Motor de cálculo da pontuação declarada desacoplado do serviço de pontuação.
 * Testes unitários do mecanismo de geração de PDFs.
 * Geração automática do Pacote do Processo Administrativo em formato ZIP.
@@ -401,6 +403,7 @@ Estrutura da resposta paginada:
 * Cálculo e armazenamento de hash dos arquivos.
 * Geração do Formulário Oficial de Requerimento em PDF.
 * Geração do Memorial Descritivo em PDF.
+* Geração do Parecer Técnico em PDF.
 * Padronização automática dos nomes dos documentos.
 * Download dos documentos oficiais em PDF.
 * Infraestrutura compartilhada para geração de PDFs.
@@ -529,7 +532,7 @@ Estrutura da resposta paginada:
 * ✅ Parecer Técnico
 * ✅ Decisão Administrativa
 * ✅ Auditoria Funcional das Decisões Administrativas
-* ✅ Documentos Oficiais em PDF
+* ✅ Documentos Oficiais (Formulário, Memorial e Parecer Técnico em PDF)
 * ✅ Recursos Administrativos
 * ✅ Integração com Processo SEI
 * ✅ Pacote do Processo Administrativo (ZIP)
@@ -900,9 +903,28 @@ Estrutura da resposta paginada:
 - Organização automática dos documentos comprobatórios.
 - Preparação para futura integração automática com o SEI.
 
+## ✅ Sprint 20 — Parecer Técnico em PDF
+
+### Concluído
+
+* Implementação do ParecerPdfService.
+* Reutilização da infraestrutura compartilhada de geração de documentos oficiais.
+* Geração automática do Parecer Técnico em formato PDF.
+* Implementação do endpoint REST para download do parecer.
+* Padronização visual do documento conforme os demais documentos oficiais.
+* Integração com o módulo Parecer Técnico.
+* Testes unitários utilizando JUnit 5 e Mockito.
+* Validação funcional completa via curl.
+
+### Entregas da Sprint
+
+- Parecer Técnico em PDF.
+- Download automático do documento.
+- Infraestrutura reutilizável para futuros documentos oficiais.
+- Padronização visual dos documentos administrativos.
+
 ### Próximas etapas
 
-- Geração do Parecer Técnico em PDF.
 - Geração da Decisão Administrativa em PDF.
 - Geração da Folha de Assinaturas.
 - Assinatura digital ICP-Brasil.
@@ -1146,6 +1168,7 @@ SECRETARIO
 | GET | `/api/documentos-oficiais/solicitacoes/{id}/formulario` | Gera o Formulário Oficial de Requerimento em PDF. |
 | GET | `/api/documentos-oficiais/solicitacoes/{id}/memorial` | Gera o Memorial Descritivo em PDF. |
 | GET | `/api/documentos-oficiais/solicitacoes/{id}/pacote` | Gera o Pacote do Processo Administrativo em formato ZIP. |
+| GET | `/api/documentos-oficiais/pareceres/{id}` | Gera o Parecer Técnico em PDF. |
 
 ---
 
@@ -1233,13 +1256,16 @@ SECRETARIO
 * Organização automática dos documentos para instrução do processo.
 * Geração automática do arquivo manifest.json.
 * Download do processo completo em arquivo ZIP.
+* Geração do Parecer Técnico em PDF.
+* Infraestrutura reutilizável para documentos oficiais.
+* Testes unitários do ParecerPdfService.
 
 
 ## Em Desenvolvimento
 
 ## Em Desenvolvimento
 
-* Geração de PDF do Parecer e da Decisão.
+* Geração da Decisão Administrativa em PDF.
 * Assinatura digital ICP-Brasil.
 * Dashboard Gerencial.
 * Integração completa com o Frontend Angular.
@@ -1271,6 +1297,7 @@ SECRETARIO
 | **v0.19.0** | Implementação da integração administrativa com o Processo SEI, incluindo vinculação da solicitação ao processo institucional, registro do número do processo, data de abertura e usuário responsável pela protocolização, criação dos endpoints REST para vinculação e consulta, auditoria funcional do Processo SEI, migrações Flyway V20 e V21, testes unitários (JUnit 5 + Mockito) e validação funcional completa via curl. |
 | **v0.20.0** | Implementação da infraestrutura de Documentos Oficiais em PDF, incluindo geração do Formulário Oficial de Requerimento e Memorial Descritivo, criação do DocumentoOficialController, padronização dos nomes dos arquivos conforme integração com o SEI, infraestrutura compartilhada para geração de PDFs, refatoração do cálculo da pontuação por meio do PontuacaoDeclaradaCalculator e inclusão de testes unitários para os novos componentes. |
 | **v0.21.0** | Implementação do Gerador do Pacote do Processo Administrativo, incluindo geração automática do arquivo ZIP contendo Formulário Oficial de Requerimento, Memorial Descritivo, documentos comprobatórios organizados por Grupo e Critério, geração do arquivo `manifest.json`, padronização da nomenclatura dos arquivos, criação do ProcessoZipService, infraestrutura compartilhada para geração de pacotes administrativos, novos endpoints REST, testes unitários e validação funcional completa. |
+| **v0.22.0** | Implementação da geração do Parecer Técnico em PDF, incluindo criação do ParecerPdfService, reutilização da infraestrutura compartilhada de geração de documentos oficiais, novo endpoint REST para download do parecer, padronização visual do documento, integração com o módulo Parecer Técnico, testes unitários (JUnit 5 + Mockito) e validação funcional completa via curl. |
 
 ---
 
